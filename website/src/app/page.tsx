@@ -54,7 +54,7 @@ export default function HomePage() {
 
         <div className="nav-actions">
           <a href="#contact" className="btn-outline">Talk to us</a>
-          <a href="https://app.ifu-labs.io" className="btn-solid">Client portal →</a>
+          <a href="http://localhost:3003" className="btn-solid">Client portal →</a>
         </div>
       </nav>
 
@@ -248,9 +248,9 @@ export default function HomePage() {
 
         <div className="pricing-grid" id="pricing-products" style={{ display: 'none' }}>
           {[
-            { tier: 'Comply · Starter', name: 'Compliance Tool', price: '$299', period: 'per month, billed annually', desc: 'SOC 2 automation for early-stage teams.', features: ['SOC 2 control monitoring', 'AWS & GitHub connectors', 'Evidence PDF export', 'Vendor risk tracker', 'Up to 3 team members'], cta: 'Start free trial', href: 'https://app.ifu-labs.io/signup' },
-            { tier: 'Comply · Growth', name: 'Multi-framework', price: '$799', period: 'per month, billed annually', desc: 'SOC 2, ISO 27001, GDPR, and HIPAA — plus AI gap explanations.', features: ['Everything in Starter', 'ISO 27001, GDPR, HIPAA', 'AI gap explanations', 'Regulatory change alerts', 'Unlimited team members'], cta: 'Start free trial', href: 'https://app.ifu-labs.io/signup', featured: true },
-            { tier: 'FinOps Tool', name: 'Cost Optimisation', price: '$199', period: 'per month, billed annually', desc: 'Live AWS cost dashboard with waste detection and anomaly alerts.', features: ['Idle resource detection', 'RI & Savings Plan analysis', 'Weekly anomaly alerts', 'Monthly spend report', 'Unlimited AWS accounts'], cta: 'Start free trial', href: 'https://app.ifu-labs.io/signup' },
+            { tier: 'Comply · Starter', name: 'Compliance Tool', price: '$299', period: 'per month, billed annually', desc: 'SOC 2 automation for early-stage teams.', features: ['SOC 2 control monitoring', 'AWS & GitHub connectors', 'Evidence PDF export', 'Vendor risk tracker', 'Up to 3 team members'], cta: 'Start free trial', href: 'http://localhost:3003' },
+            { tier: 'Comply · Growth', name: 'Multi-framework', price: '$799', period: 'per month, billed annually', desc: 'SOC 2, ISO 27001, GDPR, and HIPAA — plus AI gap explanations.', features: ['Everything in Starter', 'ISO 27001, GDPR, HIPAA', 'AI gap explanations', 'Regulatory change alerts', 'Unlimited team members'], cta: 'Start free trial', href: 'http://localhost:3003', featured: true },
+            { tier: 'FinOps Tool', name: 'Cost Optimisation', price: '$199', period: 'per month, billed annually', desc: 'Live AWS cost dashboard with waste detection and anomaly alerts.', features: ['Idle resource detection', 'RI & Savings Plan analysis', 'Weekly anomaly alerts', 'Monthly spend report', 'Unlimited AWS accounts'], cta: 'Start free trial', href: 'http://localhost:3003' },
           ].map(p => (
             <div key={p.tier} className={`pricing-card${p.featured ? ' featured' : ''}`}>
               <div className="pricing-tier">{p.tier}</div>
@@ -337,7 +337,7 @@ export default function HomePage() {
         <div className="footer-col">
           <h4>Products</h4>
           <ul>
-            {[['Comply', 'https://app.ifu-labs.io'], ['FinOps Tool', 'https://app.ifu-labs.io'], ['Client portal', 'https://app.ifu-labs.io'], ['Documentation', '/docs']].map(([name, href]) => <li key={name as string}><a href={href as string}>{name}</a></li>)}
+            {[['Comply', 'http://localhost:3003'], ['FinOps Tool', 'http://localhost:3003'], ['Client portal', 'http://localhost:3003'], ['Documentation', '/docs']].map(([name, href]) => <li key={name as string}><a href={href as string}>{name}</a></li>)}
           </ul>
         </div>
         <div className="footer-col">

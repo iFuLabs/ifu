@@ -19,7 +19,6 @@ import {
   DescribeVolumesCommand,
   DescribeAddressesCommand,
   DescribeNatGatewaysCommand,
-  DescribeLoadBalancersCommand,
 } from '@aws-sdk/client-ec2'
 
 import {

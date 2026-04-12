@@ -286,5 +286,10 @@ export default async function integrationRoutes(fastify) {
   fastify.post('/github/webhook', {
     config: { rawBody: true }, // Need raw body for signature verification
     schema: { tags: ['Integrations'] }
-  }, handleGithubWebhook)
+  }, async (request, reply) => {
+    // TODO: Implement GitHub webhook handler
+    // Should verify X-Hub-Signature-256 header
+    // Handle events: push, member_added, member_removed, installation
+    return reply.send({ received: true })
+  })
 }

@@ -1,5 +1,5 @@
 import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts'
-import { IAMClient, GetAccountAliasesCommand } from '@aws-sdk/client-iam'
+import { IAMClient, ListAccountAliasesCommand } from '@aws-sdk/client-iam'
 
 /**
  * Validates that iFu Labs Comply can assume the customer's IAM role.
@@ -42,7 +42,7 @@ export async function validateAwsRole(roleArn, externalId) {
           sessionToken: Credentials.SessionToken
         }
       })
-      const aliases = await iam.send(new GetAccountAliasesCommand({}))
+      const aliases = await iam.send(new ListAccountAliasesCommand({}))
       accountAlias = aliases.AccountAliases?.[0] || null
     } catch {
       // No alias permission — that's fine
