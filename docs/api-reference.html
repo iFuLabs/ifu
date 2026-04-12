@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iFu Labs API Docs — Comply</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAFAF8;--surface:#F4F3EF;--border:#E0DDD5;--ink:#1A1917;--muted:#6B685F;--muted2:#9C9890;
+  --brand:#1B3A5C;--brand-light:#EEF3F9;--accent:#D4790A;--green:#1D6648;--green-light:#EAF3EE;
+  --danger:#C84B31;--warn:#C87A1A;
+  --get:#1D6648;--post:#1B3A5C;--patch:#C87A1A;--delete:#C84B31;
+  --sans:'DM Sans',sans-serif;--serif:'Fraunces',serif;--mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{
+  width:260px;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;
+  background:#fff;border-right:1px solid var(--border);overflow-y:auto;
+  display:flex;flex-direction:column;z-index:50;
+}
+.sidebar-logo{
+  display:flex;align-items:center;gap:10px;padding:20px;
+  border-bottom:1px solid var(--border);text-decoration:none;
+}
+.sidebar-logo-mark{width:28px;height:28px;background:var(--brand);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.sidebar-logo-mark svg{width:16px;height:16px}
+.sidebar-logo-name{font-weight:600;font-size:14px;color:var(--ink)}
+.sidebar-logo-sub{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+
+.sidebar-section{padding:16px 16px 4px;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2)}
+.sidebar-link{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;color:var(--muted);text-decoration:none;border-radius:6px;margin:1px 8px;transition:all .15s}
+.sidebar-link:hover{color:var(--ink);background:var(--surface)}
+.sidebar-link.active{color:var(--brand);background:var(--brand-light);font-weight:500}
+.method-tag{font-family:var(--mono);font-size:9px;font-weight:500;padding:2px 5px;border-radius:3px;letter-spacing:.3px;flex-shrink:0}
+.tag-get{background:#EAF3EE;color:var(--get)}
+.tag-post{background:var(--brand-light);color:var(--brand)}
+.tag-patch{background:#FEF3E8;color:var(--warn)}
+.tag-delete{background:#FCECEA;color:var(--danger)}
+
+/* Main */
+.main{margin-left:260px;flex:1;min-width:0}
+.content{max-width:860px;margin:0 auto;padding:48px 40px 120px}
+
+/* Page header */
+.page-header{margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+.page-header h1{font-family:var(--serif);font-size:42px;font-weight:400;color:var(--ink);letter-spacing:-.5px;margin-bottom:12px}
+.page-header p{font-size:16px;color:var(--muted);line-height:1.7;font-weight:300}
+
+/* Section */
+.api-section{margin-bottom:56px}
+.section-title{font-family:var(--serif);font-size:26px;font-weight:400;color:var(--ink);margin-bottom:8px;letter-spacing:-.3px;padding-top:40px}
+.section-desc{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.65}
+
+/* Endpoint card */
+.endpoint{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.endpoint-header{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}
+.endpoint-header:hover{background:var(--surface)}
+.method-badge{font-family:var(--mono);font-size:11px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:.5px;flex-shrink:0;width:64px;text-align:center}
+.badge-get{background:#EAF3EE;color:var(--get)}
+.badge-post{background:var(--brand-light);color:var(--brand)}
+.badge-patch{background:#FEF3E8;color:var(--warn)}
+.badge-delete{background:#FCECEA;color:var(--danger)}
+.endpoint-path{font-family:var(--mono);font-size:13px;color:var(--ink);flex:1}
+.endpoint-summary{font-size:13px;color:var(--muted);margin-left:auto;padding-left:16px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.endpoint-chevron{color:var(--muted2);flex-shrink:0;font-size:11px;transition:transform .2s}
+.endpoint.open .endpoint-chevron{transform:rotate(180deg)}
+
+.endpoint-body{border-top:1px solid var(--border);padding:24px;display:none;background:var(--bg)}
+.endpoint.open .endpoint-body{display:block}
+
+.endpoint-desc{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:20px}
+
+/* Params / body tables */
+.param-table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px}
+.param-table th{text-align:left;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);padding:8px 12px;border-bottom:1px solid var(--border)}
+.param-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.param-table tr:last-child td{border-bottom:none}
+.param-name{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.param-type{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface);padding:2px 6px;border-radius:3px}
+.param-required{font-family:var(--mono);font-size:10px;color:var(--danger);background:#FCECEA;padding:2px 5px;border-radius:3px}
+.param-optional{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface);padding:2px 5px;border-radius:3px}
+.param-desc{color:var(--muted);line-height:1.5}
+
+/* Code blocks */
+.code-label{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+pre{background:var(--ink);border-radius:8px;padding:16px;overflow-x:auto;margin-bottom:16px}
+code{font-family:var(--mono);font-size:12px;line-height:1.7;color:#E8E8E2}
+.copy-btn{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--border);background:#fff;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .15s}
+.copy-btn:hover{color:var(--ink);border-color:var(--ink)}
+
+/* Inline code */
+p code,li code{font-family:var(--mono);font-size:12px;background:var(--surface);border:1px solid var(--border);padding:1px 5px;border-radius:3px;color:var(--ink)}
+
+/* Response badges */
+.response-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
+.status-badge{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;flex-shrink:0}
+.status-2xx{background:#EAF3EE;color:var(--green)}
+.status-4xx{background:#FEF3E8;color:var(--warn)}
+.status-5xx{background:#FCECEA;color:var(--danger)}
+
+/* Info boxes */
+.info-box{background:var(--brand-light);border:1px solid rgba(27,58,92,.15);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--brand);line-height:1.6}
+.warn-box{background:#FEF3E8;border:1px solid rgba(200,122,26,.2);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--warn);line-height:1.6}
+
+/* Base URL bar */
+.base-url-bar{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:32px;font-family:var(--mono);font-size:13px}
+.base-url-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;flex-shrink:0}
+.base-url-val{color:var(--ink)}
+.base-url-env{color:var(--muted);font-size:11px;margin-left:auto;flex-shrink:0}
+
+/* Auth note */
+.auth-note{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted);padding:6px 12px;background:var(--surface);border-radius:5px;margin-bottom:16px}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .content{padding:24px 16px 80px}
+  .endpoint-summary{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="sidebar-logo-mark">
+      <svg viewBox="0 0 18 18" fill="none"><path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" stroke-width="1.4" stroke-linejoin="round"/><circle cx="9" cy="9" r="2.5" fill="white"/></svg>
+    </div>
+    <div>
+      <div class="sidebar-logo-name">iFu Labs</div>
+      <div class="sidebar-logo-sub">API Reference</div>
+    </div>
+  </a>
+
+  <div style="padding:8px 0">
+    <div class="sidebar-section">Overview</div>
+    <a href="#overview"       class="sidebar-link active">Introduction</a>
+    <a href="#authentication" class="sidebar-link">Authentication</a>
+    <a href="#errors"         class="sidebar-link">Errors</a>
+    <a href="#pagination"     class="sidebar-link">Pagination</a>
+
+    <div class="sidebar-section">Endpoints</div>
+    <a href="#auth"           class="sidebar-link">Auth</a>
+    <a href="#controls"       class="sidebar-link">Controls</a>
+    <a href="#integrations"   class="sidebar-link">Integrations</a>
+    <a href="#scans"          class="sidebar-link">Scans</a>
+    <a href="#evidence"       class="sidebar-link">Evidence</a>
+    <a href="#vendors"        class="sidebar-link">Vendors</a>
+    <a href="#ai"             class="sidebar-link">AI</a>
+    <a href="#finops"         class="sidebar-link">FinOps</a>
+    <a href="#organizations"  class="sidebar-link">Organizations</a>
+
+    <div class="sidebar-section">Resources</div>
+    <a href="ifu-labs-api.postman_collection.json" class="sidebar-link" download>↓ Postman Collection</a>
+    <a href="https://ifu-labs.io" class="sidebar-link">← Back to site</a>
+  </div>
+</nav>
+
+<!-- Main -->
+<main class="main">
+<div class="content">
+
+  <!-- Overview -->
+  <div class="page-header" id="overview">
+    <h1>API Reference</h1>
+    <p>The iFu Labs Comply API is a REST API that gives you programmatic access to compliance controls, scan results, evidence, vendors, and cost optimisation data. All responses are JSON.</p>
+  </div>
+
+  <div class="base-url-bar">
+    <span class="base-url-label">Base URL</span>
+    <span class="base-url-val">https://api.ifu-labs.io</span>
+    <span class="base-url-env">Production</span>
+  </div>
+  <div class="base-url-bar">
+    <span class="base-url-label">Base URL</span>
+    <span class="base-url-val">http://localhost:3000</span>
+    <span class="base-url-env">Local development</span>
+  </div>
+
+  <!-- Auth -->
+  <div class="api-section" id="authentication">
+    <div class="section-title">Authentication</div>
+    <p class="section-desc">All API endpoints require a valid Auth0 JWT token in the Authorization header. Tokens are issued by Auth0 after the user completes the login flow.</p>
+
+    <div class="auth-note">🔒 All requests must include: Authorization: Bearer &lt;token&gt;</div>
+
+    <div class="code-label">Example request</div>
+    <pre><code>curl https://api.ifu-labs.io/api/v1/auth/me \
+  -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVC..."</code></pre>
+
+    <div class="info-box">
+      Tokens expire after 24 hours. Your frontend Auth0 SDK will handle token refresh automatically. For server-to-server calls, use the Auth0 Management API to generate a machine-to-machine token.
+    </div>
+
+    <p style="font-size:14px;color:var(--muted);margin-bottom:8px">All data is scoped to the authenticated user's organisation. You cannot access another organisation's data regardless of what IDs you provide.</p>
+  </div>
+
+  <!-- Errors -->
+  <div class="api-section" id="errors">
+    <div class="section-title">Errors</div>
+    <p class="section-desc">The API uses standard HTTP status codes. Error responses always include a JSON body with <code>error</code> and <code>message</code> fields.</p>
+
+    <table class="param-table">
+      <thead><tr><th>Status</th><th>Meaning</th><th>Common cause</th></tr></thead>
+      <tbody>
+        <tr><td><span class="param-type">200</span></td><td>OK</td><td>Request succeeded</td></tr>
+        <tr><td><span class="param-type">201</span></td><td>Created</td><td>Resource created successfully</td></tr>
+        <tr><td><span class="param-type">204</span></td><td>No Content</td><td>DELETE succeeded</td></tr>
+        <tr><td><span class="param-type">400</span></td><td>Bad Request</td><td>Validation error or missing required field</td></tr>
+        <tr><td><span class="param-type">401</span></td><td>Unauthorized</td><td>Missing or invalid JWT token</td></tr>
+        <tr><td><span class="param-type">403</span></td><td>Forbidden</td><td>Valid token but insufficient role (e.g. member trying admin action)</td></tr>
+        <tr><td><span class="param-type">404</span></td><td>Not Found</td><td>Resource doesn't exist or belongs to another org</td></tr>
+        <tr><td><span class="param-type">409</span></td><td>Conflict</td><td>Resource already exists (e.g. already onboarded)</td></tr>
+        <tr><td><span class="param-type">429</span></td><td>Rate Limited</td><td>100 requests per minute per IP</td></tr>
+        <tr><td><span class="param-type">503</span></td><td>Service Unavailable</td><td>AI or external service temporarily unavailable</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-label">Error response shape</div>
+    <pre><code>{
+  "error": "Not Found",
+  "message": "Integration not found"
+}</code></pre>
+  </div>
+
+  <!-- AUTH ENDPOINTS -->
+  <div class="api-section" id="auth">
+    <div class="section-title">Auth</div>
+    <p class="section-desc">User authentication, first-login onboarding, and profile updates.</p>
+
+    <div class="endpoint open">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/auth/me</span>
+        <span class="endpoint-summary">Get current user</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Returns the authenticated user and their organisation. Call this on every app load to determine if onboarding is complete.</p>
+        <div class="code-label">Response — onboarded user</div>
+        <pre><code>{
+  "authenticated": true,
+  "onboarded": true,
+  "user": {
+    "id": "uuid",
+    "email": "jane@acme.com",
+    "name": "Jane Smith",
+    "role": "owner"
+  },
+  "organization": {
+    "id": "uuid",
+    "name": "Acme Corp",
+    "slug": "acme-corp",
+    "plan": "starter",
+    "trialEndsAt": "2026-04-26T00:00:00.000Z"
+  }
+}</code></pre>
+        <div class="code-label">Response — not yet onboarded</div>
+        <pre><code>{
+  "authenticated": true,
+  "onboarded": false,
+  "auth0Sub": "auth0|abc123",
+  "email": "jane@acme.com"
+}</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">Success</span></div>
+        <div class="response-row"><span class="status-badge status-4xx">401</span><span style="font-size:13px;color:var(--muted)">Missing or invalid token</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-post">POST</span>
+        <span class="endpoint-path">/api/v1/auth/onboard</span>
+        <span class="endpoint-summary">Create org on first login</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Creates the user's organisation on first login. Call when <code>GET /auth/me</code> returns <code>onboarded: false</code>.</p>
+        <table class="param-table">
+          <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">orgName</td><td><span class="param-type">string</span></td><td><span class="param-required">required</span></td><td class="param-desc">Display name for the organisation</td></tr>
+            <tr><td class="param-name">orgDomain</td><td><span class="param-type">string</span></td><td><span class="param-optional">optional</span></td><td class="param-desc">Company domain (e.g. acme.com). Used to auto-verify teammates</td></tr>
+          </tbody>
+        </table>
+        <div class="code-label">Request body</div>
+        <pre><code>{ "orgName": "Acme Corp", "orgDomain": "acme.com" }</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">201</span><span style="font-size:13px;color:var(--muted)">Organisation created</span></div>
+        <div class="response-row"><span class="status-badge status-4xx">409</span><span style="font-size:13px;color:var(--muted)">User already onboarded</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-patch">PATCH</span>
+        <span class="endpoint-path">/api/v1/auth/me</span>
+        <span class="endpoint-summary">Update profile</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Updates the authenticated user's display name or avatar URL.</p>
+        <table class="param-table">
+          <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">name</td><td><span class="param-type">string</span></td><td><span class="param-optional">optional</span></td><td class="param-desc">Display name</td></tr>
+            <tr><td class="param-name">avatarUrl</td><td><span class="param-type">string</span></td><td><span class="param-optional">optional</span></td><td class="param-desc">URL to profile image</td></tr>
+          </tbody>
+        </table>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">Updated user object</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="api-section" id="controls">
+    <div class="section-title">Controls</div>
+    <p class="section-desc">Compliance controls across SOC 2, ISO 27001, GDPR, HIPAA, and PCI-DSS frameworks. Results are populated automatically by scans.</p>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/controls</span>
+        <span class="endpoint-summary">List all controls</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Returns all controls with their latest scan result. Filter by <code>framework</code> or <code>status</code>.</p>
+        <table class="param-table">
+          <thead><tr><th>Query param</th><th>Type</th><th>Values</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">framework</td><td><span class="param-type">string</span></td><td class="param-desc"><code>soc2</code> · <code>iso27001</code> · <code>gdpr</code> · <code>hipaa</code> · <code>pci_dss</code></td></tr>
+            <tr><td class="param-name">status</td><td><span class="param-type">string</span></td><td class="param-desc"><code>pass</code> · <code>fail</code> · <code>review</code> · <code>pending</code></td></tr>
+          </tbody>
+        </table>
+        <div class="code-label">Response item shape</div>
+        <pre><code>{
+  "id": "uuid",
+  "controlId": "CC6.1-MFA",
+  "framework": "soc2",
+  "category": "Logical Access",
+  "title": "MFA enabled for all IAM users",
+  "severity": "critical",
+  "automatable": true,
+  "status": "fail",
+  "lastChecked": "2026-04-12T02:00:00.000Z",
+  "evidence": {
+    "detail": "3 user(s) missing MFA: alice, bob, carol",
+    "resources": [...]
+  }
+}</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">Array of control objects</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/controls/score</span>
+        <span class="endpoint-summary">Compliance score by framework</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Returns the overall compliance score and per-framework breakdown. Used for the dashboard radial chart.</p>
+        <div class="code-label">Response</div>
+        <pre><code>{
+  "overall": 84,
+  "frameworks": {
+    "soc2":     { "total": 20, "pass": 17, "fail": 2, "review": 1, "pending": 0, "score": 85 },
+    "iso27001": { "total": 13, "pass": 10, "fail": 2, "review": 0, "pending": 1, "score": 77 },
+    "gdpr":     { "total": 10, "pass": 9,  "fail": 1, "review": 0, "pending": 0, "score": 90 }
+  },
+  "lastUpdated": "2026-04-12T10:00:00.000Z"
+}</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">Score object</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/controls/:controlId</span>
+        <span class="endpoint-summary">Get control detail</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Returns a single control with full definition, latest result, and the last 30 scan results as history. Example controlIds: <code>CC6.1-MFA</code>, <code>ISO-A.10.1.1-S3</code>, <code>GDPR-ART32-RDS</code></p>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">Control object with history array</span></div>
+        <div class="response-row"><span class="status-badge status-4xx">404</span><span style="font-size:13px;color:var(--muted)">Control not found</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-patch">PATCH</span>
+        <span class="endpoint-path">/api/v1/controls/:controlId/notes</span>
+        <span class="endpoint-summary">Add notes to control</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Adds or replaces manual notes on the latest control result. Use this for exemption documentation or audit context.</p>
+        <div class="code-label">Request body</div>
+        <pre><code>{ "notes": "Exempted — we use SSO only, no IAM console users." }</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">Updated control result</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTEGRATIONS -->
+  <div class="api-section" id="integrations">
+    <div class="section-title">Integrations</div>
+    <p class="section-desc">Connect cloud accounts to enable automated compliance scanning. iFu Labs uses read-only access only — we never write to your infrastructure.</p>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/integrations</span>
+        <span class="endpoint-summary">List integrations</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Returns all integrations for this org. Raw credentials are never returned — only metadata and status.</p>
+        <div class="code-label">Response item shape</div>
+        <pre><code>{
+  "id": "uuid",
+  "type": "aws",
+  "status": "connected",
+  "metadata": { "accountId": "123456789012", "alias": "acme-prod" },
+  "lastSyncAt": "2026-04-12T02:00:00.000Z",
+  "lastError": null
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-post">POST</span>
+        <span class="endpoint-path">/api/v1/integrations/aws</span>
+        <span class="endpoint-summary">Connect AWS account</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Connects an AWS account via cross-account IAM role. iFu Labs validates the role can be assumed before saving.</p>
+        <div class="warn-box">⚠ The IAM role must have the <code>SecurityAudit</code> managed policy attached and a trust policy allowing assumption from the iFu Labs AWS account with the provided external ID.</div>
+        <table class="param-table">
+          <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">roleArn</td><td><span class="param-type">string</span></td><td><span class="param-required">required</span></td><td class="param-desc">ARN of the read-only IAM role. Format: <code>arn:aws:iam::ACCOUNT:role/ROLE_NAME</code></td></tr>
+            <tr><td class="param-name">externalId</td><td><span class="param-type">string</span></td><td><span class="param-required">required</span></td><td class="param-desc">External ID shown to the user during setup. Prevents confused deputy attacks.</td></tr>
+          </tbody>
+        </table>
+        <div class="code-label">Request body</div>
+        <pre><code>{
+  "roleArn": "arn:aws:iam::123456789012:role/iFuLabsComplyRole",
+  "externalId": "ifu-labs-abc123xyz"
+}</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">201</span><span style="font-size:13px;color:var(--muted)">Integration created, initial scan queued</span></div>
+        <div class="response-row"><span class="status-badge status-4xx">400</span><span style="font-size:13px;color:var(--muted)">Role cannot be assumed — check trust policy</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-post">POST</span>
+        <span class="endpoint-path">/api/v1/integrations/github</span>
+        <span class="endpoint-summary">Connect GitHub org</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Connects a GitHub organisation via GitHub App installation. The installation ID is found in the URL after installing the app.</p>
+        <table class="param-table">
+          <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">installationId</td><td><span class="param-type">integer</span></td><td><span class="param-required">required</span></td><td class="param-desc">GitHub App installation ID from <code>github.com/settings/installations/<strong>ID</strong></code></td></tr>
+          </tbody>
+        </table>
+        <div class="code-label">Request body</div>
+        <pre><code>{ "installationId": 12345678 }</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">201</span><span style="font-size:13px;color:var(--muted)">Integration created, initial scan queued</span></div>
+        <div class="response-row"><span class="status-badge status-4xx">400</span><span style="font-size:13px;color:var(--muted)">Installation not found</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-post">POST</span>
+        <span class="endpoint-path">/api/v1/integrations/:id/sync</span>
+        <span class="endpoint-summary">Trigger manual scan</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Queues an immediate compliance scan for the integration. Returns a job ID for tracking.</p>
+        <div class="code-label">Response</div>
+        <pre><code>{ "message": "Scan queued", "jobId": "123" }</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">Scan queued</span></div>
+        <div class="response-row"><span class="status-badge status-4xx">400</span><span style="font-size:13px;color:var(--muted)">Integration not connected</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-delete">DELETE</span>
+        <span class="endpoint-path">/api/v1/integrations/:id</span>
+        <span class="endpoint-summary">Disconnect</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Disconnects an integration and removes stored credentials. Scan history and control results are preserved. Requires admin role.</p>
+        <div class="response-row"><span class="status-badge status-2xx">204</span><span style="font-size:13px;color:var(--muted)">Disconnected</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVIDENCE -->
+  <div class="api-section" id="evidence">
+    <div class="section-title">Evidence</div>
+    <p class="section-desc">Evidence library including automated scan results and manual uploads. Export full audit packs as PDF.</p>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/evidence/export/pdf</span>
+        <span class="endpoint-summary">Export audit PDF</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Generates and streams a compliance evidence pack as PDF. The response is a binary PDF file.</p>
+        <table class="param-table">
+          <thead><tr><th>Query param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">framework</td><td><span class="param-type">string</span></td><td><code>soc2</code></td><td class="param-desc"><code>soc2</code> · <code>iso27001</code> · <code>gdpr</code> · <code>hipaa</code> · <code>pci_dss</code></td></tr>
+          </tbody>
+        </table>
+        <div class="info-box">The PDF includes: cover page, table of contents, executive summary, per-category control sections with evidence, remediation guidance for failures, and scan history.</div>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">PDF binary — Content-Type: application/pdf</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/evidence</span>
+        <span class="endpoint-summary">List evidence</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Returns all evidence split into <code>automated</code> (from scans) and <code>manual</code> (uploaded) arrays.</p>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)"><code>{automated: [], manual: [], total: N}</code></span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-post">POST</span>
+        <span class="endpoint-path">/api/v1/evidence</span>
+        <span class="endpoint-summary">Add manual evidence</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Adds a manual evidence item — e.g. a policy document, vendor contract, or training record.</p>
+        <div class="code-label">Request body</div>
+        <pre><code>{
+  "title": "Information Security Policy v2.1",
+  "description": "Approved by board on 2026-01-15",
+  "controlResultId": null,
+  "data": { "documentUrl": "https://...", "approvedDate": "2026-01-15" }
+}</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">201</span><span style="font-size:13px;color:var(--muted)">Evidence item created</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div class="api-section" id="ai">
+    <div class="section-title">AI</div>
+    <p class="section-desc">AI-powered compliance analysis using Claude via Amazon Bedrock. Explains failing controls in plain English with actionable fix steps.</p>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-post">POST</span>
+        <span class="endpoint-path">/api/v1/ai/explain/:controlId</span>
+        <span class="endpoint-summary">Explain failing control</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Generates a structured AI explanation for a failing control. Results cached for 24 hours per org per control.</p>
+        <div class="code-label">Response</div>
+        <pre><code>{
+  "controlId": "CC6.6-S3-PUBLIC",
+  "summary": "3 S3 buckets allow public read access...",
+  "businessImpact": "Any person on the internet can read the contents...",
+  "steps": [
+    {
+      "order": 1,
+      "title": "Enable S3 Block Public Access",
+      "detail": "aws s3api put-public-access-block --bucket BUCKET_NAME --public-access-block-configuration BlockPublicAcls=true,...",
+      "effort": "5 mins"
+    }
+  ],
+  "priority": "immediate",
+  "estimatedEffort": "15 mins",
+  "automationTip": "resource \"aws_s3_bucket_public_access_block\" ...",
+  "cached": false,
+  "generatedAt": "2026-04-12T10:00:00.000Z"
+}</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">Explanation object</span></div>
+        <div class="response-row"><span class="status-badge status-4xx">400</span><span style="font-size:13px;color:var(--muted)">Control is not failing</span></div>
+        <div class="response-row"><span class="status-badge status-5xx">503</span><span style="font-size:13px;color:var(--muted)">Bedrock unavailable — fallback guidance returned</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/ai/explain/:controlId/stream</span>
+        <span class="endpoint-summary">Stream explanation (SSE)</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Same as POST /ai/explain but streams token-by-token via Server-Sent Events. Use for real-time UI rendering.</p>
+        <div class="code-label">Event stream format</div>
+        <pre><code>data: {"text": "3 S3 buckets "}
+data: {"text": "allow public read "}
+data: {"text": "access..."}
+data: [DONE]</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">text/event-stream</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/ai/summary</span>
+        <span class="endpoint-summary">Compliance summary card</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">High-level AI summary for the dashboard insight card. Cached for 6 hours.</p>
+        <div class="code-label">Response</div>
+        <pre><code>{
+  "headline": "2 critical controls need immediate attention",
+  "riskLevel": "high",
+  "topPriority": "Fix public S3 bucket before your next audit...",
+  "insight": "Your CloudTrail is active but not integrated with CloudWatch...",
+  "quickWins": ["Enable MFA delete on S3", "Rotate access keys for alice"],
+  "cached": true
+}</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINOPS -->
+  <div class="api-section" id="finops">
+    <div class="section-title">FinOps</div>
+    <p class="section-desc">AWS cost optimisation — detects waste, rightsizing opportunities, and coverage gaps in Reserved Instances and Savings Plans.</p>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/finops</span>
+        <span class="endpoint-summary">Get FinOps findings</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Returns full cost analysis findings. Results cached for 6 hours. Add <code>?refresh=true</code> to force a fresh scan.</p>
+        <div class="code-label">Response</div>
+        <pre><code>{
+  "monthlyCost": 1842.50,
+  "forecastedCost": 2100.00,
+  "totalMonthlySavings": 340.00,
+  "waste": [
+    {
+      "type": "unattached_ebs",
+      "resourceId": "vol-0abc123",
+      "resourceType": "EBS Volume",
+      "description": "Unattached gp2 volume (100 GB) — not attached to any instance",
+      "estimatedMonthlySavings": 10.00,
+      "recommendation": "aws ec2 delete-volume --volume-id vol-0abc123",
+      "severity": "medium"
+    }
+  ],
+  "rightsizing": [...],
+  "reservations": [...],
+  "savingsPlans": [...],
+  "topServices": [...],
+  "summary": {
+    "wasteItems": 5,
+    "rightsizingItems": 3,
+    "totalMonthlySavings": 340.00,
+    "totalAnnualSavings": 4080.00,
+    "coverageGaps": 2,
+    "checkedAt": "2026-04-12T10:00:00.000Z"
+  }
+}</code></pre>
+        <div class="response-row"><span class="status-badge status-2xx">200</span><span style="font-size:13px;color:var(--muted)">Full findings object</span></div>
+        <div class="response-row"><span class="status-badge status-4xx">400</span><span style="font-size:13px;color:var(--muted)">No AWS integration connected</span></div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/finops/stream</span>
+        <span class="endpoint-summary">Stream scan progress (SSE)</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Runs a FinOps scan and streams progress via Server-Sent Events. Findings are cached automatically on completion.</p>
+        <div class="code-label">Event types</div>
+        <pre><code>data: {"type":"status",   "message":"Connected to AWS", "progress":5}
+data: {"type":"progress", "message":"Detecting waste...", "progress":45}
+data: {"type":"complete", "findings":{...}}
+data: {"type":"error",    "message":"Cost Explorer access denied"}</code></pre>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge badge-get">GET</span>
+        <span class="endpoint-path">/api/v1/finops/summary</span>
+        <span class="endpoint-summary">Dashboard summary card</span>
+        <span class="endpoint-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <p class="endpoint-desc">Lightweight summary for the dashboard. Returns <code>available: false</code> if no scan has been run.</p>
+        <div class="code-label">Response</div>
+        <pre><code>{
+  "available": true,
+  "monthlyCost": 1842.50,
+  "totalMonthlySavings": 340.00,
+  "totalAnnualSavings": 4080.00,
+  "wasteItems": 5,
+  "rightsizingItems": 3,
+  "coverageGaps": 2,
+  "checkedAt": "2026-04-12T10:00:00.000Z"
+}</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENDORS quick -->
+  <div class="api-section" id="vendors">
+    <div class="section-title">Vendors</div>
+    <p class="section-desc">Third-party vendor risk tracking. Tracks SOC 2 and ISO 27001 cert expiry with 60-day alerts.</p>
+    <div class="info-box">All 5 vendor endpoints (GET list, GET by ID, POST, PATCH, DELETE) follow standard REST conventions. See the Postman collection for full request/response examples.</div>
+    <div class="code-label">Cert status values</div>
+    <pre><code>"soc2Status": "valid"      // cert expires > 60 days away
+"soc2Status": "expiring"   // cert expires within 60 days
+"soc2Status": "expired"    // cert has expired
+"soc2Status": "none"       // no cert date recorded</code></pre>
+  </div>
+
+  <!-- ORGANIZATIONS quick -->
+  <div class="api-section" id="organizations">
+    <div class="section-title">Organizations</div>
+    <p class="section-desc">Organisation settings and team member management. Role hierarchy: owner > admin > member.</p>
+    <table class="param-table">
+      <thead><tr><th>Role</th><th>Can do</th></tr></thead>
+      <tbody>
+        <tr><td class="param-name">owner</td><td class="param-desc">Everything — including changing member roles and billing</td></tr>
+        <tr><td class="param-name">admin</td><td class="param-desc">Connect/disconnect integrations, manage vendors and evidence</td></tr>
+        <tr><td class="param-name">member</td><td class="param-desc">Read everything, add notes, export PDFs</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</main>
+
+<script>
+function toggle(header) {
+  const card = header.parentElement
+  card.classList.toggle('open')
+}
+
+// Highlight active sidebar link on scroll
+const sections = document.querySelectorAll('[id]')
+const links = document.querySelectorAll('.sidebar-link')
+window.addEventListener('scroll', () => {
+  let current = ''
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 80) current = s.id })
+  links.forEach(l => {
+    l.classList.remove('active')
+    if (l.getAttribute('href') === '#' + current) l.classList.add('active')
+  })
+}, { passive: true })
+</script>
+</body>
+</html>

@@ -1,0 +1,542 @@
+{
+  "info": {
+    "name": "iFu Labs — Comply API",
+    "description": "Complete API collection for the iFu Labs Comply platform.\n\n## Setup\n1. Set the `baseUrl` variable to your API URL (e.g. `http://localhost:3000` for local, `https://api.ifu-labs.io` for production)\n2. Set the `token` variable to a valid Auth0 JWT token\n3. All requests requiring authentication include a Bearer token header automatically\n\n## Authentication\nAll endpoints except `/health` require a valid Auth0 JWT in the Authorization header:\n```\nAuthorization: Bearer {{token}}\n```\n\n## Multi-tenancy\nAll data is automatically scoped to the authenticated user's organisation. You cannot access another org's data.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "token",   "value": "YOUR_AUTH0_JWT_TOKEN",  "type": "string" },
+    { "key": "orgId",   "value": "",                      "type": "string" },
+    { "key": "controlId",     "value": "CC6.1-MFA",       "type": "string" },
+    { "key": "integrationId", "value": "",                "type": "string" },
+    { "key": "scanId",        "value": "",                "type": "string" },
+    { "key": "evidenceId",    "value": "",                "type": "string" },
+    { "key": "vendorId",      "value": "",                "type": "string" },
+    { "key": "userId",        "value": "",                "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health",
+            "description": "Returns API status, timestamp, and version. No authentication required."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Auth",
+      "description": "User authentication, onboarding, and profile management.",
+      "item": [
+        {
+          "name": "Get current user",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "description": "Returns the authenticated user and their organisation. If `onboarded: false`, redirect to onboarding. Called on every app load."
+          }
+        },
+        {
+          "name": "Onboard — create org",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/onboard",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orgName\": \"Acme Corp\",\n  \"orgDomain\": \"acme.com\"\n}"
+            },
+            "description": "Creates the user's organisation on first login. Call this when `GET /auth/me` returns `onboarded: false`.\n\n**orgDomain** is optional — used to auto-verify teammates who sign up with the same email domain."
+          }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"avatarUrl\": \"https://example.com/avatar.png\"\n}"
+            },
+            "description": "Updates the authenticated user's display name or avatar URL."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Controls",
+      "description": "Compliance controls across all frameworks. Controls are checked automatically by scans and stored per-organisation.",
+      "item": [
+        {
+          "name": "List controls",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/controls",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "controls"],
+              "query": [
+                { "key": "framework", "value": "soc2",  "description": "Filter by framework: soc2 | iso27001 | gdpr | hipaa | pci_dss", "disabled": true },
+                { "key": "status",    "value": "fail",  "description": "Filter by status: pass | fail | review | pending",              "disabled": true }
+              ]
+            },
+            "description": "Returns all controls with their latest scan result for this org. Use `framework` and `status` query params to filter.\n\n**Frameworks:** soc2, iso27001, gdpr, hipaa, pci_dss\n**Statuses:** pass, fail, review, pending, not_applicable"
+          }
+        },
+        {
+          "name": "Get compliance score",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/controls/score",
+            "description": "Returns the compliance score broken down by framework. Used for the dashboard overview chart.\n\nReturns `overall` score (0–100) plus per-framework breakdown with pass/fail/review/pending counts."
+          }
+        },
+        {
+          "name": "Get control detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/controls/{{controlId}}",
+            "description": "Returns a single control with its full definition, latest result, evidence detail, and last 30 scan results (history).\n\n**Example controlIds:** CC6.1-MFA, CC7.2-CLOUDTRAIL, ISO-A.10.1.1-S3, GDPR-ART32-RDS"
+          }
+        },
+        {
+          "name": "Update control notes",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/controls/{{controlId}}/notes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Exempted — this control does not apply because we use SSO exclusively. No IAM console users exist.\"\n}"
+            },
+            "description": "Adds or updates manual notes on a control result. Used to document exemptions, remediation context, or audit notes."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Integrations",
+      "description": "Connect cloud accounts to enable automated compliance scanning. Currently supports AWS and GitHub.",
+      "item": [
+        {
+          "name": "List integrations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/integrations",
+            "description": "Returns all integrations for this org. Credentials are never returned — only metadata and status."
+          }
+        },
+        {
+          "name": "Connect AWS",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/integrations/aws",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleArn\": \"arn:aws:iam::123456789012:role/iFuLabsComplyRole\",\n  \"externalId\": \"ifu-labs-abc123xyz\"\n}"
+            },
+            "description": "Connects an AWS account via a cross-account IAM role.\n\n**Setup steps:**\n1. Customer creates an IAM role in their AWS account\n2. Trust policy allows iFu Labs AWS account to assume it\n3. External ID prevents confused deputy attacks\n4. Attach the `SecurityAudit` managed policy\n5. Submit the Role ARN here\n\nAn initial scan is queued automatically on successful connection."
+          }
+        },
+        {
+          "name": "Connect GitHub",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/integrations/github",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"installationId\": 12345678\n}"
+            },
+            "description": "Connects a GitHub organisation via GitHub App installation.\n\n**Setup steps:**\n1. Install the iFu Labs Comply GitHub App in your GitHub org\n2. After installation, the URL shows: github.com/settings/installations/**12345678**\n3. Submit that installation ID here\n\nAn initial scan is queued automatically."
+          }
+        },
+        {
+          "name": "GitHub webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",        "value": "application/json" },
+              { "key": "X-Hub-Signature-256", "value": "sha256=YOUR_SIGNATURE" },
+              { "key": "X-GitHub-Event",      "value": "push" }
+            ],
+            "url": "{{baseUrl}}/api/v1/integrations/github/webhook",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"installation\": { \"id\": 12345678 }, \"action\": \"created\" }"
+            },
+            "description": "Receives GitHub App webhook events. Configure this URL in your GitHub App settings.\n\nHandled events: installation, push, repository, member\n\n**Note:** Signature verification is required. The webhook secret must match `GITHUB_WEBHOOK_SECRET` in your environment."
+          }
+        },
+        {
+          "name": "Disconnect integration",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/integrations/{{integrationId}}",
+            "description": "Disconnects an integration. Scan history and control results are preserved. Requires admin role."
+          }
+        },
+        {
+          "name": "Trigger manual scan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/integrations/{{integrationId}}/sync",
+            "description": "Queues an immediate compliance scan for the specified integration. Returns a job ID you can use to track progress via GET /scans."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Scans",
+      "description": "Scan history and live job status.",
+      "item": [
+        {
+          "name": "List scans",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/scans",
+            "description": "Returns the 20 most recent scans for this org, ordered by creation time descending."
+          }
+        },
+        {
+          "name": "Get scan detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/scans/{{scanId}}",
+            "description": "Returns a single scan with full results. If the scan is still running, also returns live progress from the BullMQ job."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Evidence",
+      "description": "Evidence library — automated and manual evidence items. Export audit packs as PDF.",
+      "item": [
+        {
+          "name": "List evidence",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/evidence",
+            "description": "Returns all evidence items split into `automated` (from scans) and `manual` (uploaded by team). Includes total count."
+          }
+        },
+        {
+          "name": "Add manual evidence",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/evidence",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Information Security Policy v2.1\",\n  \"description\": \"Approved by board on 2026-01-15. Covers scope, roles, and acceptable use.\",\n  \"controlResultId\": null,\n  \"data\": { \"documentUrl\": \"https://drive.google.com/...\", \"approvedBy\": \"CEO\", \"approvedDate\": \"2026-01-15\" }\n}"
+            },
+            "description": "Adds a manual evidence item — e.g. a policy document, vendor contract, or training record. Optionally link to a specific control result."
+          }
+        },
+        {
+          "name": "Delete evidence item",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/evidence/{{evidenceId}}",
+            "description": "Removes a manual evidence item. Requires admin role. Automated evidence from scans cannot be deleted."
+          }
+        },
+        {
+          "name": "Export evidence PDF",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/evidence/export/pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "evidence", "export", "pdf"],
+              "query": [
+                { "key": "framework", "value": "soc2", "description": "Framework to export: soc2 | iso27001 | gdpr | hipaa | pci_dss" }
+              ]
+            },
+            "description": "Generates and downloads a full compliance evidence pack as PDF.\n\nThe PDF includes:\n- Cover page with org name, score, and date\n- Table of contents\n- Executive summary with pass/fail breakdown\n- Per-category control sections with evidence detail\n- Remediation guidance for failing controls\n- Scan history\n\nResponse is a PDF binary with Content-Disposition: attachment."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Vendors",
+      "description": "Third-party vendor risk tracking. Track SOC 2 and ISO 27001 cert expiry dates.",
+      "item": [
+        {
+          "name": "List vendors",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vendors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vendors"],
+              "query": [
+                { "key": "riskLevel",     "value": "high", "description": "Filter by risk: critical | high | medium | low", "disabled": true },
+                { "key": "expiringSoon",  "value": "true", "description": "Show only vendors with certs expiring within 60 days", "disabled": true }
+              ]
+            },
+            "description": "Returns all vendors with cert status annotations (`valid`, `expiring`, `expired`, `none`) and a summary stats object."
+          }
+        },
+        {
+          "name": "Get vendor",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/vendors/{{vendorId}}",
+            "description": "Returns a single vendor with cert status annotations."
+          }
+        },
+        {
+          "name": "Add vendor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/vendors",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"AWS\",\n  \"website\": \"https://aws.amazon.com\",\n  \"category\": \"Infrastructure\",\n  \"riskLevel\": \"critical\",\n  \"soc2ExpiresAt\": \"2026-09-30\",\n  \"iso27001ExpiresAt\": \"2026-12-31\",\n  \"notes\": \"Primary cloud provider. BAA in place via AWS Artifact.\"\n}"
+            },
+            "description": "Adds a vendor to the risk tracker.\n\n**riskLevel:** critical | high | medium | low\n**soc2ExpiresAt / iso27001ExpiresAt:** YYYY-MM-DD format. Alerts fire 60 days before expiry."
+          }
+        },
+        {
+          "name": "Update vendor",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/vendors/{{vendorId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"soc2ExpiresAt\": \"2027-03-31\",\n  \"notes\": \"Cert renewed March 2026.\"\n}"
+            },
+            "description": "Updates any fields on a vendor. All fields are optional — only include what you want to change."
+          }
+        },
+        {
+          "name": "Delete vendor",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/vendors/{{vendorId}}",
+            "description": "Permanently removes a vendor. Requires admin role."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "AI",
+      "description": "AI-powered compliance analysis using Claude via Amazon Bedrock.",
+      "item": [
+        {
+          "name": "Explain failing control",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/ai/explain/{{controlId}}",
+            "description": "Generates a plain-English explanation for a failing control including:\n- Summary of what's wrong\n- Business impact if left unfixed\n- Step-by-step fix with CLI commands\n- Estimated effort\n- Automation tip (Terraform/CDK snippet)\n\nResponses are cached in Redis for 24 hours. Returns `cached: true` if served from cache."
+          }
+        },
+        {
+          "name": "Stream control explanation (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/ai/explain/{{controlId}}/stream",
+            "description": "Same as POST /ai/explain/:controlId but streams the response in real time via Server-Sent Events.\n\nEach event is: `data: {\"text\": \"chunk\"}\\n\\n`\nFinal event is: `data: [DONE]\\n\\n`\n\nUse this for the UI to show the explanation being typed out."
+          }
+        },
+        {
+          "name": "Get compliance summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ai/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ai", "summary"],
+              "query": [
+                { "key": "framework", "value": "soc2", "description": "Framework to summarise: soc2 | iso27001 | gdpr" }
+              ]
+            },
+            "description": "Returns a high-level AI-generated compliance summary for the dashboard insight card.\n\nIncludes: headline, risk level, top priority, non-obvious insight, and 2–3 quick wins.\n\nCached for 6 hours."
+          }
+        },
+        {
+          "name": "Bust AI cache",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/ai/cache/{{controlId}}",
+            "description": "Force-invalidates the cached AI explanation for a specific control. Call this after remediating a control so the next explanation reflects the new state."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "FinOps",
+      "description": "AWS cost optimisation — waste detection, rightsizing, Reserved Instance and Savings Plan coverage.",
+      "item": [
+        {
+          "name": "Get FinOps findings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/finops",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "finops"],
+              "query": [
+                { "key": "refresh", "value": "true", "description": "Set to true to force a fresh scan, bypassing the 6-hour cache", "disabled": true }
+              ]
+            },
+            "description": "Returns full FinOps findings including:\n- Monthly spend and cost forecast\n- Waste items (idle EBS, unused EIPs, idle NAT Gateways, idle RDS)\n- Rightsizing recommendations from Cost Explorer\n- Reserved Instance coverage gaps\n- Savings Plan coverage gaps\n- Summary with total monthly savings found\n\nResults cached for 6 hours. Requires a connected AWS integration."
+          }
+        },
+        {
+          "name": "Stream FinOps scan (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/finops/stream",
+            "description": "Runs a FinOps scan and streams progress updates in real time via Server-Sent Events.\n\nEvent types:\n- `{type: 'status', message, progress}` — connection status\n- `{type: 'progress', message, progress}` — scan progress (0–100)\n- `{type: 'complete', findings}` — full findings object\n- `{type: 'error', message}` — scan failed\n\nResults are cached automatically on completion."
+          }
+        },
+        {
+          "name": "Get FinOps summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/finops/summary",
+            "description": "Lightweight summary for the dashboard card. Returns `available: false` if no FinOps scan has been run yet.\n\nWhen available, returns: monthlyCost, totalMonthlySavings, totalAnnualSavings, wasteItems, rightsizingItems, coverageGaps, checkedAt."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Organizations",
+      "description": "Organisation settings and team member management.",
+      "item": [
+        {
+          "name": "Get current org",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/organizations/current",
+            "description": "Returns the authenticated user's organisation details including name, slug, plan, and trial expiry."
+          }
+        },
+        {
+          "name": "Update org",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/organizations/current",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp Ltd\",\n  \"domain\": \"acmecorp.com\"\n}"
+            },
+            "description": "Updates org name or domain. Requires admin role."
+          }
+        },
+        {
+          "name": "List members",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/organizations/members",
+            "description": "Returns all team members in this org. Auth0 IDs are never returned."
+          }
+        },
+        {
+          "name": "Change member role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/organizations/members/{{userId}}/role",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}"
+            },
+            "description": "Changes a member's role. Requires owner role.\n\n**Roles:** admin | member (owners cannot be changed via API)"
+          }
+        },
+        {
+          "name": "Remove member",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/organizations/members/{{userId}}",
+            "description": "Removes a member from the organisation. Requires owner role. Cannot remove yourself."
+          }
+        }
+      ]
+    }
+
+  ]
+}
