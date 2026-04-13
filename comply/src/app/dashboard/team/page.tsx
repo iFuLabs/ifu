@@ -2,18 +2,19 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { Users, UserPlus, Mail, Shield, MoreVertical, X, Trash2, Copy, Check } from 'lucide-react'
-import { api } from '@/lib/api'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 export default function TeamPage() {
-  const { data: members, mutate: mutateMembers } = useSWR('/api/v1/team/members', () => 
-    fetch('http://localhost:3000/api/v1/team/members', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+  const { data: members, mutate: mutateMembers } = useSWR('/api/v1/team/members', () =>
+    fetch(`${API_URL}/api/v1/team/members`, {
+      credentials: 'include'
     }).then(r => r.json())
   )
-  
+
   const { data: invitations, mutate: mutateInvitations } = useSWR('/api/v1/team/invitations', () =>
-    fetch('http://localhost:3000/api/v1/team/invitations', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+    fetch(`${API_URL}/api/v1/team/invitations`, {
+      credentials: 'include'
     }).then(r => r.json())
   )
 
@@ -35,14 +36,12 @@ export default function TeamPage() {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:3000/api/v1/team/invite', {
+      const response = await fetch(`${API_URL}/api/v1/team/invite`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({ 
-          email: inviteEmail, 
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: inviteEmail,
           role: inviteRole,
           product: 'comply'
         })
@@ -74,9 +73,9 @@ export default function TeamPage() {
     if (!confirm('Are you sure you want to remove this team member?')) return
 
     try {
-      await fetch(`http://localhost:3000/api/v1/team/members/${memberId}`, {
+      await fetch(`${API_URL}/api/v1/team/members/${memberId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+        credentials: 'include'
       })
       mutateMembers()
     } catch (err) {
@@ -86,9 +85,9 @@ export default function TeamPage() {
 
   const handleCancelInvite = async (inviteId: string) => {
     try {
-      await fetch(`http://localhost:3000/api/v1/team/invitations/${inviteId}`, {
+      await fetch(`${API_URL}/api/v1/team/invitations/${inviteId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+        credentials: 'include'
       })
       mutateInvitations()
     } catch (err) {
@@ -103,7 +102,7 @@ export default function TeamPage() {
           <h1 className="font-serif text-2xl font-normal text-ink">Team</h1>
           <p className="text-sm text-muted mt-0.5">Manage team members and their access</p>
         </div>
-        <button 
+        <button
           onClick={() => setShowInviteModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent-mid transition-all"
         >
@@ -117,7 +116,7 @@ export default function TeamPage() {
         <div className="px-5 py-4 border-b border-border">
           <h2 className="text-sm font-medium text-ink">Team members ({members?.length || 0})</h2>
         </div>
-        
+
         <div className="divide-y divide-border">
           {members?.map((member: any) => (
             <div key={member.id} className="flex items-center gap-4 px-5 py-4">
@@ -156,7 +155,7 @@ export default function TeamPage() {
           <div className="px-5 py-4 border-b border-border">
             <h2 className="text-sm font-medium text-ink">Pending invitations ({invitations.length})</h2>
           </div>
-          
+
           <div className="divide-y divide-border">
             {invitations.map((invite: any) => (
               <div key={invite.id} className="flex items-center gap-4 px-5 py-4">
@@ -252,7 +251,7 @@ export default function TeamPage() {
                   </div>
                   <p className="text-sm text-ink mb-2">Invitation sent!</p>
                   <p className="text-xs text-muted mb-4">Share this link with {inviteEmail}</p>
-                  
+
                   <div className="flex items-center gap-2 p-3 bg-bg border border-border rounded-lg mb-4">
                     <code className="flex-1 text-xs text-muted truncate">{inviteUrl}</code>
                     <button

@@ -86,10 +86,7 @@ export default function OnboardingPage() {
         orgDomain: orgDomain.trim() || undefined 
       })
       
-      // Store the JWT token
-      localStorage.setItem('auth_token', response.token)
-      localStorage.setItem('user_email', response.user.email)
-      
+      // Cookie is set by the backend via Set-Cookie header.
       setStep(2)
     } catch (err: any) {
       setError(err.message)
@@ -130,10 +127,8 @@ export default function OnboardingPage() {
 
   const handleFinish = () => {
     if (selectedProducts.includes('comply')) {
-      localStorage.setItem('lastProduct', 'comply')
       window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
     } else if (selectedProducts.includes('finops')) {
-      localStorage.setItem('lastProduct', 'finops')
       window.location.href = process.env.NEXT_PUBLIC_FINOPS_URL + '/dashboard'
     } else {
       router.push('/')

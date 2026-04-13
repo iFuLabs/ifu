@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index, uniqueIndex } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
 // ── Enums ──────────────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ export const controlResults = pgTable('control_results', {
   createdAt:      timestamp('created_at').notNull().defaultNow()
 }, (table) => [
   index('idx_control_results_org_id').on(table.orgId),
-  index('idx_control_results_org_control').on(table.orgId, table.controlDefId)
+  uniqueIndex('idx_control_results_org_control').on(table.orgId, table.controlDefId)
 ])
 
 // ── Scans ──────────────────────────────────────────────────────────────────

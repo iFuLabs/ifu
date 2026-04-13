@@ -30,13 +30,8 @@ export default function AuthCallbackPage() {
         const returnTo = result.appState?.returnTo || '/onboarding'
         router.push(returnTo)
       } else {
-        // Existing user - go to their last used product or default
-        const lastProduct = localStorage.getItem('lastProduct')
-        if (lastProduct === 'finops') {
-          window.location.href = process.env.NEXT_PUBLIC_FINOPS_URL + '/dashboard'
-        } else {
-          window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
-        }
+        // Existing user - go to their default product dashboard
+        window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
       }
     } catch (err: any) {
       console.error('Auth callback error:', err)
