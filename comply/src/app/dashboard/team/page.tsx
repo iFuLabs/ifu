@@ -41,7 +41,11 @@ export default function TeamPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify({ email: inviteEmail, role: inviteRole })
+        body: JSON.stringify({ 
+          email: inviteEmail, 
+          role: inviteRole,
+          product: 'comply'
+        })
       })
 
       if (!response.ok) {

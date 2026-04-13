@@ -9,6 +9,7 @@ import { verifyToken } from '../middleware/auth.js'
 import { auditAction } from '../services/audit.js'
 import { slugify } from '../services/utils.js'
 import { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } from '../services/config.js'
+import { sendWelcomeEmail } from '../services/email.js'
 
 const onboardSchema = z.object({
   name: z.string().optional(),
@@ -151,6 +152,18 @@ export default async function authRoutes(fastify) {
       action: 'auth.onboarded',
       metadata: { orgName: body.orgName, email: userEmail }
     })
+
+    // Send welcome email
+    const emailResult = await sendWelcomeEmail({
+      to: userEmail,
+      name: userName,
+      orgName: result.org.name
+    })
+
+    if (!emailResult.success) {
+      fastify.log.warn({ error: emailResult.error }, 'Failed to send welcome email')
+      // Don't fail the request if email fails
+    }
 
     // Generate JWT token for session
     const token = jwt.sign(

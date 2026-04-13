@@ -49,6 +49,7 @@ export const invitations = pgTable('invitations', {
   invitedBy:      uuid('invited_by').references(() => users.id, { onDelete: 'set null' }),
   token:          text('token').notNull().unique(),         // unique invite token
   status:         invitationStatusEnum('status').notNull().default('pending'),
+  product:        text('product').default('comply'),        // comply | finops
   expiresAt:      timestamp('expires_at').notNull(),
   acceptedAt:     timestamp('accepted_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow()
