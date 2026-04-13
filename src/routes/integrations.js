@@ -9,6 +9,27 @@ import { validateAwsRole } from '../connectors/aws/validate.js'
 
 export default async function integrationRoutes(fastify) {
 
+  // GET /api/v1/integrations/aws/setup-info
+  // Get AWS account ID and external ID for setting up the role
+  fastify.get('/aws/setup-info', {
+    schema: { tags: ['Integrations'] }
+  }, async (request, reply) => {
+    // In production, this would be your actual AWS account ID
+    // For now, using a placeholder
+    return reply.send({
+      accountId: process.env.AWS_ACCOUNT_ID || '123456789012',
+      externalIdPrefix: 'ifu-',
+      instructions: [
+        'Open AWS IAM → Roles → Create role',
+        'Select "Another AWS account"',
+        'Enter the Account ID shown above',
+        'Enter your External ID (generated in the form)',
+        'Attach policy: SecurityAudit',
+        'Copy the Role ARN'
+      ]
+    })
+  })
+
   // GET /api/v1/integrations
   // List all integrations for the org
   fastify.get('/', {

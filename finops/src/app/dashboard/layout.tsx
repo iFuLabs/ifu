@@ -1,20 +1,40 @@
 'use client'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, TrendingDown, Settings, LogOut, Menu
+  LayoutDashboard, TrendingDown, Settings, LogOut, Menu, GitBranch, Users, CreditCard
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
 const NAV = [
   { href: '/dashboard',          label: 'Overview',     icon: LayoutDashboard },
-  { href: '/dashboard/analysis', label: 'Cost Analysis', icon: TrendingDown },
+  { href: '/dashboard/integrations', label: 'Integrations', icon: GitBranch },
+]
+
+const BOTTOM_NAV = [
+  { href: '/dashboard/team',    label: 'Team',    icon: Users },
+  { href: '/dashboard/billing', label: 'Billing', icon: CreditCard },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
+
+  useEffect(() => {
+    // Get user email from localStorage
+    const email = localStorage.getItem('user_email')
+    if (email) setUserEmail(email)
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_email')
+    localStorage.removeItem('lastProduct')
+    window.location.href = process.env.NEXT_PUBLIC_PORTAL_URL + '/login'
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
@@ -60,34 +80,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Bottom nav */}
         <div className="px-3 py-3 border-t border-border space-y-0.5">
-          <Link
-            href="/dashboard/settings"
-            className={clsx(
-              'flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all text-muted hover:text-ink hover:bg-bg',
-              pathname === '/dashboard/settings' && 'bg-brand-light text-brand font-medium'
-            )}
-          >
-            <Settings size={15} />
-            Settings
-          </Link>
+          {BOTTOM_NAV.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={clsx(
+                'flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all text-muted hover:text-ink hover:bg-bg',
+                pathname === href && 'bg-brand-light text-brand font-medium'
+              )}
+            >
+              <Icon size={15} />
+              {label}
+            </Link>
+          ))}
 
           <div className="flex items-center gap-2.5 px-3 py-2 mt-1">
             <div className="w-6 h-6 rounded-full bg-brand flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-              U
+              {userEmail?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-ink truncate">User</div>
-              <div className="text-[10px] text-muted truncate">user@example.com</div>
+              <div className="text-xs font-medium text-ink truncate">{userEmail?.split('@')[0] || 'User'}</div>
+              <div className="text-[10px] text-muted truncate">{userEmail || 'user@example.com'}</div>
             </div>
           </div>
 
-          <a
-            href="http://localhost:3003"
-            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-muted hover:text-ink transition-all"
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-muted hover:text-danger transition-all w-full text-left"
           >
             <LogOut size={15} />
-            Back to portal
-          </a>
+            Sign out
+          </button>
         </div>
       </aside>
 

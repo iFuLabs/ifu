@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
+import cookie from '@fastify/cookie'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import 'dotenv/config'
@@ -21,6 +22,7 @@ import billingRoutes from './routes/billing.js'
 import scanRoutes from './routes/scans.js'
 import aiRoutes from './routes/ai.js'
 import finopsRoutes from './routes/finops.js'
+import teamRoutes from './routes/team.js'
 
 const app = Fastify({
   logger: {
@@ -31,6 +33,7 @@ const app = Fastify({
 })
 
 // ── Plugins ────────────────────────────────────────────────────────────────
+await app.register(cookie)
 await app.register(helmet, { contentSecurityPolicy: false })
 await app.register(cors, {
   origin: process.env.NODE_ENV === 'production'
@@ -71,7 +74,8 @@ await app.register(vendorRoutes,       { prefix: '/api/v1/vendors' })
 await app.register(billingRoutes,      { prefix: '/api/v1/billing' })
 await app.register(scanRoutes,         { prefix: '/api/v1/scans' })
 await app.register(aiRoutes,           { prefix: '/api/v1/ai' })
-await app.register(finopsRoutes,        { prefix: '/api/v1/finops' })
+await app.register(finopsRoutes,       { prefix: '/api/v1/finops' })
+await app.register(teamRoutes,         { prefix: '/api/v1/team' })
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', async () => ({

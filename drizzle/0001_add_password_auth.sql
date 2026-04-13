@@ -1,0 +1,3 @@
+-- Add password authentication support
+ALTER TABLE "users" ALTER COLUMN "auth0_id" DROP NOT NULL;
+ALTER TABLE "users" ADD COLUMN "password_hash" text;

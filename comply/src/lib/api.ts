@@ -1,14 +1,17 @@
+import { getAccessToken } from './auth'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  // Get Auth0 token from cookie-based session
+  const token = await getAccessToken()
+  
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options?.headers,
     },
-    credentials: 'include',
   })
 
   if (!res.ok) {

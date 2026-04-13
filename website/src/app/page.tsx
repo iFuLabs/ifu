@@ -248,9 +248,9 @@ export default function HomePage() {
 
         <div className="pricing-grid" id="pricing-products" style={{ display: 'none' }}>
           {[
-            { tier: 'Comply · Starter', name: 'Compliance Tool', price: '$299', period: 'per month, billed annually', desc: 'SOC 2 automation for early-stage teams.', features: ['SOC 2 control monitoring', 'AWS & GitHub connectors', 'Evidence PDF export', 'Vendor risk tracker', 'Up to 3 team members'], cta: 'Start free trial', href: 'http://localhost:3003' },
-            { tier: 'Comply · Growth', name: 'Multi-framework', price: '$799', period: 'per month, billed annually', desc: 'SOC 2, ISO 27001, GDPR, and HIPAA — plus AI gap explanations.', features: ['Everything in Starter', 'ISO 27001, GDPR, HIPAA', 'AI gap explanations', 'Regulatory change alerts', 'Unlimited team members'], cta: 'Start free trial', href: 'http://localhost:3003', featured: true },
-            { tier: 'FinOps Tool', name: 'Cost Optimisation', price: '$199', period: 'per month, billed annually', desc: 'Live AWS cost dashboard with waste detection and anomaly alerts.', features: ['Idle resource detection', 'RI & Savings Plan analysis', 'Weekly anomaly alerts', 'Monthly spend report', 'Unlimited AWS accounts'], cta: 'Start free trial', href: 'http://localhost:3003' },
+            { tier: 'Comply · Starter', name: 'Compliance Tool', price: '$299', period: 'per month, billed annually', desc: 'SOC 2 automation for early-stage teams.', features: ['SOC 2 control monitoring', 'AWS & GitHub connectors', 'Evidence PDF export', 'Vendor risk tracker', 'Up to 3 team members'], cta: 'Start free trial', product: 'comply', plan: 'starter' },
+            { tier: 'Comply · Growth', name: 'Multi-framework', price: '$799', period: 'per month, billed annually', desc: 'SOC 2, ISO 27001, GDPR, and HIPAA — plus AI gap explanations.', features: ['Everything in Starter', 'ISO 27001, GDPR, HIPAA', 'AI gap explanations', 'Regulatory change alerts', 'Unlimited team members'], cta: 'Start free trial', featured: true, product: 'comply', plan: 'growth' },
+            { tier: 'FinOps Tool', name: 'Cost Optimisation', price: '$199', period: 'per month, billed annually', desc: 'Live AWS cost dashboard with waste detection and anomaly alerts.', features: ['Idle resource detection', 'RI & Savings Plan analysis', 'Weekly anomaly alerts', 'Monthly spend report', 'Unlimited AWS accounts'], cta: 'Start free trial', product: 'finops', plan: 'starter' },
           ].map(p => (
             <div key={p.tier} className={`pricing-card${p.featured ? ' featured' : ''}`}>
               <div className="pricing-tier">{p.tier}</div>
@@ -261,7 +261,13 @@ export default function HomePage() {
               <ul className="pricing-features-list">
                 {p.features.map(f => <li key={f} className="pricing-feature">{f}</li>)}
               </ul>
-              <a href={p.href} className="pricing-cta">{p.cta}</a>
+              <button 
+                onClick={() => window.location.href = `http://localhost:3003/onboarding?product=${p.product}&plan=${p.plan}`}
+                className="pricing-cta"
+                style={{ cursor: 'pointer', border: 'none', width: '100%' }}
+              >
+                {p.cta}
+              </button>
             </div>
           ))}
         </div>
@@ -289,6 +295,71 @@ export default function HomePage() {
 
       <div className="divider" />
 
+      {/* About */}
+      <section className="section reveal" id="about">
+        <div className="section-eyebrow">About iFu Labs</div>
+        <h2 className="section-title">Engineers who've<br/><em>been there.</em></h2>
+        <p className="section-sub">We're not a traditional consultancy. We're AWS engineers who've built, scaled, and secured production systems — and now we help teams do the same.</p>
+
+        <div className="about-grid reveal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginTop: '48px' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '16px' }}>🏗️</div>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)', marginBottom: '12px' }}>Built for scale</h3>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>
+              Our team has architected systems handling millions of requests per day, managed multi-region deployments, and led cloud transformations for companies from seed stage to IPO.
+            </p>
+          </div>
+
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '16px' }}>🔒</div>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)', marginBottom: '12px' }}>Security first</h3>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>
+              We've passed SOC 2 audits, achieved ISO 27001 certification, and built HIPAA-compliant infrastructure. We know what auditors look for because we've been through it.
+            </p>
+          </div>
+
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '16px' }}>💡</div>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)', marginBottom: '12px' }}>No vendor lock-in</h3>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>
+              We deliver infrastructure as code, comprehensive documentation, and knowledge transfer. When we're done, you own everything — no proprietary tools, no dependencies on us.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '64px', padding: '48px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', textAlign: 'center' }}>
+          <h3 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--ink)', marginBottom: '16px' }}>AWS Partner Network Member</h3>
+          <p style={{ fontSize: '15px', color: 'var(--muted)', maxWidth: '600px', margin: '0 auto 24px', lineHeight: '1.6' }}>
+            As an AWS Partner, we help clients access AWS credits, navigate the AWS ecosystem, and leverage partner-exclusive resources. We're also certified in multiple AWS specializations.
+          </p>
+          <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap', fontSize: '13px', color: 'var(--muted)' }}>
+            <div>✓ AWS Solutions Architect</div>
+            <div>✓ AWS DevOps Engineer</div>
+            <div>✓ AWS Security Specialty</div>
+            <div>✓ Kubernetes Certified</div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '48px', textAlign: 'center' }}>
+          <h3 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ink)', marginBottom: '16px' }}>Our principles</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', marginTop: '32px', maxWidth: '900px', margin: '32px auto 0' }}>
+            {[
+              { title: 'Read-only by default', desc: 'We never need write access to your production systems' },
+              { title: 'Document everything', desc: 'Every decision, every architecture choice, fully documented' },
+              { title: 'No surprises', desc: 'Fixed scopes, transparent pricing, honest timelines' },
+              { title: 'Leave you self-sufficient', desc: 'Our goal is to make ourselves unnecessary' }
+            ].map(p => (
+              <div key={p.title} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--ink)', marginBottom: '8px' }}>{p.title}</div>
+                <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.5' }}>{p.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="divider" />
+
       {/* CTA / Contact */}
       <div className="reveal" id="contact">
         <div className="cta-section">
@@ -297,10 +368,10 @@ export default function HomePage() {
             <p>Book a free 30-minute discovery call. No commitment, no sales pitch — just honest advice from engineers who&apos;ve seen it all.</p>
           </div>
           <div className="cta-form">
-            <input className="cta-field" type="text" placeholder="Your name" />
-            <input className="cta-field" type="email" placeholder="Work email" />
-            <input className="cta-field" type="text" placeholder="Company name" />
-            <select className="cta-select">
+            <input className="cta-field" type="text" placeholder="Your name" id="contact-name" />
+            <input className="cta-field" type="email" placeholder="Work email" id="contact-email" />
+            <input className="cta-field" type="text" placeholder="Company name" id="contact-company" />
+            <select className="cta-select" id="contact-need">
               <option value="">What do you need help with?</option>
               <option>Cost optimisation</option>
               <option>Compliance (SOC 2 / ISO 27001)</option>
@@ -311,7 +382,27 @@ export default function HomePage() {
               <option>SaaS product subscription</option>
               <option>Not sure yet</option>
             </select>
-            <button className="cta-submit">Book discovery call →</button>
+            <button 
+              className="cta-submit"
+              onClick={() => {
+                const name = (document.getElementById('contact-name') as HTMLInputElement)?.value
+                const email = (document.getElementById('contact-email') as HTMLInputElement)?.value
+                const company = (document.getElementById('contact-company') as HTMLInputElement)?.value
+                const need = (document.getElementById('contact-need') as HTMLSelectElement)?.value
+                
+                if (!name || !email || !company) {
+                  alert('Please fill in all required fields')
+                  return
+                }
+                
+                // Create mailto link with pre-filled info
+                const subject = encodeURIComponent(`Discovery Call Request - ${company}`)
+                const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\nCompany: ${company}\nNeed help with: ${need || 'Not specified'}\n\nI'd like to book a discovery call to discuss our AWS infrastructure.`)
+                window.location.href = `mailto:hello@ifu-labs.io?subject=${subject}&body=${body}`
+              }}
+            >
+              Book discovery call →
+            </button>
           </div>
         </div>
       </div>
@@ -337,13 +428,19 @@ export default function HomePage() {
         <div className="footer-col">
           <h4>Products</h4>
           <ul>
-            {[['Comply', 'http://localhost:3003'], ['FinOps Tool', 'http://localhost:3003'], ['Client portal', 'http://localhost:3003'], ['Documentation', '/docs']].map(([name, href]) => <li key={name as string}><a href={href as string}>{name}</a></li>)}
+            <li><a href="http://localhost:3003/onboarding?product=comply&plan=starter">Comply</a></li>
+            <li><a href="http://localhost:3003/onboarding?product=finops&plan=starter">FinOps Tool</a></li>
+            <li><a href="http://localhost:3003/login">Client portal</a></li>
+            <li><a href="http://localhost:3000/docs">API Documentation</a></li>
           </ul>
         </div>
         <div className="footer-col">
           <h4>Company</h4>
           <ul>
-            {[['About', '#about'], ['AWS Partnership', '#'], ['Security', '#'], ['Privacy policy', '#'], ['hello@ifu-labs.io', 'mailto:hello@ifu-labs.io']].map(([name, href]) => <li key={name as string}><a href={href as string}>{name}</a></li>)}
+            <li><a href="#about">About</a></li>
+            <li><a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener">AWS Partnership</a></li>
+            <li><a href="#contact">Contact us</a></li>
+            <li><a href="mailto:hello@ifu-labs.io">hello@ifu-labs.io</a></li>
           </ul>
         </div>
       </footer>

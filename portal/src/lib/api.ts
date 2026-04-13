@@ -1,13 +1,30 @@
+import { getAccessToken } from './auth'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  // Try to get token from localStorage first (our JWT)
+  let token = null
+  if (typeof window !== 'undefined') {
+    token = localStorage.getItem('auth_token')
+  }
+  
+  // If no local token, try Auth0
+  if (!token) {
+    try {
+      token = await getAccessToken()
+    } catch (err) {
+      console.warn('No auth token available, continuing without auth')
+    }
+  }
+  
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options?.headers,
     },
-    credentials: 'include',
   })
 
   if (!res.ok) {
@@ -21,15 +38,30 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 export const api = {
   auth: {
     me: () => apiFetch<Me>('/api/v1/auth/me'),
-    onboard: (body: { orgName: string; orgDomain?: string }) =>
-      apiFetch<Me>('/api/v1/auth/onboard', { method: 'POST', body: JSON.stringify(body) }),
+    onboard: (body: { name?: string; email?: string; password?: string; orgName: string; orgDomain?: string }) =>
+      apiFetch<AuthResponse>('/api/v1/auth/onboard', { method: 'POST', body: JSON.stringify(body) }),
+    login: (body: { email: string; password: string }) =>
+      apiFetch<AuthResponse>('/api/v1/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   },
 
   integrations: {
     list: () => apiFetch<Integration[]>('/api/v1/integrations'),
+    getAwsSetupInfo: () => apiFetch<AwsSetupInfo>('/api/v1/integrations/aws/setup-info'),
     connectAws: (body: { roleArn: string; externalId: string }) =>
       apiFetch<Integration>('/api/v1/integrations/aws', { method: 'POST', body: JSON.stringify(body) }),
   },
+}
+
+export interface AwsSetupInfo {
+  accountId: string
+  externalIdPrefix: string
+  instructions: string[]
+}
+
+export interface AuthResponse {
+  token: string
+  user: User
+  organization: Organization
 }
 
 export interface Me {
