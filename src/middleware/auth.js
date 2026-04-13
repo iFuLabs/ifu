@@ -4,11 +4,7 @@ import { db } from '../db/client.js'
 import { users, organizations } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
-
-if (!process.env.JWT_SECRET) {
-  throw new Error('FATAL: JWT_SECRET environment variable is required')
-}
-const JWT_SECRET = process.env.JWT_SECRET
+import { JWT_SECRET } from '../services/config.js'
 
 const JWKS = createRemoteJWKSet(
   new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`)

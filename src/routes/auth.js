@@ -8,20 +8,7 @@ import { eq } from 'drizzle-orm'
 import { verifyToken } from '../middleware/auth.js'
 import { auditAction } from '../services/audit.js'
 import { slugify } from '../services/utils.js'
-
-if (!process.env.JWT_SECRET) {
-  throw new Error('FATAL: JWT_SECRET environment variable is required')
-}
-const JWT_SECRET = process.env.JWT_SECRET
-const JWT_EXPIRES_IN = '7d'
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 // 7 days in seconds
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax',
-  path: '/',
-  maxAge: COOKIE_MAX_AGE
-}
+import { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } from '../services/config.js'
 
 const onboardSchema = z.object({
   name: z.string().optional(),

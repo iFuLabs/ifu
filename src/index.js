@@ -38,7 +38,22 @@ const app = Fastify({
 
 // ── Plugins ────────────────────────────────────────────────────────────────
 await app.register(cookie)
-await app.register(helmet, { contentSecurityPolicy: false })
+await app.register(helmet, {
+  contentSecurityPolicy: process.env.NODE_ENV === 'production'
+    ? {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+        }
+      }
+    : false // Disabled in development for Swagger UI
+})
 await app.register(cors, {
   origin: process.env.NODE_ENV === 'production'
     ? ['https://app.ifu-labs.io']

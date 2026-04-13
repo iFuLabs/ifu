@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
 // ── Enums ──────────────────────────────────────────────────────────────────
@@ -36,7 +36,9 @@ export const users = pgTable('users', {
   role:           text('role').notNull().default('member'), // owner | admin | member
   createdAt:      timestamp('created_at').notNull().defaultNow(),
   updatedAt:      timestamp('updated_at').notNull().defaultNow()
-})
+}, (table) => [
+  index('idx_users_org_id').on(table.orgId)
+])
 
 // ── Invitations ────────────────────────────────────────────────────────────
 export const invitations = pgTable('invitations', {
@@ -50,7 +52,9 @@ export const invitations = pgTable('invitations', {
   expiresAt:      timestamp('expires_at').notNull(),
   acceptedAt:     timestamp('accepted_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow()
-})
+}, (table) => [
+  index('idx_invitations_org_id_status').on(table.orgId, table.status)
+])
 
 // ── Integrations ───────────────────────────────────────────────────────────
 export const integrations = pgTable('integrations', {
@@ -68,7 +72,10 @@ export const integrations = pgTable('integrations', {
   lastError:      text('last_error'),
   createdAt:      timestamp('created_at').notNull().defaultNow(),
   updatedAt:      timestamp('updated_at').notNull().defaultNow()
-})
+}, (table) => [
+  index('idx_integrations_org_id').on(table.orgId),
+  index('idx_integrations_status').on(table.status)
+])
 
 // ── Controls ───────────────────────────────────────────────────────────────
 // The global control library — shared across all tenants
@@ -99,7 +106,10 @@ export const controlResults = pgTable('control_results', {
   checkedAt:      timestamp('checked_at').notNull().defaultNow(),
   nextCheckAt:    timestamp('next_check_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow()
-})
+}, (table) => [
+  index('idx_control_results_org_id').on(table.orgId),
+  index('idx_control_results_org_control').on(table.orgId, table.controlDefId)
+])
 
 // ── Scans ──────────────────────────────────────────────────────────────────
 export const scans = pgTable('scans', {
@@ -116,7 +126,9 @@ export const scans = pgTable('scans', {
   completedAt:    timestamp('completed_at'),
   error:          text('error'),
   createdAt:      timestamp('created_at').notNull().defaultNow()
-})
+}, (table) => [
+  index('idx_scans_org_id').on(table.orgId)
+])
 
 // ── Evidence ───────────────────────────────────────────────────────────────
 export const evidenceItems = pgTable('evidence_items', {
@@ -130,7 +142,9 @@ export const evidenceItems = pgTable('evidence_items', {
   collectedAt:    timestamp('collected_at').notNull().defaultNow(),
   expiresAt:      timestamp('expires_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow()
-})
+}, (table) => [
+  index('idx_evidence_org_id').on(table.orgId)
+])
 
 // ── Vendors ────────────────────────────────────────────────────────────────
 export const vendors = pgTable('vendors', {
@@ -146,7 +160,9 @@ export const vendors = pgTable('vendors', {
   metadata:       jsonb('metadata'),
   createdAt:      timestamp('created_at').notNull().defaultNow(),
   updatedAt:      timestamp('updated_at').notNull().defaultNow()
-})
+}, (table) => [
+  index('idx_vendors_org_id').on(table.orgId)
+])
 
 // ── Audit log ──────────────────────────────────────────────────────────────
 export const auditLog = pgTable('audit_log', {
@@ -159,7 +175,9 @@ export const auditLog = pgTable('audit_log', {
   metadata:       jsonb('metadata'),
   ipAddress:      text('ip_address'),
   createdAt:      timestamp('created_at').notNull().defaultNow()
-})
+}, (table) => [
+  index('idx_audit_log_org_id').on(table.orgId)
+])
 
 
 // ── Relations ──────────────────────────────────────────────────────────────

@@ -1,10 +1,8 @@
 import crypto from 'crypto'
+import { ENCRYPTION_KEY } from './config.js'
 
 const ALGORITHM = 'aes-256-gcm'
-if (!process.env.ENCRYPTION_KEY) {
-  throw new Error('FATAL: ENCRYPTION_KEY environment variable is required')
-}
-const KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'hex')
+const KEY = ENCRYPTION_KEY
 
 export function encrypt(plaintext) {
   const iv = crypto.randomBytes(12)
