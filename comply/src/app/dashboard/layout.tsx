@@ -1,13 +1,12 @@
 'use client'
-import { useUser } from '@auth0/nextjs-auth0/client'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   LayoutDashboard, Shield, GitBranch, FileText,
   Building2, Users, CreditCard, LogOut, Menu, X,
   ChevronRight
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
 const NAV = [
@@ -24,9 +23,23 @@ const BOTTOM_NAV = [
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useUser()
+  const router = useRouter()
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
+
+  useEffect(() => {
+    // Get user email from localStorage
+    const email = localStorage.getItem('user_email')
+    if (email) setUserEmail(email)
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_email')
+    localStorage.removeItem('lastProduct')
+    window.location.href = process.env.NEXT_PUBLIC_PORTAL_URL + '/login'
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
@@ -89,21 +102,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* User */}
           <div className="flex items-center gap-2.5 px-3 py-2 mt-1">
             <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-              {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+              {userEmail?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-ink truncate">{user?.name || 'User'}</div>
-              <div className="text-[10px] text-muted truncate">{user?.email}</div>
+              <div className="text-xs font-medium text-ink truncate">{userEmail?.split('@')[0] || 'User'}</div>
+              <div className="text-[10px] text-muted truncate">{userEmail || 'user@example.com'}</div>
             </div>
           </div>
 
-          <a
-            href="/api/auth/logout"
-            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-muted hover:text-danger transition-all"
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-muted hover:text-danger transition-all w-full text-left"
           >
             <LogOut size={15} />
             Sign out
-          </a>
+          </button>
         </div>
       </aside>
 

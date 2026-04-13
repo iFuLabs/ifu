@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
+import cookie from '@fastify/cookie'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import 'dotenv/config'
@@ -9,6 +10,10 @@ import 'dotenv/config'
 import { db } from './db/client.js'
 import { redis } from './services/redis.js'
 import { authPlugin } from './middleware/auth.js'
+
+// Background jobs
+import { startScheduler } from './jobs/scheduler.js'
+import './jobs/scanWorker.js'
 
 // Routes
 import authRoutes from './routes/auth.js'
@@ -21,6 +26,7 @@ import billingRoutes from './routes/billing.js'
 import scanRoutes from './routes/scans.js'
 import aiRoutes from './routes/ai.js'
 import finopsRoutes from './routes/finops.js'
+import teamRoutes from './routes/team.js'
 
 const app = Fastify({
   logger: {
@@ -31,7 +37,23 @@ const app = Fastify({
 })
 
 // ── Plugins ────────────────────────────────────────────────────────────────
-await app.register(helmet, { contentSecurityPolicy: false })
+await app.register(cookie)
+await app.register(helmet, {
+  contentSecurityPolicy: process.env.NODE_ENV === 'production'
+    ? {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+        }
+      }
+    : false // Disabled in development for Swagger UI
+})
 await app.register(cors, {
   origin: process.env.NODE_ENV === 'production'
     ? ['https://app.ifu-labs.io']
@@ -71,7 +93,8 @@ await app.register(vendorRoutes,       { prefix: '/api/v1/vendors' })
 await app.register(billingRoutes,      { prefix: '/api/v1/billing' })
 await app.register(scanRoutes,         { prefix: '/api/v1/scans' })
 await app.register(aiRoutes,           { prefix: '/api/v1/ai' })
-await app.register(finopsRoutes,        { prefix: '/api/v1/finops' })
+await app.register(finopsRoutes,       { prefix: '/api/v1/finops' })
+await app.register(teamRoutes,         { prefix: '/api/v1/team' })
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', async () => ({
@@ -121,6 +144,9 @@ const start = async () => {
 
     await app.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' })
     app.log.info(`🚀 iFu Labs — Comply API running on port ${process.env.PORT || 3000}`)
+
+    // Start background job scheduler (daily compliance scans)
+    startScheduler()
 
     if (process.env.NODE_ENV === 'development') {
       app.log.info(`📚 API docs: http://localhost:${process.env.PORT || 3000}/docs`)

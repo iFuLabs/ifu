@@ -1,6 +1,6 @@
 import { db } from '../db/client.js'
 import { controlDefinitions, controlResults } from '../db/schema.js'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, sql, count } from 'drizzle-orm'
 import { verifyToken, requireUser } from '../middleware/auth.js'
 
 export default async function controlRoutes(fastify) {
@@ -75,36 +75,40 @@ export default async function controlRoutes(fastify) {
     preHandler: [verifyToken, requireUser],
     schema: { tags: ['Controls'], security: [{ bearerAuth: [] }] }
   }, async (request, reply) => {
-    const definitions = await db.query.controlDefinitions.findMany()
-    const results = await db.query.controlResults.findMany({
-      where: eq(controlResults.orgId, request.orgId),
-      orderBy: [desc(controlResults.checkedAt)]
-    })
+    // Count total controls per framework (single query)
+    const defCounts = await db
+      .select({
+        framework: controlDefinitions.framework,
+        total: count()
+      })
+      .from(controlDefinitions)
+      .groupBy(controlDefinitions.framework)
 
-    const latestResults = {}
-    for (const result of results) {
-      if (!latestResults[result.controlDefId]) {
-        latestResults[result.controlDefId] = result
-      }
-    }
+    // Count results per framework and status using a LEFT JOIN (single query)
+    const resultCounts = await db
+      .select({
+        framework: controlDefinitions.framework,
+        status: controlResults.status,
+        cnt: count()
+      })
+      .from(controlResults)
+      .innerJoin(controlDefinitions, eq(controlResults.controlDefId, controlDefinitions.id))
+      .where(eq(controlResults.orgId, request.orgId))
+      .groupBy(controlDefinitions.framework, controlResults.status)
 
-    // Calculate per-framework scores
+    // Build scores from the two aggregated results
     const frameworks = ['soc2', 'iso27001', 'gdpr', 'hipaa', 'pci_dss']
     const scores = {}
+    let totalAll = 0, passAll = 0
 
     for (const fw of frameworks) {
-      const fwDefs = definitions.filter(d => d.framework === fw)
-      const total = fwDefs.length
-      let pass = 0, fail = 0, review = 0, pending = 0
-
-      for (const def of fwDefs) {
-        const result = latestResults[def.id]
-        if (!result) { pending++; continue }
-        if (result.status === 'pass') pass++
-        else if (result.status === 'fail') fail++
-        else if (result.status === 'review') review++
-        else pending++
-      }
+      const total = defCounts.find(d => d.framework === fw)?.total || 0
+      const fwResults = resultCounts.filter(r => r.framework === fw)
+      const pass = fwResults.find(r => r.status === 'pass')?.cnt || 0
+      const fail = fwResults.find(r => r.status === 'fail')?.cnt || 0
+      const review = fwResults.find(r => r.status === 'review')?.cnt || 0
+      const checked = pass + fail + review
+      const pending = total - checked
 
       scores[fw] = {
         total,
@@ -114,12 +118,12 @@ export default async function controlRoutes(fastify) {
         pending,
         score: total > 0 ? Math.round((pass / total) * 100) : 0
       }
+
+      totalAll += total
+      passAll += pass
     }
 
-    // Overall score (SOC 2 weighted)
-    const allDefs = definitions.length
-    const allPass = Object.values(latestResults).filter(r => r.status === 'pass').length
-    const overallScore = allDefs > 0 ? Math.round((allPass / allDefs) * 100) : 0
+    const overallScore = totalAll > 0 ? Math.round((passAll / totalAll) * 100) : 0
 
     return reply.send({
       overall: overallScore,

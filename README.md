@@ -1,331 +1,394 @@
 # iFu Labs
 
-AWS cloud consultancy and SaaS products for engineering teams.
+Multi-tenant SaaS platform for compliance automation and cloud cost optimization.
 
-> **Website:** ifu-labs.io · **App:** app.ifu-labs.io · **Contact:** hello@ifu-labs.io
+## Products
 
----
-
-## Repo Structure
-
-```
-ifu-labs/
-│
-├── website/                  ← ifu-labs.io (marketing site, port 3004)
-│   ├── src/app/
-│   │   ├── page.tsx          ← Homepage
-│   │   ├── layout.tsx        ← Metadata
-│   │   └── globals.css       ← Site styles
-│   └── package.json
-│
-├── portal/                   ← app.ifu-labs.io (product selector, port 3003)
-│   └── src/app/
-│       └── page.tsx          ← Choose Comply or FinOps
-│
-├── comply/                   ← comply.ifu-labs.io (Comply SaaS, port 3001)
-│   └── src/app/
-│       ├── onboarding/       ← New user setup wizard
-│       ├── auth/callback/    ← Post-Auth0 redirect
-│       └── dashboard/
-│           ├── page.tsx      ← Overview + AI insights
-│           ├── controls/     ← Compliance controls
-│           ├── integrations/ ← AWS + GitHub connectors
-│           ├── evidence/     ← Evidence library + PDF
-│           └── vendors/      ← Vendor risk tracker
-│
-├── finops/                   ← finops.ifu-labs.io (FinOps SaaS, port 3002)
-│   └── src/app/
-│       └── dashboard/
-│           └── page.tsx      ← Cost analysis dashboard
-│
-├── src/                      ← api.ifu-labs.io (Fastify API, port 3000)
-│   ├── routes/               ← auth, controls, integrations,
-│   │                            evidence, vendors, ai, finops
-│   ├── connectors/
-│   │   ├── aws/checks/       ← 20 SOC 2 control checks
-│   │   ├── github/           ← 6 GitHub controls
-│   │   └── finops/           ← Cost Explorer + waste detection
-│   ├── jobs/                 ← BullMQ workers + daily scheduler
-│   └── services/             ← AI, PDF, encryption, audit
-│
-├── tests/                    ← Jest test suite
-├── package.json
-├── .env.example
-└── README.md
-```
-
----
+- **Comply** — Automated compliance monitoring for SOC 2, ISO 27001, GDPR, HIPAA ($299-799/mo)
+- **FinOps** — AWS cost optimization and waste detection ($199/mo)
 
 ## Quick Start
 
-### Prerequisites
-- Node.js 18+
-- Docker Desktop (for PostgreSQL & Redis)
-
-### 1. Clone & Install
 ```bash
-git clone https://github.com/iFuLabs/ifu.git
-cd ifu-labs
-
-# Install root dependencies
+# Install dependencies
 npm install
-
-# Install frontend dependencies
 cd portal && npm install && cd ..
 cd comply && npm install --legacy-peer-deps && cd ..
 cd finops && npm install --legacy-peer-deps && cd ..
 cd website && npm install && cd ..
-```
 
-### 2. Start Local Services
-```bash
-./scripts/test-local.sh
-```
+# Configure environment
+cp .env.example .env
+# Edit .env and set required variables (see Environment Setup below)
 
-This will:
-- Start PostgreSQL and Redis in Docker
-- Run database migrations
-- Seed the database with test data
+# Start services
+docker-compose up -d        # PostgreSQL + Redis
+npm run migrate             # Run database migrations
+node src/db/seed.js         # Seed control definitions (optional)
 
-### 3. Start All Applications
-```bash
-# Option 1: Start everything at once
+# Start all apps
 ./scripts/start-all.sh
 
-# Option 2: Start individually
-npm run dev              # API (port 3000)
-cd portal && npm run dev # Portal (port 3003)
-cd comply && npm run dev # Comply (port 3001)
-cd finops && npm run dev # FinOps (port 3002)
-cd website && npm run dev # Website (port 3004)
-```
-
-### 4. Access the Applications
-- Portal: http://localhost:3003 (choose your product)
-- Comply: http://localhost:3001 (compliance dashboard)
-- FinOps: http://localhost:3002 (cost optimization)
-- Website: http://localhost:3004 (marketing site)
-- API Docs: http://localhost:3000/docs
-
-### 5. Stop All Services
-```bash
+# Stop all apps
 ./scripts/stop-all.sh
 ```
 
----
+## Architecture
 
-## Running Tests
+| Service | Port | Purpose |
+|---------|------|---------|
+| API | 3000 | Fastify backend |
+| Comply | 3001 | Compliance product dashboard |
+| FinOps | 3002 | Cost optimization dashboard |
+| Portal | 3003 | Onboarding, login & auth |
+| Website | 3004 | Marketing site |
 
-```bash
-npm test
-```
+## Authentication
 
-Test coverage:
-- ✅ Encryption service (AES-256-GCM)
-- ✅ Auth middleware (JWT validation, role checks)
-- ✅ AWS connector structure
-- ✅ AI service structure
+**Local JWT-based authentication** with bcrypt password hashing. Auth0 support is optional.
 
----
+### User Flow
+1. User visits website → clicks "Start free trial"
+2. Redirects to Portal onboarding (4 steps):
+   - **Step 1:** Sign up (name, email, password)
+   - **Step 2:** Create organization
+   - **Step 3:** Connect AWS account (optional)
+   - **Step 4:** Confirmation
+3. JWT token issued and stored in httpOnly cookie + localStorage
+4. User redirected to product dashboard (Comply or FinOps)
 
-## Frontend Development
+### Login Flow
+1. User visits `/login` on Portal
+2. Enters email + password
+3. Backend verifies credentials with bcrypt
+4. JWT token issued (7-day expiration)
+5. Redirects to dashboard
 
-Each product runs as a separate Next.js application:
+See [AUTH_FLOW.md](./AUTH_FLOW.md) for detailed authentication documentation.
 
-**Portal** (port 3003) - Product selector
-```bash
-cd portal
-npm install
-npm run dev
-```
+## Environment Setup
 
-**Comply Dashboard** (port 3001) - Compliance automation
-```bash
-cd comply
-npm install --legacy-peer-deps
-cp .env.example .env.local
-npm run dev
-```
-
-**FinOps Dashboard** (port 3002) - Cost optimization
-```bash
-cd finops
-npm install --legacy-peer-deps
-npm run dev
-```
-
-**Marketing Website** (port 3004)
-```bash
-cd website
-npm install
-npm run dev
-```
-
----
-
-## Environment Variables
+### Required Environment Variables
 
 Copy `.env.example` to `.env` and configure:
 
-**Required for local development:**
-- `DATABASE_URL` - PostgreSQL connection string
-- `REDIS_URL` - Redis connection string
-- `ENCRYPTION_KEY` - 64-character hex string for credential encryption
+```bash
+# Database (required)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ifu_labs_dev
 
-**Required for production:**
-- `AUTH0_DOMAIN`, `AUTH0_AUDIENCE` - Auth0 configuration
-- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` - AWS credentials
-- `BEDROCK_REGION` - AWS Bedrock region for AI features
-- `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY` - GitHub App credentials
+# Redis (required)
+REDIS_URL=redis://localhost:6379
 
----
+# JWT Secret (REQUIRED - generate with: openssl rand -hex 32)
+JWT_SECRET=your-super-secret-jwt-key-change-in-production-min-32-chars
 
-## Products
+# Encryption Key (REQUIRED - generate with: openssl rand -hex 32)
+ENCRYPTION_KEY=64-character-hex-string-for-aes-256-encryption
 
-| Product | Price |
-|---------|-------|
-| Comply — SOC 2 / ISO 27001 / GDPR automation | $299–$799/mo |
-| FinOps — Cost optimisation & waste detection | $199/mo |
+# AWS Account ID (your iFu Labs AWS account for cross-account role assumption)
+AWS_ACCOUNT_ID=123456789012
 
----
+# AWS Credentials (for Bedrock AI and Cost Explorer)
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+BEDROCK_REGION=us-east-1
 
-## Architecture
+# Auth0 (optional - only if using Auth0 instead of local auth)
+AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_AUDIENCE=https://api.ifu-labs.io
+AUTH0_CLIENT_ID=your_client_id
+AUTH0_CLIENT_SECRET=your_client_secret
 
+# Stripe (optional - for billing)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# GitHub App (optional - for GitHub integration)
+GITHUB_APP_ID=123456
+GITHUB_WEBHOOK_SECRET=your_webhook_secret
+
+# Resend Email Service (REQUIRED for emails)
+# Get your API key from: https://resend.com/api-keys
+# Free tier: 100 emails/day, 3,000/month
+RESEND_API_KEY=re_your_api_key_here
+FROM_EMAIL=onboarding@resend.dev
+PORTAL_URL=http://localhost:3003
 ```
-ifu-labs.io (website, port 3004)
-    │ "Start free trial" button
-    ▼
-app.ifu-labs.io (portal, port 3003)
-    │ Choose product: Comply or FinOps
-    ├─▶ comply.ifu-labs.io (port 3001)
-    │       │ Compliance automation dashboard
-    │       └─▶ api.ifu-labs.io/api/v1/controls
-    │
-    └─▶ finops.ifu-labs.io (port 3002)
-            │ Cost optimization dashboard
-            └─▶ api.ifu-labs.io/api/v1/finops
-                    │
-                    ▼
-            AWS account (read-only IAM role)
-            GitHub org  (GitHub App installation)
+
+### Frontend Environment Variables
+
+Each frontend app needs `.env.local`:
+
+```bash
+# Portal, Comply, FinOps, Website
+NEXT_PUBLIC_API_URL=http://localhost:3000
+NEXT_PUBLIC_PORTAL_URL=http://localhost:3003
+NEXT_PUBLIC_COMPLY_URL=http://localhost:3001
+NEXT_PUBLIC_FINOPS_URL=http://localhost:3002
 ```
 
-**Product Separation:**
-- Comply and FinOps are separate products with independent subscriptions
-- Each has its own subdomain and dedicated dashboard
-- Portal acts as the entry point for customers to access their products
-- Shared backend API serves both products
+## Database Migrations
 
----
+```bash
+# Run all migrations
+npm run migrate
+
+# Create new migration
+npx drizzle-kit generate:pg
+
+# View database schema
+npx drizzle-kit studio
+```
+
+### Migration History
+- `0000_broad_sister_grimm.sql` - Initial schema
+- `0001_add_password_auth.sql` - Added passwordHash column for local auth
+- `0002_add_invitations.sql` - Added team invitations table
+
+## Features
+
+### ✅ Implemented
+
+#### Authentication & Authorization
+- Local JWT-based authentication with bcrypt
+- Email/password login and signup
+- httpOnly cookies + localStorage token storage
+- Role-based access control (Owner, Admin, Member)
+- 7-day token expiration
+- Welcome emails on signup (Resend)
+
+#### Team Management
+- Invite team members by email ✅ WITH EMAIL
+- Pending invitation tracking
+- Role assignment (Admin, Member)
+- Remove team members
+- Invitation expiration (7 days)
+- Automated invitation emails via Resend
+
+#### Compliance (Comply)
+- Multi-framework support (SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS)
+- Automated control checks via AWS integration
+- Control status tracking (pass, fail, review, pending)
+- Evidence collection and storage
+- PDF evidence export
+- AI-powered gap explanations (Amazon Bedrock)
+- Manual control notes
+
+#### Integrations
+- AWS cross-account role assumption
+- GitHub App integration
+- Dynamic AWS setup info endpoint
+- Integration status monitoring
+- Manual sync triggers
+
+#### FinOps
+- AWS cost analysis
+- Waste detection (idle resources)
+- Rightsizing recommendations
+- Reserved Instance coverage analysis
+- Savings Plans coverage analysis
+- Cost forecasting
+- Real-time scan streaming (SSE)
+
+#### Vendor Management
+- Vendor risk tracking
+- SOC 2 / ISO 27001 certificate expiration monitoring
+- Risk level categorization
+
+#### Dashboard Features
+- Compliance score overview
+- Recent scans history
+- Team member management
+- Billing page (UI ready, Stripe integration pending)
+- Working navigation and logout
+
+### 🚧 TODO
+
+1. **~~Email Service Integration~~** ✅ IMPLEMENTED (Resend)
+   - Welcome emails on signup
+   - Team invitation emails
+   - See [docs/RESEND_SETUP.md](./docs/RESEND_SETUP.md) for setup
+
+2. **~~Team Invitation Accept Flow~~** ✅ IMPLEMENTED
+   - Invitation accept page with account creation
+   - Token validation and expiry checking
+   - Automatic user account creation
+   - See [INVITATION_FLOW.md](./INVITATION_FLOW.md) for details
+
+3. **Stripe Billing**
+   - Checkout session creation
+   - Customer portal
+   - Webhook handling (subscription events)
+   - Location: `src/routes/billing.js`
+
+4. **GitHub Webhook Handler**
+   - Signature verification
+   - Event processing (push, member changes, installation)
+   - Location: `src/routes/integrations.js` line 238
+
+5. **Production Environment**
+   - Replace placeholder AWS_ACCOUNT_ID
+   - Generate production JWT_SECRET and ENCRYPTION_KEY
+   - Configure real AWS credentials
+   - Set up SSL/TLS certificates
+
+## API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/onboard` - Create account
+- `POST /api/v1/auth/login` - Login
+- `POST /api/v1/auth/logout` - Logout
+- `GET /api/v1/auth/me` - Current user info
+- `PATCH /api/v1/auth/me` - Update profile
+
+### Team Management
+- `GET /api/v1/team/members` - List team members
+- `GET /api/v1/team/invitations` - List pending invitations
+- `POST /api/v1/team/invite` - Invite team member
+- `DELETE /api/v1/team/members/:id` - Remove member
+- `DELETE /api/v1/team/invitations/:id` - Cancel invitation
+- `GET /api/v1/team/invitation/:token` - Get invitation details (public)
+- `POST /api/v1/team/accept-invitation` - Accept invitation (public)
+
+### Controls
+- `GET /api/v1/controls` - List controls (with filters)
+- `GET /api/v1/controls/score` - Compliance score
+- `GET /api/v1/controls/:controlId` - Control details
+- `PATCH /api/v1/controls/:controlId/notes` - Add notes
+
+### Evidence
+- `GET /api/v1/evidence` - List evidence
+- `POST /api/v1/evidence` - Add manual evidence
+- `DELETE /api/v1/evidence/:id` - Delete evidence
+- `GET /api/v1/evidence/export/pdf` - Export PDF
+
+### Integrations
+- `GET /api/v1/integrations` - List integrations
+- `GET /api/v1/integrations/aws/setup-info` - AWS setup info
+- `POST /api/v1/integrations/aws` - Connect AWS
+- `POST /api/v1/integrations/github` - Connect GitHub
+- `DELETE /api/v1/integrations/:id` - Disconnect
+- `POST /api/v1/integrations/:id/sync` - Manual sync
+
+### FinOps
+- `GET /api/v1/finops` - FinOps findings (cached)
+- `GET /api/v1/finops/stream` - Real-time scan (SSE)
+- `GET /api/v1/finops/summary` - Dashboard summary
+
+### Vendors
+- `GET /api/v1/vendors` - List vendors
+- `POST /api/v1/vendors` - Create vendor
+- `PATCH /api/v1/vendors/:id` - Update vendor
+- `DELETE /api/v1/vendors/:id` - Delete vendor
+
+### AI
+- `POST /api/v1/ai/explain/:controlId` - AI explanation
+- `GET /api/v1/ai/explain/:controlId/stream` - Streaming explanation
+- `GET /api/v1/ai/summary` - Compliance summary
+
+### Scans
+- `GET /api/v1/scans` - List scans
+- `GET /api/v1/scans/:id` - Scan details
+
+Full API documentation: http://localhost:3000/docs (development only)
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test -- src/routes/auth.test.js
+
+# Run with coverage
+npm test -- --coverage
+```
 
 ## Tech Stack
 
 **Backend:**
-- Fastify - Fast web framework
-- Drizzle ORM - Type-safe SQL
-- PostgreSQL - Primary database
-- Redis - Caching & job queue
-- BullMQ - Background job processing
-- AWS SDK - Cloud resource scanning
-- Amazon Bedrock - AI-powered insights
+- Fastify (web framework)
+- Drizzle ORM (database)
+- PostgreSQL (database)
+- Redis (caching)
+- BullMQ (job queue)
+- AWS SDK (integrations)
+- Amazon Bedrock (AI)
+- bcryptjs (password hashing)
+- jsonwebtoken (JWT auth)
+- zod (validation)
 
 **Frontend:**
-- Next.js 14 - React framework
-- Tailwind CSS - Styling
-- SWR - Data fetching
-- Recharts - Data visualization
-- Auth0 - Authentication
+- Next.js 14 (React framework)
+- Tailwind CSS (styling)
+- SWR (data fetching)
+- Recharts (charts)
+- date-fns (date formatting)
+- Lucide React (icons)
 
----
+## Security
 
-## Development Commands
+- Passwords hashed with bcrypt (10 rounds)
+- JWT tokens with 7-day expiration
+- httpOnly cookies for token storage
+- AES-256-GCM encryption for stored credentials
+- CORS protection
+- Rate limiting (100 req/min)
+- Helmet security headers
+- SQL injection protection (parameterized queries)
+- Input validation with Zod
 
+## Documentation
+
+- [AUTH_FLOW.md](./AUTH_FLOW.md) - Authentication flow details
+- [TESTING.md](./TESTING.md) - Testing guide
+- [docs/api-reference.html](./docs/api-reference.html) - API reference
+- API docs: http://localhost:3000/docs (Swagger UI)
+
+## Troubleshooting
+
+### Database connection fails
 ```bash
-# Backend API
-npm run dev          # Start dev server with hot reload
-npm test             # Run test suite
-npm run migrate      # Run database migrations
+# Check if PostgreSQL is running
+docker ps | grep postgres
 
-# Docker services
-docker-compose up -d    # Start PostgreSQL & Redis
-docker-compose down     # Stop services
-docker-compose logs     # View logs
+# Restart PostgreSQL
+docker-compose restart postgres
 
-# Database
-node src/db/seed.js     # Seed test data
-npx drizzle-kit studio  # Open database GUI
+# Check logs
+docker logs ifu-labs-postgres
 ```
 
----
-
----
-
-## Testing
-
-### Run Tests
+### Redis connection fails
 ```bash
-npm test
+# Check if Redis is running
+docker ps | grep redis
+
+# Restart Redis
+docker-compose restart redis
 ```
 
-**Results:** 15/15 tests passing ✅
-- Encryption service (5 tests)
-- Auth middleware (6 tests)  
-- AWS connector (2 tests)
-- AI service (2 tests)
-
-### Test Endpoints
+### Migration fails
 ```bash
-# API health
-curl http://localhost:3000/health
-
-# API auth (should return 401)
-curl http://localhost:3000/api/v1/controls
-
-# Portal
-open http://localhost:3003
-
-# Comply dashboard
-open http://localhost:3001
-
-# FinOps dashboard
-open http://localhost:3002
-
-# Website
-open http://localhost:3004
-
-# API docs
-open http://localhost:3000/docs
+# Drop and recreate database
+docker-compose down -v
+docker-compose up -d
+npm run migrate
 ```
 
----
+### Frontend can't connect to API
+- Verify API is running on port 3000
+- Check NEXT_PUBLIC_API_URL in frontend .env.local
+- Check CORS settings in src/index.js
 
-## Authentication Flow
+## Contributing
 
-**Local Development:**
-- Auth is bypassed for easier testing
-- Portal accessible at http://localhost:3003
-- Comply dashboard accessible at http://localhost:3001/dashboard
-- FinOps dashboard accessible at http://localhost:3002/dashboard
-
-**Production:**
-- Auth0 handles authentication
-- Users sign up/login at the portal
-- Portal redirects to appropriate product dashboard based on subscription
-- Middleware protects all `/dashboard` routes
-- Onboarding flow for new users
-
----
-
-## Still to Build
-- ✅ Test suite (15 tests passing)
-- ✅ Docker Compose for local development
-- ⏳ Stripe billing integration
-- ⏳ Email notifications
-- ⏳ Production deployment (Docker + ECS)
-- ⏳ CI/CD pipeline
-- ⏳ Monitoring & alerting
-
----
+1. Create feature branch: `git checkout -b feature/your-feature`
+2. Make changes and commit: `git commit -m "feat: your feature"`
+3. Push branch: `git push origin feature/your-feature`
+4. Create pull request
 
 ## License
 

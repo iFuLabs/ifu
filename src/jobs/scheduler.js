@@ -3,6 +3,7 @@ import { db } from '../db/client.js'
 import { integrations } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import { scanQueue } from '../jobs/queues.js'
+import { logger } from '../services/logger.js'
 
 /**
  * Runs daily at 2 AM UTC.
@@ -10,14 +11,14 @@ import { scanQueue } from '../jobs/queues.js'
  */
 export function startScheduler() {
   cron.schedule('0 2 * * *', async () => {
-    console.log('🕐 Daily scan scheduler triggered')
+    logger.info('Daily scan scheduler triggered')
 
     try {
       const connectedIntegrations = await db.query.integrations.findMany({
         where: eq(integrations.status, 'connected')
       })
 
-      console.log(`📋 Queuing scans for ${connectedIntegrations.length} integrations`)
+      logger.info({ count: connectedIntegrations.length }, 'Queuing scans for connected integrations')
 
       for (const integration of connectedIntegrations) {
         await scanQueue.add('scan', {
@@ -31,9 +32,9 @@ export function startScheduler() {
         })
       }
     } catch (err) {
-      console.error('Scheduler error:', err)
+      logger.error({ err }, 'Scheduler error')
     }
   }, { timezone: 'UTC' })
 
-  console.log('⏰ Scan scheduler started (daily at 02:00 UTC)')
+  logger.info('Scan scheduler started (daily at 02:00 UTC)')
 }

@@ -1,22 +1,49 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose'
+import jwt from 'jsonwebtoken'
 import { db } from '../db/client.js'
 import { users, organizations } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
+import { JWT_SECRET } from '../services/config.js'
 
 const JWKS = createRemoteJWKSet(
   new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`)
 )
 
-// Verify Auth0 JWT and attach user + org to request
+// Verify JWT token (our own or Auth0) and attach user + org to request
 async function verifyToken(request, reply) {
+  // Accept token from Authorization header or httpOnly cookie
   const authHeader = request.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    return reply.status(401).send({ error: 'Unauthorized', message: 'Missing Bearer token' })
+  const cookieToken = request.cookies?.auth_token
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : cookieToken
+
+  if (!token) {
+    return reply.status(401).send({ error: 'Unauthorized', message: 'Missing Bearer token or auth cookie' })
   }
 
-  const token = authHeader.slice(7)
+  // Try to verify as our own JWT first
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET)
+    
+    // Load user from DB
+    let user = await db.query.users.findFirst({
+      where: eq(users.id, decoded.userId),
+      with: { org: true }
+    })
 
+    if (!user) {
+      return reply.status(401).send({ error: 'Unauthorized', message: 'User not found' })
+    }
+
+    request.user = user
+    request.orgId = user.orgId
+    request.auth = decoded
+    return
+  } catch (err) {
+    // Not our JWT, try Auth0
+  }
+
+  // Try Auth0 JWT
   try {
     const { payload } = await jwtVerify(token, JWKS, {
       issuer: `https://${process.env.AUTH0_DOMAIN}/`,

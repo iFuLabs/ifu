@@ -1,5 +1,6 @@
 import { db } from '../db/client.js'
 import { auditLog } from '../db/schema.js'
+import { logger } from './logger.js'
 
 export async function auditAction({ orgId, userId, action, resource, resourceId, metadata, ipAddress }) {
   try {
@@ -14,6 +15,6 @@ export async function auditAction({ orgId, userId, action, resource, resourceId,
     })
   } catch (err) {
     // Audit log failures should never break the main flow
-    console.error('Audit log error:', err)
+    logger.error({ err, action, orgId }, 'Audit log error')
   }
 }

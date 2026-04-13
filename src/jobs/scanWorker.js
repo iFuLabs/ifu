@@ -1,4 +1,5 @@
 import { Worker } from 'bullmq'
+import { logger } from '../services/logger.js'
 import { redis } from '../services/redis.js'
 import { db } from '../db/client.js'
 import { scans, integrations, controlDefinitions, controlResults } from '../db/schema.js'
@@ -60,6 +61,7 @@ export const scanWorker = new Worker('scans', async (job) => {
       })
 
     } else if (integrationType === 'github') {
+      // Pass the raw encrypted credentials — getInstallationClient decrypts internally
       const githubClient = await getInstallationClient(integration.credentials)
       results = await runGithubChecks({
         client: githubClient,
@@ -73,18 +75,38 @@ export const scanWorker = new Worker('scans', async (job) => {
 
     await job.updateProgress(95)
 
-    // Persist results
+    // Persist results — upsert to avoid unbounded row growth
     let passCount = 0, failCount = 0, reviewCount = 0
+    const now = new Date()
+    const nextCheck = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
     for (const result of results) {
-      await db.insert(controlResults).values({
-        orgId,
-        controlDefId: result.controlDefId,
-        status: result.status,
-        evidence: result.evidence,
-        checkedAt: new Date(),
-        nextCheckAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // check again in 24h
+      // Check if a result already exists for this org + control
+      const existing = await db.query.controlResults.findFirst({
+        where: and(
+          eq(controlResults.orgId, orgId),
+          eq(controlResults.controlDefId, result.controlDefId)
+        )
       })
+
+      if (existing) {
+        // Update in place — preserves user-added notes
+        await db.update(controlResults).set({
+          status: result.status,
+          evidence: result.evidence,
+          checkedAt: now,
+          nextCheckAt: nextCheck
+        }).where(eq(controlResults.id, existing.id))
+      } else {
+        await db.insert(controlResults).values({
+          orgId,
+          controlDefId: result.controlDefId,
+          status: result.status,
+          evidence: result.evidence,
+          checkedAt: now,
+          nextCheckAt: nextCheck
+        })
+      }
 
       if (result.status === 'pass') passCount++
       else if (result.status === 'fail') failCount++
@@ -127,7 +149,8 @@ export const scanWorker = new Worker('scans', async (job) => {
     await db.update(integrations).set({
       status: 'error',
       lastError: err.message,
-      lastErrorAt: new Date()
+      lastErrorAt: new Date(),
+      updatedAt: new Date()
     }).where(eq(integrations.id, integrationId))
 
     throw err // BullMQ will retry
@@ -138,11 +161,11 @@ export const scanWorker = new Worker('scans', async (job) => {
 })
 
 scanWorker.on('completed', (job, result) => {
-  console.log(`✅ Scan complete for org ${job.data.orgId}:`, result)
+  logger.info({ orgId: job.data.orgId, ...result }, 'Scan complete')
 })
 
 scanWorker.on('failed', (job, err) => {
-  console.error(`❌ Scan failed for org ${job.data.orgId}:`, err.message)
+  logger.error({ orgId: job.data.orgId, err: err.message }, 'Scan failed')
 })
 
 async function assumeCustomerRole(roleArn, externalId) {

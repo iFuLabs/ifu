@@ -1,4 +1,9 @@
+import Stripe from 'stripe'
 import { verifyToken, requireUser, requireOwner } from '../middleware/auth.js'
+
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null
 
 export default async function billingRoutes(fastify) {
 
@@ -59,7 +64,31 @@ export default async function billingRoutes(fastify) {
     config: { rawBody: true },
     schema: { tags: ['Billing'] }
   }, async (request, reply) => {
-    // TODO: Handle Stripe webhooks (subscription.created, subscription.updated, etc.)
+    if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+      return reply.status(501).send({ error: 'Stripe not configured' })
+    }
+
+    const signature = request.headers['stripe-signature']
+    if (!signature) {
+      return reply.status(400).send({ error: 'Missing stripe-signature header' })
+    }
+
+    let event
+    try {
+      event = stripe.webhooks.constructEvent(
+        request.rawBody,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET
+      )
+    } catch (err) {
+      request.log.warn({ err }, 'Stripe webhook signature verification failed')
+      return reply.status(401).send({ error: 'Invalid webhook signature' })
+    }
+
+    request.log.info({ type: event.type }, 'Stripe webhook received')
+
+    // TODO: Handle events (subscription.created, subscription.updated, etc.)
+
     return reply.send({ received: true })
   })
 }

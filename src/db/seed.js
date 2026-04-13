@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { db } from '../db/client.js'
 import { controlDefinitions } from '../db/schema.js'
 
