@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
@@ -8,8 +9,19 @@ import { verifyToken } from '../middleware/auth.js'
 import { auditAction } from '../services/audit.js'
 import { slugify } from '../services/utils.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production'
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is required')
+}
+const JWT_SECRET = process.env.JWT_SECRET
 const JWT_EXPIRES_IN = '7d'
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 // 7 days in seconds
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  path: '/',
+  maxAge: COOKIE_MAX_AGE
+}
 
 const onboardSchema = z.object({
   name: z.string().optional(),
@@ -105,36 +117,46 @@ export default async function authRoutes(fastify) {
     const userName = body.name
     const passwordHash = await bcrypt.hash(body.password, 10)
 
-    // Generate unique slug for the org
-    let slug = slugify(body.orgName)
-    const existing = await db.query.organizations.findFirst({
-      where: eq(organizations.slug, slug)
-    })
-    if (existing) slug = `${slug}-${Date.now()}`
+    // Generate unique slug — retry with random suffix on conflict
+    const baseSlug = slugify(body.orgName)
+    let result
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const slug = attempt === 0 ? baseSlug : `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`
+      try {
+        result = await db.transaction(async (tx) => {
+          const [org] = await tx.insert(organizations).values({
+            name: body.orgName,
+            slug,
+            domain: body.orgDomain,
+            plan: 'starter',
+            trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 day trial
+          }).returning()
 
-    // Create org + user in a transaction
-    const result = await db.transaction(async (tx) => {
-      // Create organization
-      const [org] = await tx.insert(organizations).values({
-        name: body.orgName,
-        slug,
-        domain: body.orgDomain,
-        plan: 'starter',
-        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 day trial
-      }).returning()
+          const [user] = await tx.insert(users).values({
+            auth0Id: null,
+            email: userEmail,
+            name: userName,
+            passwordHash,
+            orgId: org.id,
+            role: 'owner'
+          }).returning()
 
-      // Create user as owner
-      const [user] = await tx.insert(users).values({
-        auth0Id: null, // No Auth0, using local auth
-        email: userEmail,
-        name: userName,
-        passwordHash,
-        orgId: org.id,
-        role: 'owner'
-      }).returning()
+          return { org, user }
+        })
+        break // success
+      } catch (err) {
+        // Unique constraint violation on slug — retry with different suffix
+        if (err.code === '23505' && err.constraint?.includes('slug')) continue
+        throw err
+      }
+    }
 
-      return { org, user }
-    })
+    if (!result) {
+      return reply.status(409).send({
+        error: 'Conflict',
+        message: 'Could not generate a unique organization slug. Please try a different name.'
+      })
+    }
 
     await auditAction({
       orgId: result.org.id,
@@ -154,6 +176,8 @@ export default async function authRoutes(fastify) {
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     )
+
+    reply.setCookie('auth_token', token, COOKIE_OPTIONS)
 
     return reply.status(201).send({
       token,
@@ -231,6 +255,8 @@ export default async function authRoutes(fastify) {
       metadata: { email: body.email }
     })
 
+    reply.setCookie('auth_token', token, COOKIE_OPTIONS)
+
     return reply.send({
       token,
       user: {
@@ -286,5 +312,14 @@ export default async function authRoutes(fastify) {
       avatarUrl: updated.avatarUrl,
       role: updated.role
     })
+  })
+
+  // POST /api/v1/auth/logout
+  // Clear the auth cookie
+  fastify.post('/logout', {
+    schema: { tags: ['Auth'] }
+  }, async (request, reply) => {
+    reply.clearCookie('auth_token', { path: '/' })
+    return reply.send({ message: 'Logged out' })
   })
 }

@@ -6,6 +6,8 @@ import { encrypt, decrypt } from '../services/encryption.js'
 import { auditAction } from '../services/audit.js'
 import { scanQueue } from '../jobs/queues.js'
 import { validateAwsRole } from '../connectors/aws/validate.js'
+import { validateInstallation } from '../connectors/github/client.js'
+import { handleGithubWebhook } from '../connectors/github/webhook.js'
 
 export default async function integrationRoutes(fastify) {
 
@@ -235,7 +237,6 @@ export default async function integrationRoutes(fastify) {
     const { installationId } = request.body
 
     // Validate the installation exists and we can access it
-    const { validateInstallation } = await import('../connectors/github/client.js')
     const validation = await validateInstallation(installationId)
 
     if (!validation.success) {
@@ -247,7 +248,6 @@ export default async function integrationRoutes(fastify) {
     }
 
     // Check for existing GitHub integration
-    const { eq, and } = await import('drizzle-orm')
     const existing = await db.query.integrations.findFirst({
       where: and(
         eq(integrations.orgId, request.orgId),
@@ -255,7 +255,6 @@ export default async function integrationRoutes(fastify) {
       )
     })
 
-    const { encrypt } = await import('../services/encryption.js')
     const encryptedCredentials = encrypt(JSON.stringify({ installationId, orgLogin: validation.orgLogin }))
 
     let integration
@@ -278,7 +277,6 @@ export default async function integrationRoutes(fastify) {
     }
 
     // Queue immediate scan
-    const { scanQueue } = await import('../jobs/queues.js')
     await scanQueue.add('scan', {
       orgId: request.orgId,
       integrationId: integration.id,
@@ -286,7 +284,6 @@ export default async function integrationRoutes(fastify) {
       triggeredBy: 'manual'
     }, { priority: 1 })
 
-    const { auditAction } = await import('../services/audit.js')
     await auditAction({
       orgId: request.orgId,
       userId: request.user.id,
@@ -307,10 +304,5 @@ export default async function integrationRoutes(fastify) {
   fastify.post('/github/webhook', {
     config: { rawBody: true }, // Need raw body for signature verification
     schema: { tags: ['Integrations'] }
-  }, async (request, reply) => {
-    // TODO: Implement GitHub webhook handler
-    // Should verify X-Hub-Signature-256 header
-    // Handle events: push, member_added, member_removed, installation
-    return reply.send({ received: true })
-  })
+  }, handleGithubWebhook)
 }

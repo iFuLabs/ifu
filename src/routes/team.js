@@ -186,6 +186,14 @@ export default async function teamRoutes(fastify) {
       })
     }
 
+    // Only owners can remove admins
+    if (member.role === 'admin' && request.user.role !== 'owner') {
+      return reply.status(403).send({
+        error: 'Forbidden',
+        message: 'Only the organization owner can remove admins'
+      })
+    }
+
     await db.delete(users).where(eq(users.id, id))
 
     await auditAction({

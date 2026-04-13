@@ -2,6 +2,9 @@
 import './globals.css'
 import { useEffect } from 'react'
 
+const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+
 // Scroll reveal + pricing tab logic (extracted from original HTML)
 function usePageScripts() {
   useEffect(() => {
@@ -54,7 +57,7 @@ export default function HomePage() {
 
         <div className="nav-actions">
           <a href="#contact" className="btn-outline">Talk to us</a>
-          <a href="http://localhost:3003" className="btn-solid">Client portal →</a>
+          <a href={PORTAL_URL} className="btn-solid">Client portal →</a>
         </div>
       </nav>
 
@@ -262,7 +265,7 @@ export default function HomePage() {
                 {p.features.map(f => <li key={f} className="pricing-feature">{f}</li>)}
               </ul>
               <button 
-                onClick={() => window.location.href = `http://localhost:3003/onboarding?product=${p.product}&plan=${p.plan}`}
+                onClick={() => window.location.href = `${PORTAL_URL}/onboarding?product=${p.product}&plan=${p.plan}`}
                 className="pricing-cta"
                 style={{ cursor: 'pointer', border: 'none', width: '100%' }}
               >
@@ -428,10 +431,10 @@ export default function HomePage() {
         <div className="footer-col">
           <h4>Products</h4>
           <ul>
-            <li><a href="http://localhost:3003/onboarding?product=comply&plan=starter">Comply</a></li>
-            <li><a href="http://localhost:3003/onboarding?product=finops&plan=starter">FinOps Tool</a></li>
-            <li><a href="http://localhost:3003/login">Client portal</a></li>
-            <li><a href="http://localhost:3000/docs">API Documentation</a></li>
+            <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>Comply</a></li>
+            <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>FinOps Tool</a></li>
+            <li><a href={`${PORTAL_URL}/login`}>Client portal</a></li>
+            <li><a href={`${API_URL}/docs`}>API Documentation</a></li>
           </ul>
         </div>
         <div className="footer-col">

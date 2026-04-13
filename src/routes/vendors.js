@@ -22,15 +22,16 @@ export default async function vendorRoutes(fastify) {
       }
     }
   }, async (request, reply) => {
+    // Build WHERE conditions — push filters to SQL
+    const conditions = [eq(vendors.orgId, request.orgId)]
+    if (request.query.riskLevel) {
+      conditions.push(eq(vendors.riskLevel, request.query.riskLevel))
+    }
+
     let allVendors = await db.query.vendors.findMany({
-      where: eq(vendors.orgId, request.orgId),
+      where: and(...conditions),
       orderBy: [asc(vendors.name)]
     })
-
-    // Filter by risk level
-    if (request.query.riskLevel) {
-      allVendors = allVendors.filter(v => v.riskLevel === request.query.riskLevel)
-    }
 
     // Filter to vendors with certs expiring within 60 days
     if (request.query.expiringSoon) {

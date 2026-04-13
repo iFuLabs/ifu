@@ -11,6 +11,10 @@ import { db } from './db/client.js'
 import { redis } from './services/redis.js'
 import { authPlugin } from './middleware/auth.js'
 
+// Background jobs
+import { startScheduler } from './jobs/scheduler.js'
+import './jobs/scanWorker.js'
+
 // Routes
 import authRoutes from './routes/auth.js'
 import organizationRoutes from './routes/organizations.js'
@@ -125,6 +129,9 @@ const start = async () => {
 
     await app.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' })
     app.log.info(`🚀 iFu Labs — Comply API running on port ${process.env.PORT || 3000}`)
+
+    // Start background job scheduler (daily compliance scans)
+    startScheduler()
 
     if (process.env.NODE_ENV === 'development') {
       app.log.info(`📚 API docs: http://localhost:${process.env.PORT || 3000}/docs`)

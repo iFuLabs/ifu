@@ -19,13 +19,7 @@ export async function getAuth0Client() {
 }
 
 export async function getAccessToken() {
-  // Try to get token from localStorage first (our JWT)
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('auth_token')
-    if (token) return token
-  }
-  
-  // No token found
+  // Token is now stored in an httpOnly cookie and sent automatically.
   return null
 }
 

@@ -5,7 +5,10 @@ import { users, organizations } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import fp from 'fastify-plugin'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production'
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is required')
+}
+const JWT_SECRET = process.env.JWT_SECRET
 
 const JWKS = createRemoteJWKSet(
   new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`)
@@ -13,12 +16,14 @@ const JWKS = createRemoteJWKSet(
 
 // Verify JWT token (our own or Auth0) and attach user + org to request
 async function verifyToken(request, reply) {
+  // Accept token from Authorization header or httpOnly cookie
   const authHeader = request.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    return reply.status(401).send({ error: 'Unauthorized', message: 'Missing Bearer token' })
-  }
+  const cookieToken = request.cookies?.auth_token
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : cookieToken
 
-  const token = authHeader.slice(7)
+  if (!token) {
+    return reply.status(401).send({ error: 'Unauthorized', message: 'Missing Bearer token or auth cookie' })
+  }
 
   // Try to verify as our own JWT first
   try {
