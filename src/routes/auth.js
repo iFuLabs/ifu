@@ -117,7 +117,7 @@ export default async function authRoutes(fastify) {
             slug,
             domain: body.orgDomain,
             plan: 'starter',
-            trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 day trial
+            trialEndsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 day trial
           }).returning()
 
           const [user] = await tx.insert(users).values({

@@ -9,6 +9,7 @@ const STEPS = [
   { id: 'signup', label: 'Sign Up' },
   { id: 'org', label: 'Organization' },
   { id: 'aws', label: 'Connect AWS' },
+  { id: 'payment', label: 'Payment' },
   { id: 'confirm', label: 'Confirm' },
 ]
 
@@ -21,6 +22,13 @@ export default function OnboardingPage() {
 
   const urlProduct = searchParams.get('product')
   const urlPlan = searchParams.get('plan')
+  const urlStep = searchParams.get('step')
+
+  useEffect(() => {
+    if (urlStep) {
+      setStep(parseInt(urlStep))
+    }
+  }, [urlStep])
 
   const [orgName, setOrgName] = useState('')
   const [orgDomain, setOrgDomain] = useState('')
@@ -32,12 +40,22 @@ export default function OnboardingPage() {
   const [awsAccountId, setAwsAccountId] = useState('123456789012')
   const [skipAws, setSkipAws] = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
+  const [selectedPlan, setSelectedPlan] = useState<string>('comply-starter')
+  const [paymentProcessing, setPaymentProcessing] = useState(false)
 
   useEffect(() => {
     if (urlProduct) {
       setSelectedProducts([urlProduct])
+      // Set default plan based on product from URL
+      if (urlProduct === 'comply' && urlPlan === 'growth') {
+        setSelectedPlan('comply-growth')
+      } else if (urlProduct === 'comply') {
+        setSelectedPlan('comply-starter')
+      } else if (urlProduct === 'finops') {
+        setSelectedPlan('finops')
+      }
     }
-  }, [urlProduct])
+  }, [urlProduct, urlPlan])
 
   // Fetch AWS setup info when component mounts
   useEffect(() => {
@@ -113,7 +131,7 @@ export default function OnboardingPage() {
           roleArn: roleArn.trim(), 
           externalId 
         })
-        setStep(3)
+        setStep(3) // Go to payment
       } catch (err: any) {
         setError(err.message)
       } finally {
@@ -121,7 +139,36 @@ export default function OnboardingPage() {
       }
     } else {
       setLoading(false)
-      setStep(3)
+      setStep(3) // Go to payment
+    }
+  }
+
+  const handlePayment = async () => {
+    setPaymentProcessing(true)
+    setError('')
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/billing/initialize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ plan: selectedPlan })
+      })
+
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.message || 'Failed to initialize payment')
+      }
+
+      const data = await response.json()
+      
+      // Redirect to Paystack checkout
+      window.location.href = data.authorizationUrl
+    } catch (err: any) {
+      setError(err.message)
+      setPaymentProcessing(false)
     }
   }
 
@@ -131,7 +178,8 @@ export default function OnboardingPage() {
     } else if (selectedProducts.includes('finops')) {
       window.location.href = process.env.NEXT_PUBLIC_FINOPS_URL + '/dashboard'
     } else {
-      router.push('/')
+      // Default to Comply if no product selected
+      window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
     }
   }
 
@@ -727,8 +775,167 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 3: Confirm */}
+          {/* Step 3: Payment */}
           {step === 3 && (
+            <div>
+              <div style={{ marginBottom: '32px' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: '#F3E8FF',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px'
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                </div>
+                <h2 style={{ 
+                  fontSize: '24px', 
+                  fontWeight: '600', 
+                  color: '#1A1917', 
+                  marginBottom: '8px',
+                  fontFamily: "'Fraunces', serif"
+                }}>
+                  Add payment method
+                </h2>
+                <p style={{ fontSize: '15px', color: '#6B685F', lineHeight: '1.6' }}>
+                  Start your 3-day free trial. Your card will be charged after the trial ends.
+                </p>
+              </div>
+
+              {urlProduct && urlPlan ? (
+                // Show selected plan from website
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{
+                    padding: '20px',
+                    background: '#EEF3F9',
+                    border: '2px solid #1B3A5C',
+                    borderRadius: '12px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '18px', fontWeight: '600', color: '#1A1917' }}>
+                        {selectedPlan === 'comply-starter' ? 'Comply Starter' : 
+                         selectedPlan === 'comply-growth' ? 'Comply Growth' : 'FinOps'}
+                      </span>
+                      <span style={{ fontSize: '20px', fontWeight: '700', color: '#1B3A5C' }}>
+                        {selectedPlan === 'comply-starter' ? '$299' : 
+                         selectedPlan === 'comply-growth' ? '$799' : '$199'}
+                        <span style={{ fontSize: '14px', fontWeight: '400', color: '#6B685F' }}>/mo</span>
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '14px', color: '#6B685F', margin: 0 }}>
+                      {selectedPlan === 'comply-starter' ? 'Essential compliance monitoring' : 
+                       selectedPlan === 'comply-growth' ? 'Advanced compliance features' : 'AWS cost optimization'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                // Show plan selection if no plan from URL
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    fontSize: '14px', 
+                    fontWeight: '500', 
+                    color: '#1A1917', 
+                    marginBottom: '12px' 
+                  }}>
+                    Select your plan
+                  </label>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {[
+                      { id: 'comply-starter', name: 'Comply Starter', price: '$299', desc: 'Essential compliance monitoring' },
+                      { id: 'comply-growth', name: 'Comply Growth', price: '$799', desc: 'Advanced compliance features' },
+                      { id: 'finops', name: 'FinOps', price: '$199', desc: 'AWS cost optimization' }
+                    ].map(plan => (
+                      <div
+                        key={plan.id}
+                        onClick={() => setSelectedPlan(plan.id)}
+                        style={{
+                          padding: '16px',
+                          background: selectedPlan === plan.id ? '#EEF3F9' : '#FAFAF8',
+                          border: selectedPlan === plan.id ? '2px solid #1B3A5C' : '1px solid #E0DDD5',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '16px', fontWeight: '600', color: '#1A1917' }}>{plan.name}</span>
+                          <span style={{ fontSize: '18px', fontWeight: '700', color: '#1B3A5C' }}>{plan.price}<span style={{ fontSize: '14px', fontWeight: '400', color: '#6B685F' }}>/mo</span></span>
+                        </div>
+                        <p style={{ fontSize: '13px', color: '#6B685F', margin: 0 }}>{plan.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={{
+                padding: '16px',
+                background: '#F3E8FF',
+                border: '1px solid #C4B5FD',
+                borderRadius: '8px',
+                marginBottom: '24px',
+                fontSize: '13px',
+                color: '#5B21B6',
+                lineHeight: '1.6'
+              }}>
+                <strong>3-day free trial</strong> — Your card will be charged after the trial period ends. Cancel anytime.
+              </div>
+
+              {error && (
+                <div style={{
+                  padding: '12px 16px',
+                  background: '#FEE2E2',
+                  border: '1px solid #FCA5A5',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  color: '#991B1B',
+                  marginBottom: '20px'
+                }}>
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={handlePayment}
+                disabled={paymentProcessing}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  background: paymentProcessing ? '#6B685F' : '#1B3A5C',
+                  color: 'white',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: paymentProcessing ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.background = '#2E5F8A')}
+                onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.background = '#1B3A5C')}
+              >
+                {paymentProcessing ? (
+                  <><Loader2 size={18} className="animate-spin" /> Processing...</>
+                ) : (
+                  <>Continue to payment <ArrowRight size={18} /></>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Step 4: Confirm */}
+          {step === 4 && (
             <div>
               <div style={{ marginBottom: '32px' }}>
                 <div style={{

@@ -17,8 +17,9 @@ export const organizations = pgTable('organizations', {
   slug:            text('slug').notNull().unique(),
   domain:          text('domain'),                          // e.g. acme.com
   plan:            planEnum('plan').notNull().default('starter'),
-  stripeCustomerId: text('stripe_customer_id'),
-  stripeSubId:     text('stripe_subscription_id'),
+  paystackCustomerCode: text('paystack_customer_code'),
+  paystackSubscriptionCode: text('paystack_subscription_code'),
+  paystackAuthCode: text('paystack_auth_code'),
   trialEndsAt:     timestamp('trial_ends_at'),
   createdAt:       timestamp('created_at').notNull().defaultNow(),
   updatedAt:       timestamp('updated_at').notNull().defaultNow()
