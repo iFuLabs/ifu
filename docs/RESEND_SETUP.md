@@ -18,9 +18,20 @@ Add to your `.env` file:
 
 ```bash
 RESEND_API_KEY=re_your_actual_api_key_here
+
+# For Development (no domain setup needed)
 FROM_EMAIL=onboarding@resend.dev
+
+# For Production (requires domain verification - see below)
+# FROM_EMAIL=hello@ifu-labs.io
+
 PORTAL_URL=http://localhost:3003
 ```
+
+**About FROM_EMAIL:**
+- `onboarding@resend.dev` - Resend's test address, works immediately
+- `yourname@resend.dev` - Quick option using Resend's domain
+- `hello@yourdomain.com` - Professional option (requires domain setup)
 
 ### 4. Test It!
 Start your API server and test:
@@ -35,17 +46,43 @@ Then sign up or invite a team member - you should receive an email!
 
 ## Development vs Production
 
-### Development (Free Tier)
-- Use `onboarding@resend.dev` as FROM_EMAIL
-- 100 emails/day, 3,000/month
-- No domain verification needed
-- Perfect for testing
+### Development (Current Setup)
+- **FROM_EMAIL:** `onboarding@resend.dev`
+- **Benefits:** Works immediately, no setup required
+- **Limits:** 100 emails/day, 3,000/month (free tier)
+- **Drawback:** Emails show as from "onboarding@resend.dev" (not your brand)
 
-### Production (Requires Domain)
-1. Add your domain in Resend dashboard
-2. Add DNS records (MX, TXT, CNAME)
-3. Wait for verification (~5 minutes)
-4. Update FROM_EMAIL to `noreply@yourdomain.com`
+### Production (Recommended)
+To use your own domain (e.g., `hello@ifu-labs.io`):
+
+1. **Add Domain in Resend:**
+   - Go to [Resend Dashboard → Domains](https://resend.com/domains)
+   - Click "Add Domain"
+   - Enter your domain: `ifu-labs.io`
+
+2. **Add DNS Records:**
+   Resend will provide DNS records to add to your domain registrar:
+   - **SPF Record** (TXT) - Prevents spoofing
+   - **DKIM Record** (TXT) - Email authentication
+   - **DMARC Record** (TXT) - Email policy
+   - **MX Record** (optional) - For receiving emails
+
+3. **Wait for Verification:**
+   - Usually takes 5-10 minutes
+   - Check status in Resend dashboard
+   - Green checkmark = verified
+
+4. **Update Environment:**
+   ```bash
+   FROM_EMAIL=hello@ifu-labs.io
+   # or team@ifu-labs.io, noreply@ifu-labs.io, etc.
+   ```
+
+**Benefits of Using Your Domain:**
+- Professional appearance
+- Better deliverability
+- Builds sender reputation
+- Recipients trust emails from your domain
 
 ---
 

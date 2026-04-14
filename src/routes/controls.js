@@ -1,7 +1,8 @@
 import { db } from '../db/client.js'
 import { controlDefinitions, controlResults } from '../db/schema.js'
-import { eq, and, desc, sql, count } from 'drizzle-orm'
+import { eq, and, desc, sql, count, inArray } from 'drizzle-orm'
 import { verifyToken, requireUser } from '../middleware/auth.js'
+import { getAllowedFrameworks } from '../middleware/plan.js'
 
 export default async function controlRoutes(fastify) {
 
@@ -23,8 +24,29 @@ export default async function controlRoutes(fastify) {
   }, async (request, reply) => {
     const { framework, status } = request.query
 
-    // Get all control definitions
-    const whereClause = framework ? eq(controlDefinitions.framework, framework) : undefined
+    // Get allowed frameworks for this org's plan
+    const plan = request.user.org?.plan || 'starter'
+    const allowedFrameworks = getAllowedFrameworks(plan)
+
+    // Build where clause with plan restrictions
+    let whereClause
+    if (framework) {
+      // Check if requested framework is allowed
+      if (!allowedFrameworks.includes(framework)) {
+        return reply.status(403).send({
+          error: 'Upgrade Required',
+          message: `${framework.toUpperCase()} framework is only available on the Growth plan`,
+          code: 'PLAN_UPGRADE_REQUIRED',
+          requiredPlan: 'growth',
+          currentPlan: plan
+        })
+      }
+      whereClause = eq(controlDefinitions.framework, framework)
+    } else {
+      // Filter to only allowed frameworks
+      whereClause = inArray(controlDefinitions.framework, allowedFrameworks)
+    }
+
     const definitions = await db.query.controlDefinitions.findMany({
       where: whereClause,
       orderBy: [controlDefinitions.framework, controlDefinitions.controlId]
@@ -75,13 +97,18 @@ export default async function controlRoutes(fastify) {
     preHandler: [verifyToken, requireUser],
     schema: { tags: ['Controls'], security: [{ bearerAuth: [] }] }
   }, async (request, reply) => {
-    // Count total controls per framework (single query)
+    // Get allowed frameworks for this org's plan
+    const plan = request.user.org?.plan || 'starter'
+    const allowedFrameworks = getAllowedFrameworks(plan)
+
+    // Count total controls per framework (single query) - only allowed frameworks
     const defCounts = await db
       .select({
         framework: controlDefinitions.framework,
         total: count()
       })
       .from(controlDefinitions)
+      .where(inArray(controlDefinitions.framework, allowedFrameworks))
       .groupBy(controlDefinitions.framework)
 
     // Count results per framework and status using a LEFT JOIN (single query)
@@ -93,11 +120,14 @@ export default async function controlRoutes(fastify) {
       })
       .from(controlResults)
       .innerJoin(controlDefinitions, eq(controlResults.controlDefId, controlDefinitions.id))
-      .where(eq(controlResults.orgId, request.orgId))
+      .where(and(
+        eq(controlResults.orgId, request.orgId),
+        inArray(controlDefinitions.framework, allowedFrameworks)
+      ))
       .groupBy(controlDefinitions.framework, controlResults.status)
 
-    // Build scores from the two aggregated results
-    const frameworks = ['soc2', 'iso27001', 'gdpr', 'hipaa', 'pci_dss']
+    // Build scores from allowed frameworks only
+    const frameworks = allowedFrameworks
     const scores = {}
     let totalAll = 0, passAll = 0
 

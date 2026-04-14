@@ -2,6 +2,7 @@ import { db } from '../db/client.js'
 import { evidenceItems, controlResults, controlDefinitions, organizations, scans } from '../db/schema.js'
 import { eq, and, desc } from 'drizzle-orm'
 import { verifyToken, requireUser, requireAdmin } from '../middleware/auth.js'
+import { getAllowedFrameworks } from '../middleware/plan.js'
 import { generateEvidencePdf } from '../services/pdf/evidenceReport.js'
 import { auditAction } from '../services/audit.js'
 
@@ -108,6 +109,20 @@ export default async function evidenceRoutes(fastify) {
     }
   }, async (request, reply) => {
     const framework = request.query.framework || 'soc2'
+
+    // Check if user has access to this framework
+    const plan = request.user.org?.plan || 'starter'
+    const allowedFrameworks = getAllowedFrameworks(plan)
+    
+    if (!allowedFrameworks.includes(framework)) {
+      return reply.status(403).send({
+        error: 'Upgrade Required',
+        message: `PDF export for ${framework.toUpperCase()} is only available on the Growth plan`,
+        code: 'PLAN_UPGRADE_REQUIRED',
+        requiredPlan: 'growth',
+        currentPlan: plan
+      })
+    }
 
     const org = await db.query.organizations.findFirst({ where: eq(organizations.id, request.orgId) })
 

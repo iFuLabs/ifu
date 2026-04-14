@@ -341,7 +341,21 @@ export default async function billingRoutes(fastify) {
     switch (event.event) {
       case 'subscription.create': {
         const sub = event.data
-        logger.info({ code: sub.subscription_code }, 'Subscription created')
+        const [org] = await db.select().from(organizations)
+          .where(eq(organizations.paystackSubscriptionCode, sub.subscription_code))
+          .limit(1)
+        if (org) {
+          await auditAction({
+            orgId: org.id,
+            action: 'billing.webhook.subscription_create',
+            metadata: {
+              subscriptionCode: sub.subscription_code,
+              plan: sub.plan?.plan_code,
+              status: sub.status
+            }
+          })
+        }
+        logger.info({ code: sub.subscription_code, orgId: org?.id }, 'Subscription created')
         break
       }
 
@@ -355,6 +369,16 @@ export default async function billingRoutes(fastify) {
             .limit(1)
 
           if (org) {
+            await auditAction({
+              orgId: org.id,
+              action: 'billing.webhook.charge_success',
+              metadata: {
+                amount: charge.amount,
+                currency: charge.currency,
+                reference: charge.reference,
+                customerCode
+              }
+            })
             logger.info({ orgId: org.id, amount: charge.amount }, 'Payment received')
           }
         }
@@ -373,6 +397,14 @@ export default async function billingRoutes(fastify) {
             updatedAt: new Date()
           }).where(eq(organizations.id, org.id))
 
+          await auditAction({
+            orgId: org.id,
+            action: 'billing.webhook.subscription_disable',
+            metadata: {
+              subscriptionCode: sub.subscription_code,
+              status: sub.status
+            }
+          })
           logger.info({ orgId: org.id }, 'Subscription disabled via webhook')
         }
         break
@@ -380,12 +412,39 @@ export default async function billingRoutes(fastify) {
 
       case 'subscription.not_renew': {
         const sub = event.data
-        logger.info({ code: sub.subscription_code }, 'Subscription will not renew')
+        const [org] = await db.select().from(organizations)
+          .where(eq(organizations.paystackSubscriptionCode, sub.subscription_code))
+          .limit(1)
+        if (org) {
+          await auditAction({
+            orgId: org.id,
+            action: 'billing.webhook.subscription_not_renew',
+            metadata: { subscriptionCode: sub.subscription_code }
+          })
+        }
+        logger.info({ code: sub.subscription_code, orgId: org?.id }, 'Subscription will not renew')
         break
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data
+        const customerCode = invoice.customer?.customer_code
+        if (customerCode) {
+          const [org] = await db.select().from(organizations)
+            .where(eq(organizations.paystackCustomerCode, customerCode))
+            .limit(1)
+          if (org) {
+            await auditAction({
+              orgId: org.id,
+              action: 'billing.webhook.payment_failed',
+              metadata: {
+                amount: invoice.amount,
+                customerCode,
+                subscriptionCode: invoice.subscription?.subscription_code
+              }
+            })
+          }
+        }
         logger.warn({ customer: invoice.customer?.customer_code }, 'Payment failed')
         break
       }

@@ -18,6 +18,12 @@ export default function TeamPage() {
     }).then(r => r.json())
   )
 
+  const { data: planFeatures } = useSWR('/api/v1/plan/features', () =>
+    fetch(`${API_URL}/api/v1/plan/features`, {
+      credentials: 'include'
+    }).then(r => r.json())
+  )
+
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member')
@@ -49,6 +55,13 @@ export default function TeamPage() {
 
       if (!response.ok) {
         const err = await response.json()
+        
+        // Check for plan upgrade required
+        if (err.code === 'PLAN_UPGRADE_REQUIRED') {
+          setError(`${err.message} You have ${err.currentMembers} of ${err.maxMembers} members.`)
+          return
+        }
+        
         throw new Error(err.message || 'Failed to send invitation')
       }
 
@@ -111,10 +124,39 @@ export default function TeamPage() {
         </button>
       </div>
 
+      {/* Plan limit warning */}
+      {planFeatures?.limits.teamMembersReached && (
+        <div className="bg-warn/10 border border-warn/20 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <Shield size={16} className="text-warn flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-ink mb-1">Team member limit reached</p>
+              <p className="text-xs text-muted mb-3">
+                Your {planFeatures.plan} plan is limited to {planFeatures.features.maxTeamMembers} team members. 
+                Upgrade to Growth for unlimited members.
+              </p>
+              <a 
+                href="/dashboard/billing"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-white text-xs rounded-lg hover:bg-accent-mid transition-all"
+              >
+                Upgrade to Growth
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Team members */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-border">
-          <h2 className="text-sm font-medium text-ink">Team members ({members?.length || 0})</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-ink">Team members ({members?.length || 0})</h2>
+            {planFeatures?.features.maxTeamMembers && (
+              <span className="text-xs text-muted font-mono">
+                {members?.length || 0} / {planFeatures.features.maxTeamMembers}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="divide-y divide-border">
