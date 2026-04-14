@@ -11,6 +11,8 @@ import {
   verifyWebhookSignature
 } from '../services/paystack.js'
 import { logger } from '../services/logger.js'
+import { auditAction } from '../services/audit.js'
+import { TRIAL_DURATION_MS } from '../services/config.js'
 
 const PLAN_MAP = {
   'comply-starter': process.env.PAYSTACK_COMPLY_STARTER_PLAN,
@@ -22,6 +24,15 @@ const PLAN_NAMES = {
   'comply-starter': 'Comply Starter',
   'comply-growth': 'Comply Growth',
   'finops': 'FinOps'
+}
+
+// Maps the public plan slug to the org-level plan tier stored in the
+// `organizations.plan` enum column. Each product has its own tier value so
+// downstream code can branch correctly.
+const PLAN_TIERS = {
+  'comply-starter': 'starter',
+  'comply-growth': 'growth',
+  'finops': 'finops'
 }
 
 export default async function billingRoutes(fastify) {
@@ -121,7 +132,7 @@ export default async function billingRoutes(fastify) {
 
   // GET /api/v1/billing/verify — verify transaction and create subscription
   fastify.get('/verify', {
-    preHandler: [verifyToken, requireUser],
+    preHandler: [verifyToken, requireUser, requireOwner],
     schema: {
       tags: ['Billing'],
       security: [{ bearerAuth: [] }],
@@ -145,14 +156,27 @@ export default async function billingRoutes(fastify) {
       })
     }
 
-    const customerCode = txn.customer.customer_code
-    const authorizationCode = txn.authorization.authorization_code
+    const customerCode = txn.customer?.customer_code
+    const authorizationCode = txn.authorization?.authorization_code
     const metadata = txn.metadata || {}
     const planCode = metadata.planCode || metadata.plan_code
     const plan = metadata.plan
 
+    if (!customerCode || !authorizationCode) {
+      logger.error({ reference, hasCustomer: !!txn.customer, hasAuth: !!txn.authorization },
+        'Paystack transaction missing customer or authorization data')
+      return reply.status(400).send({ error: 'Transaction is missing customer or card authorization data' })
+    }
+
     if (!planCode) {
       return reply.status(400).send({ error: 'Missing plan information in transaction' })
+    }
+
+    // Ensure the transaction metadata's orgId matches the authenticated org
+    if (metadata.orgId && metadata.orgId !== request.orgId) {
+      logger.warn({ reference, metaOrg: metadata.orgId, reqOrg: request.orgId },
+        'Verify request orgId does not match transaction metadata')
+      return reply.status(403).send({ error: 'Transaction does not belong to this organization' })
     }
 
     // Check if organization already has a subscription
@@ -160,15 +184,48 @@ export default async function billingRoutes(fastify) {
       where: eq(organizations.id, request.orgId)
     })
 
+    if (!org) {
+      return reply.status(404).send({ error: 'Organization not found' })
+    }
+
+    const startDateMs = Date.now() + TRIAL_DURATION_MS
+    const startDate = new Date(startDateMs).toISOString()
+    const trialEndsAt = new Date(startDateMs)
+    const planTier = PLAN_TIERS[plan] || 'starter'
+
     let subscription
-    
-    if (org.paystackSubscriptionCode) {
-      // Subscription already exists, just fetch it
+    let alreadyProvisioned = false
+
+    // Idempotency: if this exact authorization has already been processed for
+    // this org, skip re-creating the subscription so callback retries / refresh
+    // don't double-charge or create duplicate subscriptions.
+    if (org.paystackAuthCode === authorizationCode && org.paystackSubscriptionCode) {
       try {
         subscription = await getSubscription(org.paystackSubscriptionCode)
+        alreadyProvisioned = true
       } catch (err) {
-        // If subscription doesn't exist in Paystack, create new one
-        const startDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+        logger.warn({ err: err.message, code: org.paystackSubscriptionCode },
+          'Existing subscription not found in Paystack — will recreate')
+      }
+    }
+
+    if (!subscription) {
+      if (org.paystackSubscriptionCode) {
+        // Subscription already exists for this org but was for a different
+        // authorization — reuse if Paystack still has it, otherwise recreate.
+        try {
+          subscription = await getSubscription(org.paystackSubscriptionCode)
+        } catch (err) {
+          subscription = await createSubscription({
+            customer: customerCode,
+            plan: planCode,
+            authorization: authorizationCode,
+            startDate
+          })
+        }
+      } else {
+        // Create new subscription with start_date in the future so the
+        // first real charge happens after the free trial.
         subscription = await createSubscription({
           customer: customerCode,
           plan: planCode,
@@ -176,19 +233,7 @@ export default async function billingRoutes(fastify) {
           startDate
         })
       }
-    } else {
-      // Create new subscription with start_date = now + 3 days (trial period)
-      const startDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-      subscription = await createSubscription({
-        customer: customerCode,
-        plan: planCode,
-        authorization: authorizationCode,
-        startDate
-      })
     }
-
-    // Determine which plan tier to set
-    const planTier = plan?.startsWith('comply') ? (plan === 'comply-growth' ? 'growth' : 'starter') : 'starter'
 
     // Update organization with Paystack details
     await db.update(organizations).set({
@@ -196,21 +241,39 @@ export default async function billingRoutes(fastify) {
       paystackSubscriptionCode: subscription.subscription_code,
       paystackAuthCode: authorizationCode,
       plan: planTier,
-      trialEndsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      trialEndsAt,
       updatedAt: new Date()
     }).where(eq(organizations.id, request.orgId))
 
-    logger.info({
-      orgId: request.orgId,
-      plan,
-      subscriptionCode: subscription.subscription_code
-    }, 'Subscription created with 3-day trial')
+    if (!alreadyProvisioned) {
+      await auditAction({
+        orgId: request.orgId,
+        userId: request.user.id,
+        action: 'billing.subscription_created',
+        metadata: {
+          plan,
+          planTier,
+          subscriptionCode: subscription.subscription_code,
+          reference
+        }
+      })
+      logger.info({
+        orgId: request.orgId,
+        plan,
+        subscriptionCode: subscription.subscription_code
+      }, 'Subscription created with free trial')
+    } else {
+      logger.info({
+        orgId: request.orgId,
+        subscriptionCode: subscription.subscription_code
+      }, 'Verify call returned already-provisioned subscription (idempotent)')
+    }
 
     return reply.send({
       status: 'success',
       plan: planTier,
       planName: PLAN_NAMES[plan] || plan,
-      trialEndsAt: startDate,
+      trialEndsAt: trialEndsAt.toISOString(),
       subscription: {
         code: subscription.subscription_code,
         nextPaymentDate: subscription.next_payment_date
@@ -263,8 +326,13 @@ export default async function billingRoutes(fastify) {
       ? request.rawBody
       : request.rawBody?.toString() || JSON.stringify(request.body)
 
-    if (!verifyWebhookSignature(rawBody, signature)) {
-      return reply.status(401).send({ error: 'Invalid webhook signature' })
+    try {
+      if (!verifyWebhookSignature(rawBody, signature)) {
+        return reply.status(401).send({ error: 'Invalid webhook signature' })
+      }
+    } catch (err) {
+      logger.error({ err: err.message }, 'Webhook signature verification failed')
+      return reply.status(500).send({ error: 'Webhook verification not configured' })
     }
 
     const event = request.body

@@ -38,11 +38,13 @@ export default function BillingPage() {
   async function fetchBilling() {
     try {
       const res = await fetch(`${API_URL}/api/v1/billing`, { credentials: 'include' })
-      if (res.ok) {
-        setBilling(await res.json())
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || data.error || `Failed to load billing (${res.status})`)
       }
-    } catch (err) {
-      setError('Failed to load billing information')
+      setBilling(await res.json())
+    } catch (err: any) {
+      setError(err.message || 'Failed to load billing information')
     } finally {
       setLoading(false)
     }
@@ -138,13 +140,34 @@ export default function BillingPage() {
           <span className="text-sm text-muted">/month</span>
         </div>
 
-        {billing?.status === 'trialing' && (
-          <div className="flex items-center gap-2 text-xs text-muted mb-6">
-            <Calendar size={14} />
-            <span>Trial ends in {billing.trialDaysLeft} day{billing.trialDaysLeft !== 1 ? 's' : ''}</span>
+        {/* Trial active with card */}
+        {billing?.status === 'trialing' && billing.hasPaymentMethod && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 text-xs text-muted mb-3">
+              <Calendar size={14} />
+              <span>Trial ends in {billing.trialDaysLeft} day{billing.trialDaysLeft !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="px-4 py-3 bg-accent-light border border-accent/20 rounded-lg text-sm text-accent">
+              Your card will be charged automatically when the trial ends.
+            </div>
           </div>
         )}
 
+        {/* Trial active without card */}
+        {billing?.status === 'trialing' && !billing.hasPaymentMethod && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 text-xs text-muted mb-3">
+              <Calendar size={14} />
+              <span>Trial ends in {billing.trialDaysLeft} day{billing.trialDaysLeft !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-3 bg-warn/10 border border-warn/20 rounded-lg text-sm text-warn mb-4">
+              <AlertCircle size={14} />
+              <span>Add a payment method to continue after your trial ends.</span>
+            </div>
+          </div>
+        )}
+
+        {/* Active subscription */}
         {billing?.subscription?.nextPaymentDate && billing.status === 'active' && (
           <div className="flex items-center gap-2 text-xs text-muted mb-6">
             <Calendar size={14} />
@@ -152,14 +175,53 @@ export default function BillingPage() {
           </div>
         )}
 
-        {billing?.status === 'expired' && !billing.hasPaymentMethod && (
+        {/* Trial expired */}
+        {billing?.status === 'expired' && (
           <div className="flex items-center gap-2 text-xs text-danger mb-6">
             <AlertCircle size={14} />
-            <span>Your trial has ended. Add a payment method to continue.</span>
+            <span>Your trial has ended. {billing.hasPaymentMethod ? 'Subscribe to continue.' : 'Add a payment method to continue.'}</span>
           </div>
         )}
 
-        {!billing?.hasPaymentMethod && !billing?.subscription ? (
+        {/* Action buttons based on status */}
+        {billing?.status === 'trialing' && billing.hasPaymentMethod ? (
+          // Trial with card - show manage option
+          <button
+            onClick={handleCancel}
+            disabled={actionLoading}
+            className="px-4 py-2 border border-border text-muted text-sm rounded-lg hover:text-ink hover:bg-bg transition-all disabled:opacity-50"
+          >
+            Manage payment method
+          </button>
+        ) : billing?.status === 'trialing' && !billing.hasPaymentMethod ? (
+          // Trial without card - show add payment with plan options
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleAddPayment('comply-starter')}
+              disabled={actionLoading}
+              className="flex-1 px-4 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent-mid transition-all disabled:opacity-50"
+            >
+              {actionLoading ? 'Redirecting...' : 'Add card — Starter $299/mo'}
+            </button>
+            <button
+              onClick={() => handleAddPayment('comply-growth')}
+              disabled={actionLoading}
+              className="flex-1 px-4 py-2 border border-accent text-accent text-sm rounded-lg hover:bg-accent-light transition-all disabled:opacity-50"
+            >
+              {actionLoading ? 'Redirecting...' : 'Add card — Growth $799/mo'}
+            </button>
+          </div>
+        ) : billing?.status === 'active' && billing.subscription ? (
+          // Active subscription - show cancel
+          <button
+            onClick={handleCancel}
+            disabled={actionLoading}
+            className="px-4 py-2 border border-danger/30 text-danger text-sm rounded-lg hover:bg-danger/5 transition-all disabled:opacity-50"
+          >
+            {actionLoading ? 'Cancelling...' : 'Cancel subscription'}
+          </button>
+        ) : billing?.status === 'expired' ? (
+          // Expired - show subscribe with plan options
           <div className="flex gap-2">
             <button
               onClick={() => handleAddPayment('comply-starter')}
@@ -176,15 +238,7 @@ export default function BillingPage() {
               {actionLoading ? 'Redirecting...' : 'Subscribe — Growth $799/mo'}
             </button>
           </div>
-        ) : billing?.subscription && (
-          <button
-            onClick={handleCancel}
-            disabled={actionLoading}
-            className="px-4 py-2 border border-danger/30 text-danger text-sm rounded-lg hover:bg-danger/5 transition-all disabled:opacity-50"
-          >
-            {actionLoading ? 'Cancelling...' : 'Cancel subscription'}
-          </button>
-        )}
+        ) : null}
       </div>
 
       {/* Payment method */}

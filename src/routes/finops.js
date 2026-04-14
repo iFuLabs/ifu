@@ -5,6 +5,7 @@ import { verifyToken, requireUser } from '../middleware/auth.js'
 import { decrypt } from '../services/encryption.js'
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts'
 import { runFinOpsChecks } from '../connectors/finops/checks.js'
+import { generateFinOpsSummary } from '../services/finops-ai.js'
 import { redis } from '../services/redis.js'
 import { auditAction } from '../services/audit.js'
 
@@ -58,6 +59,10 @@ export default async function finopsRoutes(fastify) {
         region: process.env.AWS_REGION || 'us-east-1',
         onProgress: async () => {} // no SSE on this endpoint — use /stream for live progress
       })
+
+      // Generate AI summary
+      const aiSummary = await generateFinOpsSummary(findings)
+      findings.aiSummary = aiSummary
 
       await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
 
@@ -131,6 +136,11 @@ export default async function finopsRoutes(fastify) {
 
       // Cache the result
       const cacheKey = `finops:findings:${request.orgId}`
+      
+      // Generate AI summary
+      const aiSummary = await generateFinOpsSummary(findings)
+      findings.aiSummary = aiSummary
+      
       await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
 
       send({ type: 'complete', findings })

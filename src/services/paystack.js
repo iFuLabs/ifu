@@ -70,12 +70,18 @@ export async function listPlans() {
 import crypto from 'crypto'
 
 export function verifyWebhookSignature(body, signature) {
-  if (!process.env.PAYSTACK_WEBHOOK_SECRET) return false
+  if (!process.env.PAYSTACK_WEBHOOK_SECRET) {
+    throw new Error('PAYSTACK_WEBHOOK_SECRET is not configured — refusing to verify webhook')
+  }
 
   const hash = crypto
     .createHmac('sha512', process.env.PAYSTACK_WEBHOOK_SECRET)
     .update(body)
     .digest('hex')
 
-  return hash === signature
+  // Use timing-safe comparison to prevent signature timing attacks
+  const hashBuf = Buffer.from(hash, 'hex')
+  const sigBuf = Buffer.from(signature, 'hex')
+  if (hashBuf.length !== sigBuf.length) return false
+  return crypto.timingSafeEqual(hashBuf, sigBuf)
 }

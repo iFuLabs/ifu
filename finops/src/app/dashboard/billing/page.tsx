@@ -33,11 +33,13 @@ export default function BillingPage() {
   async function fetchBilling() {
     try {
       const res = await fetch(`${API_URL}/api/v1/billing`, { credentials: 'include' })
-      if (res.ok) {
-        setBilling(await res.json())
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || data.error || `Failed to load billing (${res.status})`)
       }
-    } catch (err) {
-      setError('Failed to load billing information')
+      setBilling(await res.json())
+    } catch (err: any) {
+      setError(err.message || 'Failed to load billing information')
     } finally {
       setLoading(false)
     }

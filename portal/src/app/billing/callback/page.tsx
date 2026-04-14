@@ -25,33 +25,41 @@ export default function BillingCallbackPage() {
   }, [searchParams])
 
   async function verifyPayment(reference: string) {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
+
     try {
-      const token = localStorage.getItem('auth_token')
-      
-      const response = await fetch(`${API_URL}/api/v1/billing/verify?reference=${reference}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch(`${API_URL}/api/v1/billing/verify?reference=${encodeURIComponent(reference)}`, {
+        credentials: 'include',
+        signal: controller.signal
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Payment verification failed')
+        const error = await response.json().catch(() => ({}))
+        throw new Error(error.message || error.error || 'Payment verification failed')
       }
 
       const data = await response.json()
-      
+
       setStatus('success')
       setMessage('Payment successful! Redirecting...')
-      
-      // Redirect to onboarding confirm step after 2 seconds
+
+      // Redirect to onboarding confirm step with plan info
       setTimeout(() => {
-        router.push('/onboarding?step=4')
+        const plan = data.plan || 'finops'
+        const planName = data.planName || 'FinOps'
+        router.push(`/onboarding?step=4&plan=${plan}&planName=${encodeURIComponent(planName)}`)
       }, 2000)
-      
+
     } catch (err: any) {
       setStatus('error')
-      setMessage(err.message || 'Failed to verify payment')
+      if (err.name === 'AbortError') {
+        setMessage('Verification timed out. Please try again or contact support if you were charged.')
+      } else {
+        setMessage(err.message || 'Failed to verify payment')
+      }
+    } finally {
+      clearTimeout(timeoutId)
     }
   }
 
@@ -130,7 +138,13 @@ export default function BillingCallbackPage() {
               {message}
             </p>
             <button
-              onClick={() => router.push('/onboarding?step=3')}
+              onClick={() => {
+                // Get plan from URL params if available
+                const urlParams = new URLSearchParams(window.location.search)
+                const reference = urlParams.get('reference')
+                // Extract plan from Paystack metadata if possible, otherwise go back to step 3
+                router.push('/onboarding?step=3')
+              }}
               style={{
                 padding: '12px 24px',
                 background: '#1B3A5C',

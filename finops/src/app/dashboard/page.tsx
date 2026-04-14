@@ -14,6 +14,7 @@ interface Finding {
   savingsPlans: CoverageItem[]
   topServices: ServiceCost[]
   summary: Summary
+  aiSummary?: string
   cached?: boolean
 }
 
@@ -193,6 +194,21 @@ export default function FinOpsPage() {
 
       {findings && (
         <>
+          {/* AI Summary */}
+          {findings.aiSummary && (
+            <div className="bg-gradient-to-r from-brand-light to-blue-50 border border-brand/20 rounded-xl p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Zap size={16} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-ink mb-1">AI Insights</h3>
+                  <p className="text-sm text-muted leading-relaxed">{findings.aiSummary}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Summary cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <SummaryCard

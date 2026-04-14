@@ -55,6 +55,16 @@ export default function OnboardingPage() {
         setSelectedPlan('finops')
       }
     }
+    
+    // Restore plan from localStorage if returning from payment failure
+    const savedPlan = localStorage.getItem('onboarding_plan')
+    if (savedPlan && !urlProduct) {
+      setSelectedPlan(savedPlan)
+      const savedProduct = localStorage.getItem('onboarding_product')
+      if (savedProduct) {
+        setSelectedProducts([savedProduct])
+      }
+    }
   }, [urlProduct, urlPlan])
 
   // Fetch AWS setup info when component mounts
@@ -147,12 +157,18 @@ export default function OnboardingPage() {
     setPaymentProcessing(true)
     setError('')
     
+    // Save plan to localStorage before redirecting to Paystack
+    localStorage.setItem('onboarding_plan', selectedPlan)
+    if (selectedProducts.length > 0) {
+      localStorage.setItem('onboarding_product', selectedProducts[0])
+    }
+    
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/billing/initialize`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ plan: selectedPlan })
       })
@@ -173,6 +189,10 @@ export default function OnboardingPage() {
   }
 
   const handleFinish = () => {
+    // Clear localStorage after successful onboarding
+    localStorage.removeItem('onboarding_plan')
+    localStorage.removeItem('onboarding_product')
+    
     if (selectedProducts.includes('comply')) {
       window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
     } else if (selectedProducts.includes('finops')) {

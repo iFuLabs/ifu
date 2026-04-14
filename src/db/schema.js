@@ -2,7 +2,7 @@ import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index,
 import { relations } from 'drizzle-orm'
 
 // ── Enums ──────────────────────────────────────────────────────────────────
-export const planEnum = pgEnum('plan', ['starter', 'growth', 'enterprise'])
+export const planEnum = pgEnum('plan', ['starter', 'growth', 'finops'])
 export const controlStatusEnum = pgEnum('control_status', ['pass', 'fail', 'review', 'not_applicable'])
 export const frameworkEnum = pgEnum('framework', ['soc2', 'iso27001', 'gdpr', 'hipaa', 'pci_dss'])
 export const integrationTypeEnum = pgEnum('integration_type', ['aws', 'github', 'okta', 'google_workspace'])
@@ -17,8 +17,8 @@ export const organizations = pgTable('organizations', {
   slug:            text('slug').notNull().unique(),
   domain:          text('domain'),                          // e.g. acme.com
   plan:            planEnum('plan').notNull().default('starter'),
-  paystackCustomerCode: text('paystack_customer_code'),
-  paystackSubscriptionCode: text('paystack_subscription_code'),
+  paystackCustomerCode: text('paystack_customer_code').unique(),
+  paystackSubscriptionCode: text('paystack_subscription_code').unique(),
   paystackAuthCode: text('paystack_auth_code'),
   trialEndsAt:     timestamp('trial_ends_at'),
   createdAt:       timestamp('created_at').notNull().defaultNow(),

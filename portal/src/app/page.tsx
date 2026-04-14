@@ -43,7 +43,7 @@ export default function PortalPage() {
         }}>
           {/* Comply Card */}
           <a
-            href="http://localhost:3001"
+            href={process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001'}
             style={{
               background: 'white',
               borderRadius: '16px',
@@ -97,7 +97,7 @@ export default function PortalPage() {
 
           {/* FinOps Card */}
           <a
-            href="http://localhost:3002"
+            href={process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002'}
             style={{
               background: 'white',
               borderRadius: '16px',
@@ -163,7 +163,7 @@ export default function PortalPage() {
             New user? Complete setup →
           </a>
           <a
-            href="http://localhost:3004"
+            href={process.env.NEXT_PUBLIC_WEBSITE_URL || 'http://localhost:3004'}
             style={{
               fontSize: '14px',
               color: 'rgba(255,255,255,0.7)',
