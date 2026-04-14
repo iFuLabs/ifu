@@ -40,11 +40,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [])
 
   const handleLogout = async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/logout`, {
-      method: 'POST',
-      credentials: 'include'
-    }).catch(() => {})
-    window.location.href = process.env.NEXT_PUBLIC_PORTAL_URL + '/login'
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      if (!res.ok) {
+        console.error('Logout failed:', res.status)
+      }
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      window.location.href = process.env.NEXT_PUBLIC_PORTAL_URL + '/login'
+    }
   }
 
   return (

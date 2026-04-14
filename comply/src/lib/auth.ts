@@ -12,7 +12,7 @@ export async function getAuth0Client() {
       redirect_uri: `${process.env.NEXT_PUBLIC_PORTAL_URL}/auth/callback`,
       audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
     },
-    cacheLocation: 'localstorage',
+    cacheLocation: 'memory',
   })
 
   return auth0Client

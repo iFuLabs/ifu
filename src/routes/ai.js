@@ -49,7 +49,10 @@ export default async function aiRoutes(fastify) {
     }
 
     const control = { ...def, ...latest, evidence: latest.evidence }
-    const org = { name: 'Your Organization', plan: 'growth' } // Loaded from request.user in production
+    const org = { 
+      name: request.user.org?.name || 'Your Organization', 
+      plan: request.user.org?.plan || 'starter' 
+    }
 
     try {
       const explanation = await explainControlGap(control, org)
@@ -103,7 +106,10 @@ export default async function aiRoutes(fastify) {
     }
 
     const control = { ...def, ...latest, evidence: latest.evidence }
-    const org = { name: 'Your Organization', plan: 'growth' }
+    const org = { 
+      name: request.user.org?.name || 'Your Organization', 
+      plan: request.user.org?.plan || 'starter' 
+    }
 
     // Set SSE headers
     reply.raw.writeHead(200, {
@@ -168,7 +174,10 @@ export default async function aiRoutes(fastify) {
     const total = controls.length
     const score = total > 0 ? Math.round((passing / total) * 100) : 0
 
-    const org = { name: 'Your Organization', plan: 'growth' }
+    const org = { 
+      name: request.user.org?.name || 'Your Organization', 
+      plan: request.user.org?.plan || 'starter' 
+    }
 
     try {
       const summary = await generateComplianceSummary({ controls, score, org, framework })

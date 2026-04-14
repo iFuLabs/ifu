@@ -238,7 +238,7 @@ export default async function teamRoutes(fastify) {
       })
     }
 
-    await db.delete(users).where(eq(users.id, id))
+    await db.delete(users).where(and(eq(users.id, id), eq(users.orgId, request.orgId)))
 
     await auditAction({
       orgId: request.orgId,

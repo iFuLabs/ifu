@@ -26,6 +26,9 @@ export const organizations = pgTable('organizations', {
 })
 
 // ── Users ──────────────────────────────────────────────────────────────────
+// NOTE: email is globally unique across all orgs. This enforces a single canonical
+// user identity across the platform. If you need per-tenant identities (allowing
+// the same email in multiple orgs), change to a composite unique index on (email, orgId).
 export const users = pgTable('users', {
   id:             uuid('id').primaryKey().defaultRandom(),
   auth0Id:        text('auth0_id').unique(),                 // sub from Auth0 JWT (optional now)
@@ -55,7 +58,8 @@ export const invitations = pgTable('invitations', {
   acceptedAt:     timestamp('accepted_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow()
 }, (table) => [
-  index('idx_invitations_org_id_status').on(table.orgId, table.status)
+  index('idx_invitations_org_id_status').on(table.orgId, table.status),
+  uniqueIndex('idx_invitations_org_email').on(table.orgId, table.email)
 ])
 
 // ── Integrations ───────────────────────────────────────────────────────────

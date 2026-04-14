@@ -3,6 +3,7 @@ import { db } from '../../db/client.js'
 import { integrations } from '../../db/schema.js'
 import { eq } from 'drizzle-orm'
 import { scanQueue } from '../../jobs/queues.js'
+import { decrypt } from '../../services/encryption.js'
 
 /**
  * Handles incoming GitHub App webhook events.
@@ -34,16 +35,29 @@ export async function handleGithubWebhook(request, reply) {
         // Customer uninstalled the app — mark integration as disconnected
         const installationId = payload.installation.id
 
-        await db
-          .update(integrations)
-          .set({
-            status: 'disconnected',
-            lastError: 'GitHub App uninstalled by user',
-            lastErrorAt: new Date(),
-            updatedAt: new Date()
-          })
-          .where(eq(integrations.type, 'github'))
-        // Note: in production, filter by installationId stored in credentials
+        // Find the specific integration for this installation
+        const allGithubIntegrations = await db.query.integrations.findMany({
+          where: eq(integrations.type, 'github')
+        })
+
+        const integration = allGithubIntegrations.find(i => {
+          try {
+            const creds = JSON.parse(decrypt(i.credentials))
+            return creds.installationId === installationId
+          } catch { return false }
+        })
+
+        if (integration) {
+          await db
+            .update(integrations)
+            .set({
+              status: 'disconnected',
+              lastError: 'GitHub App uninstalled by user',
+              lastErrorAt: new Date(),
+              updatedAt: new Date()
+            })
+            .where(eq(integrations.id, integration.id))
+        }
       }
       break
     }
@@ -62,7 +76,7 @@ export async function handleGithubWebhook(request, reply) {
 
       const integration = allGithubIntegrations.find(i => {
         try {
-          const creds = JSON.parse(i.credentials?.data || '{}')
+          const creds = JSON.parse(decrypt(i.credentials))
           return creds.installationId === installationId
         } catch { return false }
       })
