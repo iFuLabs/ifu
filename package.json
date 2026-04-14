@@ -19,8 +19,11 @@
     "@aws-sdk/client-config-service": "^3.540.0",
     "@aws-sdk/client-cost-explorer": "^3.540.0",
     "@aws-sdk/client-ec2": "^3.1029.0",
+    "@aws-sdk/client-elastic-load-balancing": "^3.540.0",
+    "@aws-sdk/client-elastic-load-balancing-v2": "^3.540.0",
     "@aws-sdk/client-guardduty": "^3.1029.0",
     "@aws-sdk/client-iam": "^3.540.0",
+    "@aws-sdk/client-pricing": "^3.540.0",
     "@aws-sdk/client-rds": "^3.1029.0",
     "@aws-sdk/client-s3": "^3.540.0",
     "@aws-sdk/client-sts": "^3.540.0",
@@ -49,7 +52,6 @@
     "pino-pretty": "^11.0.0",
     "redis": "^4.6.13",
     "resend": "^6.10.0",
-    "stripe": "^14.18.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {

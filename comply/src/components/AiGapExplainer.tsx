@@ -1,7 +1,8 @@
 'use client'
 import { useState } from 'react'
-import { Sparkles, Clock, Zap, AlertTriangle, ChevronDown, ChevronUp, Terminal, Loader2 } from 'lucide-react'
+import { Sparkles, Clock, Zap, AlertTriangle, ChevronDown, ChevronUp, Terminal, Loader2, Lock } from 'lucide-react'
 import clsx from 'clsx'
+import Link from 'next/link'
 
 interface AiExplanation {
   summary: string
@@ -20,7 +21,7 @@ const PRIORITY_CONFIG = {
 }
 
 export function AiGapExplainer({ controlId }: { controlId: string }) {
-  const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error' | 'upgrade-required'>('idle')
   const [data, setData] = useState<AiExplanation | null>(null)
   const [error, setError] = useState('')
   const [showAutomation, setShowAutomation] = useState(false)
@@ -30,10 +31,20 @@ export function AiGapExplainer({ controlId }: { controlId: string }) {
     setError('')
 
     try {
-      const res = await fetch(`/api/v1/ai/explain/${controlId}`, { method: 'POST' })
+      const res = await fetch(`/api/v1/ai/explain/${controlId}`, { 
+        method: 'POST',
+        credentials: 'include'
+      })
 
       if (!res.ok) {
         const err = await res.json()
+        
+        // Check for plan upgrade required
+        if (err.code === 'PLAN_UPGRADE_REQUIRED') {
+          setState('upgrade-required')
+          return
+        }
+        
         // Graceful fallback — show built-in guidance if AI unavailable
         if (err.fallback) {
           setData(err.fallback)
@@ -73,6 +84,31 @@ export function AiGapExplainer({ controlId }: { controlId: string }) {
           <Loader2 size={15} className="animate-spin" />
           Analysing your infrastructure and generating explanation...
         </div>
+      </div>
+    )
+  }
+
+  // Upgrade required
+  if (state === 'upgrade-required') {
+    return (
+      <div className="border border-accent/20 rounded-xl p-6 bg-accent-light/20">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Lock size={16} className="text-accent" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-medium text-ink mb-1">AI Features Available on Growth Plan</h3>
+            <p className="text-sm text-muted leading-relaxed">
+              Get AI-powered gap explanations, remediation steps, and automation tips with the Growth plan.
+            </p>
+          </div>
+        </div>
+        <Link 
+          href="/dashboard/billing"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent-mid transition-all"
+        >
+          Upgrade to Growth — $799/mo
+        </Link>
       </div>
     )
   }

@@ -93,10 +93,7 @@ export default function AcceptInvitationPage() {
 
       const data = await res.json()
       
-      // Store token in localStorage as backup
-      localStorage.setItem('auth_token', data.token)
-      localStorage.setItem('user_email', data.user.email)
-
+      // Cookie is set by the backend via Set-Cookie header.
       // Redirect to the product that sent the invitation
       const productUrl = data.product === 'finops' 
         ? (process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002')

@@ -27,6 +27,7 @@ import scanRoutes from './routes/scans.js'
 import aiRoutes from './routes/ai.js'
 import finopsRoutes from './routes/finops.js'
 import teamRoutes from './routes/team.js'
+import planRoutes from './routes/plan.js'
 
 const app = Fastify({
   logger: {
@@ -95,6 +96,7 @@ await app.register(scanRoutes,         { prefix: '/api/v1/scans' })
 await app.register(aiRoutes,           { prefix: '/api/v1/ai' })
 await app.register(finopsRoutes,       { prefix: '/api/v1/finops' })
 await app.register(teamRoutes,         { prefix: '/api/v1/team' })
+await app.register(planRoutes,         { prefix: '/api/v1/plan' })
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', async () => ({

@@ -21,21 +21,27 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
           <head>
             <meta charset="utf-8">
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .logo { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 10px; color: white; }
+              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
+              .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
+              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .button:hover { background: #15402F; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+              ul { padding-left: 20px; }
+              li { margin: 8px 0; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
-                <h1 style="margin: 0;">Welcome to ${COMPANY_NAME}!</h1>
+                <div class="logo">iFu Labs</div>
+                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
               </div>
               <div class="content">
-                <p>Hi ${name},</p>
+                <p>Hi ${name || 'there'},</p>
                 
                 <p>Thanks for signing up! Your organization <strong>${orgName}</strong> is now set up and ready to go.</p>
                 
@@ -48,14 +54,16 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
                 
                 <p>You're on a 14-day free trial with full access to all features. No credit card required.</p>
                 
-                <a href="${PORTAL_URL}/dashboard" class="button">Go to Dashboard</a>
+                <a href="${PORTAL_URL}" class="button">Go to Dashboard</a>
                 
                 <p>If you have any questions, just reply to this email. We're here to help!</p>
                 
                 <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
               </div>
               <div class="footer">
-                <p>${COMPANY_NAME} - Compliance Automation & Cloud Cost Optimization</p>
+                <p><strong>iFu Labs</strong></p>
+                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
               </div>
             </div>
           </body>
@@ -97,20 +105,24 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
           <head>
             <meta charset="utf-8">
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .info-box { background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0; }
+              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .logo { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 10px; color: white; }
+              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
+              .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
+              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .button:hover { background: #15402F; }
+              .info-box { background: #E8F2EE; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #1A4D3C; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
-              .warning { color: #dc2626; font-size: 14px; margin-top: 20px; }
+              .warning { color: #dc2626; font-size: 14px; margin-top: 20px; padding: 15px; background: #fef2f2; border-radius: 6px; border-left: 4px solid #dc2626; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
-                <h1 style="margin: 0;">You're Invited!</h1>
+                <div class="logo">iFu Labs</div>
+                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
               </div>
               <div class="content">
                 <p>Hi there,</p>
@@ -126,15 +138,18 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
                 
                 <a href="${inviteUrl}" class="button">Accept Invitation</a>
                 
-                <p class="warning">⚠️ This invitation link will expire on ${expiryDate}.</p>
+                <div class="warning">
+                  ⚠️ This invitation link will expire on ${expiryDate}.
+                </div>
                 
                 <p>If you weren't expecting this invitation, you can safely ignore this email.</p>
                 
                 <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
               </div>
               <div class="footer">
-                <p>${COMPANY_NAME} - Compliance Automation & Cloud Cost Optimization</p>
-                <p style="font-size: 12px; color: #9ca3af;">This invitation was sent to ${to}</p>
+                <p><strong>iFu Labs</strong></p>
+                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This invitation was sent to ${to}</p>
               </div>
             </div>
           </body>
@@ -170,22 +185,26 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
           <head>
             <meta charset="utf-8">
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .logo { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 10px; color: white; }
+              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
+              .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
+              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .button:hover { background: #15402F; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
-              .warning { color: #dc2626; font-size: 14px; margin-top: 20px; }
+              .warning { color: #dc2626; font-size: 14px; margin-top: 20px; padding: 15px; background: #fef2f2; border-radius: 6px; border-left: 4px solid #dc2626; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
-                <h1 style="margin: 0;">Password Reset</h1>
+                <div class="logo">iFu Labs</div>
+                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
               </div>
               <div class="content">
-                <p>Hi ${name},</p>
+                <p>Hi ${name || 'there'},</p>
                 
                 <p>We received a request to reset your password for your ${COMPANY_NAME} account.</p>
                 
@@ -193,14 +212,18 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
                 
                 <a href="${resetUrl}" class="button">Reset Password</a>
                 
-                <p class="warning">⚠️ This link will expire in 1 hour for security reasons.</p>
+                <div class="warning">
+                  ⚠️ This link will expire in 1 hour for security reasons.
+                </div>
                 
                 <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
                 
                 <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
               </div>
               <div class="footer">
-                <p>${COMPANY_NAME} - Compliance Automation & Cloud Cost Optimization</p>
+                <p><strong>iFu Labs</strong></p>
+                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
               </div>
             </div>
           </body>

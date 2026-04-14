@@ -26,19 +26,40 @@
 
 ### 3. Email Templates
 All emails use responsive HTML templates with:
-- Professional gradient header
+- iFu Labs branding with logo text
+- Brand colors (#1A4D3C green header)
 - Clean, readable content
 - Call-to-action buttons
 - Footer with company info
 - Mobile-friendly design
+- Proper personalization (uses actual user names, not placeholders)
 
 ### 4. Configuration
 **Environment Variables:**
 ```bash
 RESEND_API_KEY=re_your_api_key_here
+
+# Development (no domain setup needed)
 FROM_EMAIL=onboarding@resend.dev
+
+# Production (requires domain verification)
+FROM_EMAIL=hello@ifu-labs.io
+# or team@ifu-labs.io, noreply@ifu-labs.io, etc.
+
 PORTAL_URL=http://localhost:3003
 ```
+
+**About FROM_EMAIL:**
+- `onboarding@resend.dev` - Resend's test address, works immediately for development
+- `your-name@resend.dev` - Quick option, no domain setup required
+- `hello@your-domain.com` - Professional option, requires domain verification in Resend
+
+**To use your own domain:**
+1. Go to Resend Dashboard → Domains
+2. Add your domain (e.g., ifu-labs.io)
+3. Add DNS records provided by Resend
+4. Wait for verification (usually 5-10 minutes)
+5. Update FROM_EMAIL to use your domain
 
 ### 5. Documentation
 - **Setup Guide:** `docs/RESEND_SETUP.md`
@@ -76,8 +97,14 @@ PORTAL_URL=http://localhost:3003
 - 100 emails/day
 - 3,000 emails/month
 - No credit card required
-- No domain verification needed for testing
-- Use `onboarding@resend.dev` for development
+- Use `onboarding@resend.dev` for testing (no domain verification needed)
+- For production: verify your own domain for professional emails
+
+**Domain Verification (Production):**
+- Free on all Resend plans
+- Takes 5-10 minutes
+- Improves deliverability
+- Looks more professional to recipients
 
 ---
 

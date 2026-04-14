@@ -2,10 +2,11 @@ import { z } from 'zod'
 import crypto from 'crypto'
 import { db } from '../db/client.js'
 import { users, invitations, organizations } from '../db/schema.js'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, count } from 'drizzle-orm'
 import { verifyToken, requireUser, requireAdmin } from '../middleware/auth.js'
 import { auditAction } from '../services/audit.js'
 import { sendTeamInvitationEmail } from '../services/email.js'
+import { getMaxTeamMembers } from '../middleware/plan.js'
 
 const inviteSchema = z.object({
   email: z.string().email(),
@@ -73,6 +74,30 @@ export default async function teamRoutes(fastify) {
     }
   }, async (request, reply) => {
     const body = inviteSchema.parse(request.body)
+
+    // Check team member limit based on plan
+    const plan = request.user.org?.plan || 'starter'
+    const maxMembers = getMaxTeamMembers(plan)
+    
+    if (maxMembers !== null) {
+      // Count current members
+      const [{ value: currentCount }] = await db
+        .select({ value: count() })
+        .from(users)
+        .where(eq(users.orgId, request.orgId))
+      
+      if (currentCount >= maxMembers) {
+        return reply.status(403).send({
+          error: 'Upgrade Required',
+          message: `Your ${plan} plan is limited to ${maxMembers} team members. Upgrade to Growth for unlimited members.`,
+          code: 'PLAN_UPGRADE_REQUIRED',
+          requiredPlan: 'growth',
+          currentPlan: plan,
+          currentMembers: currentCount,
+          maxMembers
+        })
+      }
+    }
 
     // Check if user already exists in this org
     const existingUser = await db.query.users.findFirst({

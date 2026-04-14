@@ -2,6 +2,7 @@ import { db } from '../db/client.js'
 import { controlDefinitions, controlResults } from '../db/schema.js'
 import { eq, and, desc } from 'drizzle-orm'
 import { verifyToken, requireUser } from '../middleware/auth.js'
+import { requireAiFeatures } from '../middleware/plan.js'
 import { explainControlGap, explainControlGapStream, generateComplianceSummary } from '../services/ai.js'
 import { redis } from '../services/redis.js'
 
@@ -13,7 +14,7 @@ export default async function aiRoutes(fastify) {
   // POST /api/v1/ai/explain/:controlId
   // Returns a full AI explanation for a failing control (cached)
   fastify.post('/explain/:controlId', {
-    preHandler: [verifyToken, requireUser],
+    preHandler: [verifyToken, requireUser, requireAiFeatures],
     schema: {
       tags: ['AI'],
       security: [{ bearerAuth: [] }],
@@ -75,7 +76,7 @@ export default async function aiRoutes(fastify) {
   // GET /api/v1/ai/explain/:controlId/stream
   // Server-sent events stream of the AI explanation being generated in real-time
   fastify.get('/explain/:controlId/stream', {
-    preHandler: [verifyToken, requireUser],
+    preHandler: [verifyToken, requireUser, requireAiFeatures],
     schema: {
       tags: ['AI'],
       security: [{ bearerAuth: [] }],
@@ -127,7 +128,7 @@ export default async function aiRoutes(fastify) {
   // GET /api/v1/ai/summary
   // High-level compliance summary for the dashboard insight card
   fastify.get('/summary', {
-    preHandler: [verifyToken, requireUser],
+    preHandler: [verifyToken, requireUser, requireAiFeatures],
     schema: {
       tags: ['AI'],
       security: [{ bearerAuth: [] }],

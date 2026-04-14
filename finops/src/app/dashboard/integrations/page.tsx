@@ -177,10 +177,33 @@ export default function IntegrationsPage() {
                     <li>Select <strong>Another AWS account</strong></li>
                     <li>Enter Account ID: <code className="font-mono bg-brand/10 px-1 rounded">123456789012</code></li>
                     <li>Enable <strong>Require external ID</strong>: <code className="font-mono bg-brand/10 px-1 rounded">{externalId}</code></li>
-                    <li>Attach policy: <code className="font-mono bg-brand/10 px-1 rounded">SecurityAudit</code></li>
-                    <li>Name it (e.g. <code className="font-mono bg-brand/10 px-1 rounded">iFuLabsRole</code>)</li>
+                    <li>Attach managed policy: <code className="font-mono bg-brand/10 px-1 rounded">ViewOnlyAccess</code></li>
+                    <li>Add inline policy for Cost Explorer (see below)</li>
+                    <li>Name it (e.g. <code className="font-mono bg-brand/10 px-1 rounded">iFuLabsFinOpsRole</code>)</li>
                     <li>Copy the Role ARN</li>
                   </ol>
+                  
+                  <details className="mt-3">
+                    <summary className="cursor-pointer font-medium text-brand hover:text-brand-mid">
+                      📋 Cost Explorer inline policy (click to expand)
+                    </summary>
+                    <pre className="mt-2 p-2 bg-brand/10 rounded text-[10px] overflow-x-auto">
+{`{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "ce:GetCostAndUsage",
+      "ce:GetCostForecast",
+      "ce:GetReservationCoverage",
+      "ce:GetSavingsPlansCoverage",
+      "ce:GetRightsizingRecommendation"
+    ],
+    "Resource": "*"
+  }]
+}`}
+                    </pre>
+                  </details>
                 </div>
 
                 <div>
@@ -227,8 +250,9 @@ export default function IntegrationsPage() {
       {/* Info box */}
       <div className="bg-bg border border-border rounded-lg p-4">
         <p className="text-xs text-muted leading-relaxed">
-          <strong className="text-ink">Note:</strong> FinOps requires read-only access to your AWS account to analyze costs and detect waste. 
-          We use AWS Cost Explorer, EC2, RDS, and S3 APIs. Your credentials are encrypted and never shared.
+          <strong className="text-ink">Required permissions:</strong> FinOps needs <code className="font-mono bg-surface px-1 rounded">ViewOnlyAccess</code> (AWS managed policy) 
+          plus Cost Explorer API access to analyze spending, detect waste, and provide optimization recommendations. 
+          All credentials are encrypted and never shared.
         </p>
       </div>
     </div>

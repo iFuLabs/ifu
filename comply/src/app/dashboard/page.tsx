@@ -3,7 +3,7 @@ import useSWR from 'swr'
 import { api } from '@/lib/api'
 import { AiInsightCard } from '@/components/AiInsightCard'
 import { RadialBarChart, RadialBar, ResponsiveContainer, Cell } from 'recharts'
-import { Shield, AlertTriangle, CheckCircle, Clock, RefreshCw, ChevronRight, Zap, TrendingDown, DollarSign } from 'lucide-react'
+import { Shield, AlertTriangle, CheckCircle, Clock, RefreshCw, ChevronRight, Zap, TrendingDown, DollarSign, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
@@ -12,6 +12,7 @@ export default function DashboardPage() {
   const { data: score, isLoading: scoreLoading } = useSWR('score', api.controls.score, { refreshInterval: 30000 })
   const { data: controls } = useSWR('controls', () => api.controls.list())
   const { data: scans } = useSWR('scans', api.scans.list)
+  const { data: planFeatures } = useSWR('plan-features', api.plan.features)
 
   const { data: finopsSummary } = useSWR('finops-summary', () =>
     fetch('/api/v1/finops/summary').then(r => r.json()).catch(() => null)
@@ -74,7 +75,7 @@ export default function DashboardPage() {
         {/* Framework scores */}
         <div className="md:col-span-2 grid grid-cols-2 gap-3">
           {score && Object.entries(score.frameworks).map(([fw, data]) => (
-            <FrameworkCard key={fw} framework={fw} data={data} />
+            <FrameworkCard key={fw} framework={fw} data={data} planFeatures={planFeatures} />
           ))}
           {scoreLoading && [1,2,3,4].map(i => (
             <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse h-24" />
@@ -219,12 +220,34 @@ function ScoreBadge({ score }: { score?: number }) {
   )
 }
 
-function FrameworkCard({ framework, data }: { framework: string; data: any }) {
+function FrameworkCard({ framework, data, planFeatures }: { framework: string; data: any; planFeatures?: any }) {
   const labels: Record<string, string> = {
     soc2: 'SOC 2', iso27001: 'ISO 27001', gdpr: 'GDPR', hipaa: 'HIPAA', pci_dss: 'PCI-DSS'
   }
+  
+  // Check if framework is locked
+  const isLocked = planFeatures && !planFeatures.features.frameworks.includes(framework)
+  
   const scoreColor = data.score >= 80 ? 'text-accent' : data.score >= 60 ? 'text-warn' : 'text-danger'
   const barColor = data.score >= 80 ? 'bg-accent' : data.score >= 60 ? 'bg-warn' : 'bg-danger'
+
+  if (isLocked) {
+    return (
+      <Link 
+        href="/dashboard/billing"
+        className="bg-card border border-border rounded-xl p-4 hover:border-accent/30 transition-colors relative overflow-hidden group"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-border/30 to-transparent" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-mono text-xs text-muted uppercase tracking-wider">{labels[framework] || framework}</span>
+            <Lock size={14} className="text-muted" />
+          </div>
+          <p className="text-xs text-muted">Growth plan required</p>
+        </div>
+      </Link>
+    )
+  }
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 hover:border-accent/30 transition-colors">

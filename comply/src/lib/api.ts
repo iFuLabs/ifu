@@ -58,6 +58,11 @@ export const api = {
     current: () => apiFetch<Organization>('/api/v1/organizations/current'),
     members: () => apiFetch<User[]>('/api/v1/organizations/members'),
   },
+
+  plan: {
+    features: () => apiFetch<PlanFeatures>('/api/v1/plan/features'),
+    check: (feature: string) => apiFetch<{ available: boolean; plan: string; requiredPlan: string | null }>(`/api/v1/plan/check/${feature}`),
+  },
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -82,6 +87,23 @@ export interface Organization {
   slug: string
   plan: 'starter' | 'growth' | 'enterprise'
   trialEndsAt?: string
+}
+
+export interface PlanFeatures {
+  plan: 'starter' | 'growth' | 'finops'
+  features: {
+    frameworks: string[]
+    aiFeatures: boolean
+    maxTeamMembers: number | null
+    regulatoryAlerts: boolean
+  }
+  usage: {
+    currentMembers: number
+    maxMembers: number | null
+  }
+  limits: {
+    teamMembersReached: boolean
+  }
 }
 
 export interface Control {

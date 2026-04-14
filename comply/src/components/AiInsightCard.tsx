@@ -1,6 +1,6 @@
 'use client'
 import useSWR from 'swr'
-import { Sparkles, AlertTriangle, Zap, ChevronRight, Loader2 } from 'lucide-react'
+import { Sparkles, AlertTriangle, Zap, ChevronRight, Loader2, Lock } from 'lucide-react'
 import Link from 'next/link'
 import clsx from 'clsx'
 
@@ -27,7 +27,33 @@ export function AiInsightCard({ framework = 'soc2' }: { framework?: string }) {
     )
   }
 
-  if (error || !data || data.error) return null
+  if (error || !data || data.error) {
+    // Check if it's a plan upgrade error
+    if (data?.code === 'PLAN_UPGRADE_REQUIRED') {
+      return (
+        <div className="bg-card border border-accent/20 rounded-xl p-5">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Lock size={16} className="text-accent" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-ink mb-1">AI Insights on Growth Plan</h3>
+              <p className="text-xs text-muted mb-3">
+                Get AI-powered compliance insights and recommendations with the Growth plan.
+              </p>
+              <Link 
+                href="/dashboard/billing"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-white text-xs rounded-lg hover:bg-accent-mid transition-all"
+              >
+                Upgrade to Growth
+              </Link>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
 
   const riskColor = RISK_COLORS[data.riskLevel as keyof typeof RISK_COLORS] || RISK_COLORS.medium
 

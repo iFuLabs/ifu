@@ -2,9 +2,10 @@
 import useSWR from 'swr'
 import { api } from '@/lib/api'
 import { useState } from 'react'
-import { Download, CheckCircle, XCircle, Clock, Minus, FileText, Plus, Trash2 } from 'lucide-react'
+import { Download, CheckCircle, XCircle, Clock, Minus, FileText, Plus, Trash2, Lock } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import clsx from 'clsx'
+import Link from 'next/link'
 
 const FRAMEWORKS = [
   { value: 'soc2',     label: 'SOC 2 Type II' },
@@ -16,14 +17,28 @@ export default function EvidencePage() {
   const { data, isLoading, mutate } = useSWR('evidence', () =>
     fetch('/api/v1/evidence').then(r => r.json())
   )
+  const { data: planFeatures } = useSWR('plan-features', api.plan.features)
   const [exporting, setExporting] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [exportError, setExportError] = useState('')
 
   const handleExport = async (framework: string) => {
     setExporting(framework)
+    setExportError('')
     try {
-      const res = await fetch(`/api/v1/evidence/export/pdf?framework=${framework}`)
-      if (!res.ok) throw new Error('Export failed')
+      const res = await fetch(`/api/v1/evidence/export/pdf?framework=${framework}`, {
+        credentials: 'include'
+      })
+      
+      if (!res.ok) {
+        const err = await res.json()
+        if (err.code === 'PLAN_UPGRADE_REQUIRED') {
+          setExportError(err.message)
+          return
+        }
+        throw new Error('Export failed')
+      }
+      
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -33,6 +48,7 @@ export default function EvidencePage() {
       URL.revokeObjectURL(url)
     } catch (err) {
       console.error(err)
+      setExportError('Failed to export PDF')
     } finally {
       setExporting(null)
     }
@@ -70,26 +86,61 @@ export default function EvidencePage() {
       {/* Export cards */}
       <div>
         <h2 className="text-sm font-medium text-ink mb-3">Export Audit Pack</h2>
+        
+        {exportError && (
+          <div className="mb-3 px-4 py-3 bg-warn/10 border border-warn/20 rounded-lg text-sm text-ink flex items-start justify-between">
+            <span>{exportError}</span>
+            <button onClick={() => setExportError('')} className="text-muted hover:text-ink">×</button>
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {FRAMEWORKS.map(fw => (
-            <div key={fw.value} className="bg-card border border-border rounded-xl p-5 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <FileText size={16} className="text-accent" />
-                <span className="text-sm font-medium text-ink">{fw.label}</span>
+          {FRAMEWORKS.map(fw => {
+            const isLocked = planFeatures && !planFeatures.features.frameworks.includes(fw.value)
+            
+            return (
+              <div key={fw.value} className={clsx(
+                'bg-card border rounded-xl p-5 flex flex-col gap-3',
+                isLocked ? 'border-border/50 relative overflow-hidden' : 'border-border'
+              )}>
+                {isLocked && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-border/30 to-transparent" />
+                )}
+                <div className="relative flex items-center gap-2">
+                  {isLocked ? (
+                    <Lock size={16} className="text-muted" />
+                  ) : (
+                    <FileText size={16} className="text-accent" />
+                  )}
+                  <span className="text-sm font-medium text-ink">{fw.label}</span>
+                </div>
+                <p className="relative text-xs text-muted">
+                  {isLocked 
+                    ? 'Available on Growth plan'
+                    : 'Full evidence pack with all controls, results, and remediation guidance.'
+                  }
+                </p>
+                {isLocked ? (
+                  <Link
+                    href="/dashboard/billing"
+                    className="relative flex items-center justify-center gap-2 px-3 py-2 text-xs border border-accent/30 rounded text-accent hover:bg-accent-light transition-all mt-auto"
+                  >
+                    <Lock size={12} />
+                    Upgrade to unlock
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => handleExport(fw.value)}
+                    disabled={exporting === fw.value}
+                    className="relative flex items-center justify-center gap-2 px-3 py-2 text-xs border border-border rounded hover:bg-bg transition-all text-muted hover:text-ink disabled:opacity-50 mt-auto"
+                  >
+                    <Download size={12} className={exporting === fw.value ? 'animate-bounce' : ''} />
+                    {exporting === fw.value ? 'Generating PDF...' : 'Download PDF'}
+                  </button>
+                )}
               </div>
-              <p className="text-xs text-muted">
-                Full evidence pack with all controls, results, and remediation guidance.
-              </p>
-              <button
-                onClick={() => handleExport(fw.value)}
-                disabled={exporting === fw.value}
-                className="flex items-center justify-center gap-2 px-3 py-2 text-xs border border-border rounded hover:bg-bg transition-all text-muted hover:text-ink disabled:opacity-50 mt-auto"
-              >
-                <Download size={12} className={exporting === fw.value ? 'animate-bounce' : ''} />
-                {exporting === fw.value ? 'Generating PDF...' : 'Download PDF'}
-              </button>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 

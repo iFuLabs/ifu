@@ -26,22 +26,16 @@ export default function LoginPage() {
     try {
       const response = await api.auth.login({ email, password })
       
-      // Store the JWT token
-      localStorage.setItem('auth_token', response.token)
-      localStorage.setItem('user_email', response.user.email)
-      
-      // Redirect to product dashboard
+      // Cookie is set by the backend via Set-Cookie header.
+      // Redirect to product dashboard.
       const complyUrl = process.env.NEXT_PUBLIC_COMPLY_URL
       const finopsUrl = process.env.NEXT_PUBLIC_FINOPS_URL
-      
-      // Check last used product
-      const lastProduct = localStorage.getItem('lastProduct')
-      if (lastProduct === 'comply') {
+
+      if (response.lastProduct === 'comply') {
         window.location.href = `${complyUrl}/dashboard`
-      } else if (lastProduct === 'finops') {
+      } else if (response.lastProduct === 'finops') {
         window.location.href = `${finopsUrl}/dashboard`
       } else {
-        // Default to portal home
         router.push('/')
       }
     } catch (err: any) {

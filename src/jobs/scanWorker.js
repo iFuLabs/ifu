@@ -81,32 +81,22 @@ export const scanWorker = new Worker('scans', async (job) => {
     const nextCheck = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
     for (const result of results) {
-      // Check if a result already exists for this org + control
-      const existing = await db.query.controlResults.findFirst({
-        where: and(
-          eq(controlResults.orgId, orgId),
-          eq(controlResults.controlDefId, result.controlDefId)
-        )
+      await db.insert(controlResults).values({
+        orgId,
+        controlDefId: result.controlDefId,
+        status: result.status,
+        evidence: result.evidence,
+        checkedAt: now,
+        nextCheckAt: nextCheck
+      }).onConflictDoUpdate({
+        target: [controlResults.orgId, controlResults.controlDefId],
+        set: {
+          status: result.status,
+          evidence: result.evidence,
+          checkedAt: now,
+          nextCheckAt: nextCheck
+        }
       })
-
-      if (existing) {
-        // Update in place — preserves user-added notes
-        await db.update(controlResults).set({
-          status: result.status,
-          evidence: result.evidence,
-          checkedAt: now,
-          nextCheckAt: nextCheck
-        }).where(eq(controlResults.id, existing.id))
-      } else {
-        await db.insert(controlResults).values({
-          orgId,
-          controlDefId: result.controlDefId,
-          status: result.status,
-          evidence: result.evidence,
-          checkedAt: now,
-          nextCheckAt: nextCheck
-        })
-      }
 
       if (result.status === 'pass') passCount++
       else if (result.status === 'fail') failCount++

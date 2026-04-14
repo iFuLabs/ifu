@@ -24,15 +24,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userEmail, setUserEmail] = useState('')
 
   useEffect(() => {
-    // Get user email from localStorage
-    const email = localStorage.getItem('user_email')
-    if (email) setUserEmail(email)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/me`, {
+      credentials: 'include'
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.user?.email) setUserEmail(data.user.email)
+      })
+      .catch(() => {})
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user_email')
-    localStorage.removeItem('lastProduct')
+  const handleLogout = async () => {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    }).catch(() => {})
     window.location.href = process.env.NEXT_PUBLIC_PORTAL_URL + '/login'
   }
 

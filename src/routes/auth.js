@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm'
 import { verifyToken } from '../middleware/auth.js'
 import { auditAction } from '../services/audit.js'
 import { slugify } from '../services/utils.js'
-import { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } from '../services/config.js'
+import { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS, TRIAL_DURATION_MS } from '../services/config.js'
 import { sendWelcomeEmail } from '../services/email.js'
 
 const onboardSchema = z.object({
@@ -117,7 +117,7 @@ export default async function authRoutes(fastify) {
             slug,
             domain: body.orgDomain,
             plan: 'starter',
-            trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 day trial
+            trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS)
           }).returning()
 
           const [user] = await tx.insert(users).values({
