@@ -18,10 +18,8 @@ export default function AuthCallbackPage() {
       const result = await client.handleRedirectCallback()
       
       // Check if user needs onboarding
-      const token = await client.getTokenSilently()
-      const res = await fetch('/api/v1/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      // Token is now in httpOnly cookie, no need to pass it explicitly
+      const res = await fetch('/api/v1/auth/me')
       
       const data = await res.json()
       
