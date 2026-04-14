@@ -1,0 +1,154 @@
+# ------------------------------------------------------------------------------
+# CI pipeline: code quality checks for branch pushes and pull requests to main.
+#
+# Customize for your project by editing the variables under `env:` and the
+# individual job steps. Each job is isolated so you can disable or extend them.
+#
+# To enforce "merge only if checks pass", go to:
+#   Settings → Branches → Branch protection rules → main
+#   → "Require status checks to pass before merging"
+#   → Select: lint, test, static-analysis
+# ------------------------------------------------------------------------------
+
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - main   # main is covered by the pull_request trigger below
+  pull_request:
+    branches:
+      - main
+
+# Cancel in-progress runs on the same ref when a new commit is pushed.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  # Bump this if you want to force a fresh npm cache.
+  CACHE_KEY_PREFIX: v1
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # 1. Lint — style and formatting checks.
+  #    Uses `npm run lint --if-present` so the job no-ops until you add a
+  #    "lint" script in package.json (e.g. "eslint . --max-warnings=0").
+  # ----------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint --if-present
+
+  # ----------------------------------------------------------------------------
+  # 2. Test — run the Jest suite.
+  # ----------------------------------------------------------------------------
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --ci --reporters=default
+        env:
+          # Keep Jest deterministic in CI; tweak as needed.
+          CI: "true"
+          NODE_ENV: test
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.run_id }}
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ----------------------------------------------------------------------------
+  # 3. Static analysis — dependency audit + CodeQL.
+  #    - `npm audit` catches known CVEs in dependencies.
+  #    - CodeQL runs semantic analysis on JS/TS source.
+  #    Swap out or add tools (Semgrep, Snyk, SonarQube) as needed.
+  # ----------------------------------------------------------------------------
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Dependency audit (high severity and above)
+        run: npm audit --audit-level=high
+        continue-on-error: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  # ----------------------------------------------------------------------------
+  # 4. Aggregate gate — single required check for branch protection.
+  #    Add this job's name ("CI Success") to the required status checks list
+  #    so you don't have to update branch protection when jobs change.
+  # ----------------------------------------------------------------------------
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [lint, test, static-analysis]
+    if: always()
+    steps:
+      - name: Verify all checks passed
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]]; then
+            echo "Lint job failed"; exit 1
+          fi
+          if [[ "${{ needs.test.result }}" != "success" ]]; then
+            echo "Test job failed"; exit 1
+          fi
+          if [[ "${{ needs.static-analysis.result }}" != "success" ]]; then
+            echo "Static analysis job failed"; exit 1
+          fi
+          echo "All checks passed"
