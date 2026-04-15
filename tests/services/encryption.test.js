@@ -1,11 +1,7 @@
-import { describe, test, expect, beforeAll } from '@jest/globals'
+import { describe, test, expect } from '@jest/globals'
 import { encrypt, decrypt } from '../../src/services/encryption.js'
 
 describe('Encryption Service', () => {
-  beforeAll(() => {
-    // Set a test encryption key
-    process.env.ENCRYPTION_KEY = 'a'.repeat(64)
-  })
 
   test('should encrypt and decrypt a string', () => {
     const plaintext = 'my secret data'
