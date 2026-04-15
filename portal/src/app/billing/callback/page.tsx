@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
-export default function BillingCallbackPage() {
+function BillingCallbackContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
@@ -138,13 +140,7 @@ export default function BillingCallbackPage() {
               {message}
             </p>
             <button
-              onClick={() => {
-                // Get plan from URL params if available
-                const urlParams = new URLSearchParams(window.location.search)
-                const reference = urlParams.get('reference')
-                // Extract plan from Paystack metadata if possible, otherwise go back to step 3
-                router.push('/onboarding?step=3')
-              }}
+              onClick={() => router.push('/onboarding?step=3')}
               style={{
                 padding: '12px 24px',
                 background: '#1B3A5C',
@@ -172,5 +168,13 @@ export default function BillingCallbackPage() {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function BillingCallbackPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+      <BillingCallbackContent />
+    </Suspense>
   )
 }
