@@ -204,7 +204,7 @@ function OnboardingForm() {
     }
   }
 
-  const productName = urlProduct === 'comply' ? 'Comply' : urlProduct === 'finops' ? 'FinOps' : null
+  const productName = urlProduct === 'comply' ? 'iFu Comply' : urlProduct === 'finops' ? 'iFu Costless' : null
   const planName = urlPlan ? urlPlan.charAt(0).toUpperCase() + urlPlan.slice(1) : null
 
   return (
@@ -840,8 +840,8 @@ function OnboardingForm() {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <span style={{ fontSize: '18px', fontWeight: '600', color: '#1A1917' }}>
-                        {selectedPlan === 'comply-starter' ? 'Comply Starter' : 
-                         selectedPlan === 'comply-growth' ? 'Comply Growth' : 'FinOps'}
+                        {selectedPlan === 'comply-starter' ? 'iFu Comply Starter' : 
+                         selectedPlan === 'comply-growth' ? 'iFu Comply Growth' : 'iFu Costless'}
                       </span>
                       <span style={{ fontSize: '20px', fontWeight: '700', color: '#1B3A5C' }}>
                         {selectedPlan === 'comply-starter' ? '$299' : 
@@ -870,9 +870,9 @@ function OnboardingForm() {
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {[
-                      { id: 'comply-starter', name: 'Comply Starter', price: '$299', desc: 'Essential compliance monitoring' },
-                      { id: 'comply-growth', name: 'Comply Growth', price: '$799', desc: 'Advanced compliance features' },
-                      { id: 'finops', name: 'FinOps', price: '$199', desc: 'AWS cost optimization' }
+                      { id: 'comply-starter', name: 'iFu Comply Starter', price: '$299', desc: 'Essential compliance monitoring' },
+                      { id: 'comply-growth', name: 'iFu Comply Growth', price: '$799', desc: 'Advanced compliance features' },
+                      { id: 'finops', name: 'iFu Costless', price: '$199', desc: 'AWS cost optimization' }
                     ].map(plan => (
                       <div
                         key={plan.id}
@@ -998,7 +998,7 @@ function OnboardingForm() {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                     <div style={{ fontSize: '28px' }}>
-                      {productName === 'Comply' ? '🛡️' : '💰'}
+                      {productName === 'iFu Comply' ? '🛡️' : '💰'}
                     </div>
                     <div>
                       <div style={{ fontSize: '18px', fontWeight: '600', color: '#1A1917', fontFamily: "'Fraunces', serif" }}>
@@ -1012,7 +1012,7 @@ function OnboardingForm() {
                     </div>
                   </div>
                   <p style={{ fontSize: '14px', color: '#6B685F', lineHeight: '1.6', margin: 0 }}>
-                    {productName === 'Comply' 
+                    {productName === 'iFu Comply' 
                       ? 'Automated compliance monitoring for SOC 2, ISO 27001, and GDPR'
                       : 'AWS cost optimization and waste detection'
                     }

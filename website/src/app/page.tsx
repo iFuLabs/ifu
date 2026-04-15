@@ -78,7 +78,7 @@ export default function HomePage() {
             containers, and DevOps — backed by deep AWS expertise and real engineering.
           </p>
           <div className="hero-actions">
-            <a href="#contact" className="btn-cta primary">
+            <a href="/schedule-consultation" className="btn-cta primary">
               Book a free discovery call
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -191,7 +191,7 @@ export default function HomePage() {
 
           <div className="products-grid reveal-grid">
             <div className="product-card">
-              <span className="product-tag" style={{ background: 'var(--brand-light)', color: 'var(--brand)' }}>● Comply</span>
+              <span className="product-tag" style={{ background: 'var(--brand-light)', color: 'var(--brand)' }}>● iFu Comply</span>
               <div className="product-name">Compliance Automation</div>
               <p className="product-desc">Automated SOC 2, ISO 27001, and GDPR evidence collection, control monitoring, and audit-ready PDF exports.</p>
               <ul className="product-features">
@@ -203,7 +203,7 @@ export default function HomePage() {
             </div>
 
             <div className="product-card">
-              <span className="product-tag" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>● FinOps</span>
+              <span className="product-tag" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>● iFu Costless</span>
               <div className="product-name">Cost Optimisation Tool</div>
               <p className="product-desc">Connect your AWS account and get a live view of waste, savings opportunities, and spend anomalies — updated daily.</p>
               <ul className="product-features">
@@ -213,6 +213,118 @@ export default function HomePage() {
               </ul>
               <div className="product-price">From <strong>$199</strong> / month · or add to your retainer</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Free consultation band */}
+      <section className="reveal" style={{ padding: '0 32px', margin: '80px auto', maxWidth: '1200px' }}>
+        <div style={{
+          background: 'var(--brand)',
+          borderRadius: '20px',
+          padding: 'clamp(40px, 6vw, 64px) clamp(28px, 5vw, 56px)',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 'clamp(28px, 4vw, 48px)',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '-80px',
+            right: '-80px',
+            width: '320px',
+            height: '320px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.04)',
+            pointerEvents: 'none',
+          }} />
+          <div style={{ position: 'relative', zIndex: 1, flex: '1 1 420px', minWidth: 0 }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 14px',
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '999px',
+              fontSize: '12px',
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.85)',
+              letterSpacing: '0.02em',
+              marginBottom: '20px',
+            }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ADE80' }} />
+              Free · 30 minutes · No sales pitch
+            </div>
+            <h2 style={{
+              fontSize: 'clamp(28px, 4vw, 42px)',
+              fontWeight: 600,
+              color: '#fff',
+              lineHeight: 1.15,
+              letterSpacing: '-0.02em',
+              marginBottom: '16px',
+            }}>
+              Book a free consultation<br />
+              <span style={{ color: 'rgba(255,255,255,0.7)', fontStyle: 'italic', fontWeight: 400 }}>
+                with an AWS engineer.
+              </span>
+            </h2>
+            <p style={{
+              fontSize: '16px',
+              color: 'rgba(255,255,255,0.75)',
+              lineHeight: 1.6,
+              maxWidth: '560px',
+              marginBottom: '0',
+            }}>
+              Tell us what you&apos;re trying to build, migrate, or secure. We&apos;ll share an honest
+              read on scope, risks, and whether we&apos;re the right fit — before you commit to anything.
+            </p>
+          </div>
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '12px', flex: '0 1 auto' }}>
+            <a
+              href="/schedule-consultation"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '16px 28px',
+                background: '#fff',
+                color: 'var(--brand)',
+                borderRadius: '12px',
+                fontSize: '15px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Book a free consultation
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </a>
+            <a
+              href="mailto:info@ifulabs.com"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '14px 28px',
+                background: 'transparent',
+                color: 'rgba(255,255,255,0.85)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: 500,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Or email us directly
+            </a>
           </div>
         </div>
       </section>
@@ -233,7 +345,7 @@ export default function HomePage() {
           {[
             { tier: 'Starter Project', name: 'Fixed-scope engagement', price: 'POA', period: 'scoped per project', desc: 'Best for single-service projects — a cost audit, compliance gap assessment, or CI/CD pipeline build.', features: ['Single service area', 'Senior engineer lead', 'Full documentation & handover', '30-day follow-up support'], cta: 'Get a quote', href: '#contact' },
             { tier: 'Growth Engagement', name: 'Multi-service delivery', price: 'POA', period: 'scoped per programme', desc: 'Our most common engagement — 2–3 service areas over 6–12 weeks with a dedicated engineer.', features: ['Multi-service scope', 'Dedicated engineer embedded', 'Weekly progress calls', 'Full IaC & runbook delivery', '60-day follow-up support'], cta: 'Book discovery call', href: '#contact', featured: true },
-            { tier: 'Enterprise Programme', name: 'Full transformation', price: 'Custom', period: 'multi-team, multi-quarter', desc: 'Large-scale cloud transformation — migration, platform engineering, and compliance as a full programme.', features: ['Multi-engineer team', 'Programme management included', 'AWS MAP funding support', 'Executive reporting & QBRs', 'Transition to managed services'], cta: 'Talk to us', href: 'mailto:hello@ifu-labs.io' },
+            { tier: 'Enterprise Programme', name: 'Full transformation', price: 'Custom', period: 'multi-team, multi-quarter', desc: 'Large-scale cloud transformation — migration, platform engineering, and compliance as a full programme.', features: ['Multi-engineer team', 'Programme management included', 'AWS MAP funding support', 'Executive reporting & QBRs', 'Transition to managed services'], cta: 'Talk to us', href: 'mailto:info@ifulabs.com' },
           ].map(p => (
             <div key={p.tier} className={`pricing-card${p.featured ? ' featured' : ''}`}>
               <div className="pricing-tier">{p.tier}</div>
@@ -251,9 +363,9 @@ export default function HomePage() {
 
         <div className="pricing-grid" id="pricing-products" style={{ display: 'none' }}>
           {[
-            { tier: 'Comply · Starter', name: 'Compliance Tool', price: '$299', period: 'per month, billed annually', desc: 'SOC 2 automation for early-stage teams.', features: ['SOC 2 control monitoring', 'AWS & GitHub connectors', 'Evidence PDF export', 'Vendor risk tracker', 'Up to 3 team members'], cta: 'Start free trial', product: 'comply', plan: 'starter' },
-            { tier: 'Comply · Growth', name: 'Multi-framework', price: '$799', period: 'per month, billed annually', desc: 'SOC 2, ISO 27001, GDPR, and HIPAA — plus AI gap explanations.', features: ['Everything in Starter', 'ISO 27001, GDPR, HIPAA', 'AI gap explanations', 'Regulatory change alerts', 'Unlimited team members'], cta: 'Start free trial', featured: true, product: 'comply', plan: 'growth' },
-            { tier: 'FinOps Tool', name: 'Cost Optimisation', price: '$199', period: 'per month, billed annually', desc: 'Live AWS cost dashboard with waste detection and anomaly alerts.', features: ['Idle resource detection', 'RI & Savings Plan analysis', 'Weekly anomaly alerts', 'Monthly spend report', 'Unlimited AWS accounts'], cta: 'Start free trial', product: 'finops', plan: 'starter' },
+            { tier: 'iFu Comply · Starter', name: 'Compliance Tool', price: '$299', period: 'per month, billed annually', desc: 'SOC 2 automation for early-stage teams.', features: ['SOC 2 control monitoring', 'AWS & GitHub connectors', 'Evidence PDF export', 'Vendor risk tracker', 'Up to 3 team members'], cta: 'Start free trial', product: 'comply', plan: 'starter' },
+            { tier: 'iFu Comply · Growth', name: 'Multi-framework', price: '$799', period: 'per month, billed annually', desc: 'SOC 2, ISO 27001, GDPR, and HIPAA — plus AI gap explanations.', features: ['Everything in Starter', 'ISO 27001, GDPR, HIPAA', 'AI gap explanations', 'Regulatory change alerts', 'Unlimited team members'], cta: 'Start free trial', featured: true, product: 'comply', plan: 'growth' },
+            { tier: 'iFu Costless', name: 'Cost Optimisation', price: '$199', period: 'per month, billed annually', desc: 'Live AWS cost dashboard with waste detection and anomaly alerts.', features: ['Idle resource detection', 'RI & Savings Plan analysis', 'Weekly anomaly alerts', 'Monthly spend report', 'Unlimited AWS accounts'], cta: 'Start free trial', product: 'finops', plan: 'starter' },
           ].map(p => (
             <div key={p.tier} className={`pricing-card${p.featured ? ' featured' : ''}`}>
               <div className="pricing-tier">{p.tier}</div>
@@ -277,9 +389,9 @@ export default function HomePage() {
 
         <div className="pricing-grid" id="pricing-managed" style={{ display: 'none' }}>
           {[
-            { tier: 'Managed · Essential', name: 'Core coverage', price: '$2,500', period: 'per month · cancel anytime', desc: 'Ongoing AWS management for small teams.', features: ['Dedicated cloud engineer (part-time)', 'Monthly cost & security review', 'Incident response (business hours)', 'Comply SaaS tool included'], cta: 'Get started', href: '#contact' },
+            { tier: 'Managed · Essential', name: 'Core coverage', price: '$2,500', period: 'per month · cancel anytime', desc: 'Ongoing AWS management for small teams.', features: ['Dedicated cloud engineer (part-time)', 'Monthly cost & security review', 'Incident response (business hours)', 'iFu Comply SaaS tool included'], cta: 'Get started', href: '#contact' },
             { tier: 'Managed · Growth', name: 'Full coverage', price: '$5,000', period: 'per month · cancel anytime', desc: 'A senior engineer embedded with your team.', features: ['Senior engineer (up to 20hrs/month)', '24/7 incident response', 'Weekly check-in call', 'Quarterly roadmap review', 'All SaaS products included'], cta: 'Book discovery call', href: '#contact', featured: true },
-            { tier: 'Managed · Enterprise', name: 'Embedded team', price: 'Custom', period: 'multi-engineer retainer', desc: 'Multiple engineers and programme management.', features: ['2–4 engineers depending on scope', 'Dedicated Slack channel & PM', 'Executive QBRs', 'Full SaaS platform included', 'AWS credits facilitation'], cta: 'Talk to us', href: 'mailto:hello@ifu-labs.io' },
+            { tier: 'Managed · Enterprise', name: 'Embedded team', price: 'Custom', period: 'multi-engineer retainer', desc: 'Multiple engineers and programme management.', features: ['2–4 engineers depending on scope', 'Dedicated Slack channel & PM', 'Executive QBRs', 'Full SaaS platform included', 'AWS credits facilitation'], cta: 'Talk to us', href: 'mailto:info@ifulabs.com' },
           ].map(p => (
             <div key={p.tier} className={`pricing-card${p.featured ? ' featured' : ''}`}>
               <div className="pricing-tier">{p.tier}</div>
@@ -401,7 +513,7 @@ export default function HomePage() {
                 // Create mailto link with pre-filled info
                 const subject = encodeURIComponent(`Discovery Call Request - ${company}`)
                 const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\nCompany: ${company}\nNeed help with: ${need || 'Not specified'}\n\nI'd like to book a discovery call to discuss our AWS infrastructure.`)
-                window.location.href = `mailto:hello@ifu-labs.io?subject=${subject}&body=${body}`
+                window.location.href = `mailto:info@ifulabs.com?subject=${subject}&body=${body}`
               }}
             >
               Book discovery call →
@@ -431,8 +543,8 @@ export default function HomePage() {
         <div className="footer-col">
           <h4>Products</h4>
           <ul>
-            <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>Comply</a></li>
-            <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>FinOps Tool</a></li>
+            <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>iFu Comply</a></li>
+            <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>iFu Costless</a></li>
             <li><a href={`${PORTAL_URL}/login`}>Client portal</a></li>
             <li><a href={`${API_URL}/docs`}>API Documentation</a></li>
           </ul>
@@ -442,8 +554,16 @@ export default function HomePage() {
           <ul>
             <li><a href="#about">About</a></li>
             <li><a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener">AWS Partnership</a></li>
-            <li><a href="#contact">Contact us</a></li>
-            <li><a href="mailto:hello@ifu-labs.io">hello@ifu-labs.io</a></li>
+            <li><a href="/schedule-consultation">Schedule consultation</a></li>
+            <li><a href="mailto:info@ifulabs.com">info@ifulabs.com</a></li>
+          </ul>
+        </div>
+        <div className="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+            <li><a href="/acceptable-use">Acceptable Use</a></li>
           </ul>
         </div>
       </footer>

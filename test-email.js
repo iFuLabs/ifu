@@ -4,11 +4,14 @@ import { sendWelcomeEmail, sendTeamInvitationEmail } from './src/services/email.
 async function testEmails() {
   console.log('🧪 Testing Email System...\n')
   console.log('Using Resend API Key:', process.env.RESEND_API_KEY ? '✅ Found' : '❌ Missing')
-  console.log('From Email:', process.env.FROM_EMAIL || 'onboarding@resend.dev')
+  console.log('Email Domain:', process.env.EMAIL_DOMAIN || 'resend.dev')
+  console.log('Reply-To Email:', process.env.REPLY_TO_EMAIL || 'info@ifulabs.com')
   console.log('\n---\n')
 
   // Use a test email - you can change this to your actual email
   const testEmail = 'delivered@resend.dev' // Resend's test email that always works
+  // Or use your own email:
+  // const testEmail = 'your-email@example.com'
 
   // Test 1: Welcome Email
   console.log('📧 Test 1: Sending Welcome Email...')

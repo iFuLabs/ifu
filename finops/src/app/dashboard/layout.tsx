@@ -66,7 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <path d="M8 6L10.5 7.5V10.5L8 12L5.5 10.5V7.5L8 6Z" fill="white"/>
             </svg>
           </div>
-          <span className="font-mono text-sm font-medium tracking-tight">FinOps</span>
+          <span className="font-mono text-sm font-medium tracking-tight">iFu Costless</span>
         </div>
 
         {/* Main nav */}
@@ -140,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button onClick={() => setMobileOpen(true)}>
             <Menu size={20} className="text-muted" />
           </button>
-          <span className="font-mono text-sm font-medium">iFu Labs · FinOps</span>
+          <span className="font-mono text-sm font-medium">iFu Labs · iFu Costless</span>
           <div className="w-5" />
         </div>
 

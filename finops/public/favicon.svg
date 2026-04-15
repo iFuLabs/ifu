@@ -1,0 +1,40 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cloud with circuit board pattern -->
+  <g transform="translate(106, 120)">
+    <!-- Cloud outline -->
+    <path d="M80 180C35.8 180 0 144.2 0 100C0 55.8 35.8 20 80 20C88.4 20 96.5 21.3 104 23.7C116.8 9.6 135.2 0 156 0C191.3 0 220 28.7 220 64C220 68.7 219.6 73.3 218.8 77.8C238.4 84.3 252 103.1 252 125C252 152.6 229.6 175 202 175H80V180Z" 
+          fill="#1B3A5C" stroke="#1B3A5C" stroke-width="8"/>
+    
+    <!-- Circuit lines - left side -->
+    <line x1="40" y1="60" x2="70" y2="60" stroke="#5DADE2" stroke-width="3" stroke-linecap="round"/>
+    <line x1="40" y1="80" x2="80" y2="80" stroke="#5DADE2" stroke-width="3" stroke-linecap="round"/>
+    <line x1="40" y1="100" x2="75" y2="100" stroke="#5DADE2" stroke-width="3" stroke-linecap="round"/>
+    <line x1="40" y1="120" x2="85" y2="120" stroke="#5DADE2" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Circuit lines - right side -->
+    <line x1="180" y1="70" x2="210" y2="70" stroke="#5DADE2" stroke-width="3" stroke-linecap="round"/>
+    <line x1="170" y1="90" x2="210" y2="90" stroke="#5DADE2" stroke-width="3" stroke-linecap="round"/>
+    <line x1="175" y1="110" x2="210" y2="110" stroke="#5DADE2" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Circuit nodes -->
+    <circle cx="70" cy="60" r="4" fill="#5DADE2"/>
+    <circle cx="80" cy="80" r="4" fill="#5DADE2"/>
+    <circle cx="75" cy="100" r="4" fill="#5DADE2"/>
+    <circle cx="85" cy="120" r="4" fill="#5DADE2"/>
+    <circle cx="180" cy="70" r="4" fill="#5DADE2"/>
+    <circle cx="170" cy="90" r="4" fill="#5DADE2"/>
+    <circle cx="175" cy="110" r="4" fill="#5DADE2"/>
+    
+    <!-- Center vertical lines -->
+    <line x1="120" y1="50" x2="120" y2="130" stroke="#5DADE2" stroke-width="3" stroke-linecap="round"/>
+    <line x1="135" y1="55" x2="135" y2="125" stroke="#5DADE2" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Center nodes -->
+    <circle cx="120" cy="70" r="4" fill="#5DADE2"/>
+    <circle cx="120" cy="90" r="4" fill="#5DADE2"/>
+    <circle cx="120" cy="110" r="4" fill="#5DADE2"/>
+    <circle cx="135" cy="75" r="4" fill="#5DADE2"/>
+    <circle cx="135" cy="95" r="4" fill="#5DADE2"/>
+    <circle cx="135" cy="115" r="4" fill="#5DADE2"/>
+  </g>
+</svg>

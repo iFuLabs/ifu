@@ -1084,3 +1084,22 @@ footer {
   footer { grid-template-columns: 1fr 1fr; padding: 40px 24px 32px; }
   .footer-bottom { padding: 20px 24px; flex-direction: column; gap: 8px; text-align: center; }
 }
+
+/* ── CAL.COM BRANDING REMOVAL ───────────────────────────────────── */
+/* Hide Cal.com branding on free plan */
+[class*="cal-branding"],
+[class*="powered-by"],
+[class*="branding"],
+a[href*="cal.com"][target="_blank"]:not([class*="cal-link"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Additional selectors for Cal.com footer branding */
+div[class*="text-"][class*="text-center"] a[href*="cal.com"],
+div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
+  display: none !important;
+}

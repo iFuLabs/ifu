@@ -1,22 +1,22 @@
 'use client'
-import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, Loader2 } from 'lucide-react'
-import { api } from '@/lib/api'
+import { useState } from 'react'
+import { ArrowLeft, Mail, CheckCircle, Loader2 } from 'lucide-react'
+import Link from 'next/link'
 
-function LoginForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  const redirectTo = searchParams.get('redirect') || '/dashboard'
+  const handleSubmit = async () => {
+    if (!email.trim()) {
+      setError('Email is required')
+      return
+    }
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      setError('Email and password are required')
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setError('Please enter a valid email address')
       return
     }
 
@@ -24,25 +24,94 @@ function LoginForm() {
     setError('')
 
     try {
-      const response = await api.auth.login({ email, password })
-      
-      // Cookie is set by the backend via Set-Cookie header.
-      // Redirect to product dashboard.
-      const complyUrl = process.env.NEXT_PUBLIC_COMPLY_URL
-      const finopsUrl = process.env.NEXT_PUBLIC_FINOPS_URL
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+      const response = await fetch(`${apiUrl}/api/v1/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
 
-      if (response.lastProduct === 'comply') {
-        window.location.href = `${complyUrl}/dashboard`
-      } else if (response.lastProduct === 'finops') {
-        window.location.href = `${finopsUrl}/dashboard`
-      } else {
-        router.push('/')
+      if (!response.ok) {
+        throw new Error('Failed to send reset email')
       }
+
+      setSuccess(true)
     } catch (err: any) {
-      setError(err.message || 'Login failed')
+      setError(err.message || 'Something went wrong')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#FAFAF8',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 20px',
+        fontFamily: "'DM Sans', system-ui, sans-serif"
+      }}>
+        <div style={{ maxWidth: '420px', width: '100%' }}>
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              background: '#10B981',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px'
+            }}>
+              <CheckCircle size={32} color="white" />
+            </div>
+            <h1 style={{ 
+              fontSize: '32px', 
+              fontWeight: '600', 
+              color: '#1A1917', 
+              marginBottom: '8px',
+              fontFamily: "'Fraunces', serif",
+              letterSpacing: '-0.02em'
+            }}>
+              Check your email
+            </h1>
+            <p style={{ fontSize: '15px', color: '#6B685F', lineHeight: '1.6' }}>
+              If an account exists for <strong>{email}</strong>, you'll receive a password reset link shortly.
+            </p>
+          </div>
+
+          <div style={{
+            background: 'white',
+            border: '1px solid #E0DDD5',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px'
+          }}>
+            <p style={{ fontSize: '14px', color: '#6B685F', marginBottom: '16px' }}>
+              The email may take a few minutes to arrive. Be sure to check your spam folder.
+            </p>
+            <Link 
+              href="/login"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px',
+                color: '#1B3A5C',
+                textDecoration: 'none',
+                fontWeight: '500'
+              }}
+            >
+              <ArrowLeft size={16} />
+              Back to login
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -55,10 +124,7 @@ function LoginForm() {
       padding: '40px 20px',
       fontFamily: "'DM Sans', system-ui, sans-serif"
     }}>
-      
       <div style={{ maxWidth: '420px', width: '100%' }}>
-        
-        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{
             width: '56px',
@@ -70,10 +136,7 @@ function LoginForm() {
             justifyContent: 'center',
             margin: '0 auto 20px'
           }}>
-            <svg width="32" height="32" viewBox="0 0 18 18" fill="none">
-              <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-              <circle cx="9" cy="9" r="2.5" fill="white"/>
-            </svg>
+            <Mail size={28} color="white" />
           </div>
           <h1 style={{ 
             fontSize: '32px', 
@@ -83,14 +146,13 @@ function LoginForm() {
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
           }}>
-            Welcome back
+            Reset your password
           </h1>
           <p style={{ fontSize: '15px', color: '#6B685F' }}>
-            Sign in to your account
+            Enter your email and we'll send you a reset link
           </p>
         </div>
 
-        {/* Card */}
         <div style={{
           background: 'white',
           border: '1px solid #E0DDD5',
@@ -98,8 +160,7 @@ function LoginForm() {
           padding: '40px',
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
         }}>
-
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <label style={{ 
               display: 'block', 
               fontSize: '14px', 
@@ -113,47 +174,9 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="john@company.com"
               autoFocus
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                fontSize: '15px',
-                background: '#FAFAF8',
-                border: '1px solid #E0DDD5',
-                borderRadius: '8px',
-                color: '#1A1917',
-                outline: 'none',
-                transition: 'all 0.2s',
-                fontFamily: "'DM Sans', sans-serif"
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#1B3A5C'
-                e.target.style.background = 'white'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#E0DDD5'
-                e.target.style.background = '#FAFAF8'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '28px' }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '14px', 
-              fontWeight: '500', 
-              color: '#1A1917', 
-              marginBottom: '8px' 
-            }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              placeholder="Enter your password"
               style={{
                 width: '100%',
                 padding: '12px 16px',
@@ -192,7 +215,7 @@ function LoginForm() {
           )}
 
           <button
-            onClick={handleLogin}
+            onClick={handleSubmit}
             disabled={loading}
             style={{
               width: '100%',
@@ -215,52 +238,28 @@ function LoginForm() {
             onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
           >
             {loading ? (
-              <><Loader2 size={18} className="animate-spin" /> Signing in...</>
+              <><Loader2 size={18} className="animate-spin" /> Sending...</>
             ) : (
-              <>Sign in <ArrowRight size={18} /></>
+              <>Send reset link</>
             )}
           </button>
 
-          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-            <a 
-              href="/forgot-password" 
-              style={{ 
-                fontSize: '14px', 
-                color: '#1B3A5C',
-                textDecoration: 'none',
-                fontWeight: '500'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
-              onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
-            >
-              Forgot password?
-            </a>
-          </div>
-
           <div style={{ textAlign: 'center' }}>
-            <a 
-              href="/onboarding" 
-              style={{ 
-                fontSize: '14px', 
+            <Link 
+              href="/login"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px',
                 color: '#6B685F',
                 textDecoration: 'none'
               }}
-              onMouseOver={(e) => e.currentTarget.style.color = '#1B3A5C'}
-              onMouseOut={(e) => e.currentTarget.style.color = '#6B685F'}
             >
-              Don't have an account? Sign up
-            </a>
+              <ArrowLeft size={16} />
+              Back to login
+            </Link>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <a 
-            href={process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'}
-            style={{ fontSize: '13px', color: '#9C9890', textDecoration: 'none' }}
-          >
-            ← Back to home
-          </a>
         </div>
       </div>
 
@@ -274,13 +273,5 @@ function LoginForm() {
         }
       `}</style>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
-      <LoginForm />
-    </Suspense>
   )
 }
