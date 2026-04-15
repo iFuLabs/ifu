@@ -75,7 +75,7 @@ export default function PortalPage() {
               <span style={{ fontSize: '24px' }}>🛡️</span>
             </div>
             <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1F2937', marginBottom: '8px' }}>
-              Comply
+              iFu Comply
             </h2>
             <p style={{ fontSize: '14px', color: '#6B7280', lineHeight: '1.6', marginBottom: '16px' }}>
               SOC 2, ISO 27001, and GDPR compliance automation. Automated evidence collection and control monitoring.
@@ -88,7 +88,7 @@ export default function PortalPage() {
               color: '#1A4D3C',
               fontWeight: '500'
             }}>
-              Open Comply
+              Open iFu Comply
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
@@ -129,7 +129,7 @@ export default function PortalPage() {
               <span style={{ fontSize: '24px' }}>💰</span>
             </div>
             <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1F2937', marginBottom: '8px' }}>
-              FinOps
+              iFu Costless
             </h2>
             <p style={{ fontSize: '14px', color: '#6B7280', lineHeight: '1.6', marginBottom: '16px' }}>
               AWS cost optimization and waste detection. Find savings opportunities and reduce your cloud spend.
@@ -142,7 +142,7 @@ export default function PortalPage() {
               color: '#1D6648',
               fontWeight: '500'
             }}>
-              Open FinOps
+              Open iFu Costless
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>

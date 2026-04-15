@@ -322,4 +322,156 @@ export default async function authRoutes(fastify) {
     reply.clearCookie('auth_token', { path: '/' })
     return reply.send({ message: 'Logged out' })
   })
+
+  // POST /api/v1/auth/forgot-password
+  // Request password reset email
+  fastify.post('/forgot-password', {
+    schema: {
+      tags: ['Auth'],
+      body: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: { type: 'string', format: 'email' }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { email } = request.body
+
+    // Find user by email
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email)
+    })
+
+    // Always return success (don't reveal if email exists)
+    const successMessage = 'If email exists, reset link sent'
+
+    if (!user) {
+      // User doesn't exist, but don't reveal that
+      return reply.send({ message: successMessage })
+    }
+
+    // Generate secure random token
+    const token = crypto.randomBytes(32).toString('hex')
+    const expiresAt = new Date(Date.now() + 3600000) // 1 hour from now
+
+    // Store token in database
+    const { passwordResetTokens } = await import('../db/schema.js')
+    await db.insert(passwordResetTokens).values({
+      userId: user.id,
+      token,
+      expiresAt,
+      used: false
+    })
+
+    // Send password reset email
+    const { sendPasswordResetEmail } = await import('../services/email.js')
+    const portalUrl = process.env.PORTAL_URL || 'http://localhost:3003'
+    const resetUrl = `${portalUrl}/reset-password/${token}`
+
+    const emailResult = await sendPasswordResetEmail({
+      to: user.email,
+      name: user.name,
+      resetUrl
+    })
+
+    if (!emailResult.success) {
+      fastify.log.warn({ error: emailResult.error }, 'Failed to send password reset email')
+      // Don't fail the request if email fails
+    }
+
+    await auditAction({
+      orgId: user.orgId,
+      userId: user.id,
+      action: 'auth.password_reset_requested',
+      metadata: { email }
+    })
+
+    return reply.send({ message: successMessage })
+  })
+
+  // POST /api/v1/auth/reset-password
+  // Reset password with token
+  fastify.post('/reset-password', {
+    schema: {
+      tags: ['Auth'],
+      body: {
+        type: 'object',
+        required: ['token', 'newPassword'],
+        properties: {
+          token: { type: 'string' },
+          newPassword: { type: 'string', minLength: 8 }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { token, newPassword } = request.body
+
+    // Validate password
+    if (newPassword.length < 8) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Password must be at least 8 characters'
+      })
+    }
+
+    // Find token
+    const { passwordResetTokens } = await import('../db/schema.js')
+    const resetToken = await db.query.passwordResetTokens.findFirst({
+      where: eq(passwordResetTokens.token, token)
+    })
+
+    if (!resetToken) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Token expired or invalid'
+      })
+    }
+
+    // Check if token is expired
+    if (new Date() > resetToken.expiresAt) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Token expired or invalid'
+      })
+    }
+
+    // Check if token is already used
+    if (resetToken.used) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Token expired or invalid'
+      })
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, 10)
+
+    // Update user password
+    await db
+      .update(users)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(users.id, resetToken.userId))
+
+    // Mark token as used
+    await db
+      .update(passwordResetTokens)
+      .set({ used: true })
+      .where(eq(passwordResetTokens.id, resetToken.id))
+
+    // Get user for audit log
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, resetToken.userId)
+    })
+
+    await auditAction({
+      orgId: user.orgId,
+      userId: user.id,
+      action: 'auth.password_reset_completed',
+      metadata: { email: user.email }
+    })
+
+    return reply.send({ message: 'Password reset successful' })
+  })
 }

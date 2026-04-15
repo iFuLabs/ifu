@@ -2,17 +2,27 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev'
+const DOMAIN = process.env.EMAIL_DOMAIN || 'resend.dev'
+const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'info@ifulabs.com'
 const COMPANY_NAME = 'iFu Labs'
 const PORTAL_URL = process.env.PORTAL_URL || 'http://localhost:3003'
+
+// Helper to create from address with reply-to
+function getEmailConfig(emailPrefix) {
+  return {
+    from: `${COMPANY_NAME} <${emailPrefix}@${DOMAIN}>`,
+    replyTo: REPLY_TO_EMAIL
+  }
+}
 
 /**
  * Send welcome email to new user after signup
  */
 export async function sendWelcomeEmail({ to, name, orgName }) {
   try {
+    const emailConfig = getEmailConfig('welcome')
     const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      ...emailConfig,
       to,
       subject: `Welcome to ${COMPANY_NAME}!`,
       html: `
@@ -95,8 +105,9 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
       year: 'numeric' 
     })
 
+    const emailConfig = getEmailConfig('team')
     const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      ...emailConfig,
       to,
       subject: `${inviterName} invited you to join ${orgName} on ${COMPANY_NAME}`,
       html: `
@@ -175,8 +186,9 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
  */
 export async function sendPasswordResetEmail({ to, name, resetUrl }) {
   try {
+    const emailConfig = getEmailConfig('security')
     const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      ...emailConfig,
       to,
       subject: `Reset your ${COMPANY_NAME} password`,
       html: `

@@ -39,7 +39,7 @@ import {
   DescribeDBInstancesCommand,
 } from '@aws-sdk/client-rds'
 
-import { getEBSPricing, getSnapshotPricing, getNATGatewayPricing, getLoadBalancerPricing, getRDSPricing } from '../services/aws-pricing.js'
+import { getEBSPricing, getSnapshotPricing, getNATGatewayPricing, getLoadBalancerPricing, getRDSPricing } from '../../services/aws-pricing.js'
 
 /**
  * Runs all FinOps checks for a connected AWS account.

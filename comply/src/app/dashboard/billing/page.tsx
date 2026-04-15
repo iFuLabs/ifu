@@ -127,7 +127,7 @@ export default function BillingPage() {
           <div>
             <h2 className="text-sm font-medium text-ink mb-1">Current Plan</h2>
             <p className="text-xs text-muted">
-              {billing?.subscription?.planName || `Comply ${(billing?.plan || 'starter').charAt(0).toUpperCase() + (billing?.plan || 'starter').slice(1)}`}
+              {billing?.subscription?.planName || `iFu Comply ${(billing?.plan || 'starter').charAt(0).toUpperCase() + (billing?.plan || 'starter').slice(1)}`}
             </p>
           </div>
           <span className={`text-xs px-3 py-1 rounded-full font-mono ${statusColor}`}>
@@ -201,14 +201,14 @@ export default function BillingPage() {
               disabled={actionLoading}
               className="flex-1 px-4 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent-mid transition-all disabled:opacity-50"
             >
-              {actionLoading ? 'Redirecting...' : 'Add card — Starter $299/mo'}
+              {actionLoading ? 'Redirecting...' : 'Add card — iFu Comply Starter $299/mo'}
             </button>
             <button
               onClick={() => handleAddPayment('comply-growth')}
               disabled={actionLoading}
               className="flex-1 px-4 py-2 border border-accent text-accent text-sm rounded-lg hover:bg-accent-light transition-all disabled:opacity-50"
             >
-              {actionLoading ? 'Redirecting...' : 'Add card — Growth $799/mo'}
+              {actionLoading ? 'Redirecting...' : 'Add card — iFu Comply Growth $799/mo'}
             </button>
           </div>
         ) : billing?.status === 'active' && billing.subscription ? (
@@ -228,14 +228,14 @@ export default function BillingPage() {
               disabled={actionLoading}
               className="flex-1 px-4 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent-mid transition-all disabled:opacity-50"
             >
-              {actionLoading ? 'Redirecting...' : 'Subscribe — Starter $299/mo'}
+              {actionLoading ? 'Redirecting...' : 'Subscribe — iFu Comply Starter $299/mo'}
             </button>
             <button
               onClick={() => handleAddPayment('comply-growth')}
               disabled={actionLoading}
               className="flex-1 px-4 py-2 border border-accent text-accent text-sm rounded-lg hover:bg-accent-light transition-all disabled:opacity-50"
             >
-              {actionLoading ? 'Redirecting...' : 'Subscribe — Growth $799/mo'}
+              {actionLoading ? 'Redirecting...' : 'Subscribe — iFu Comply Growth $799/mo'}
             </button>
           </div>
         ) : null}
