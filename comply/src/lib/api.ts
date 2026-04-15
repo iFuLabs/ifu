@@ -141,7 +141,12 @@ export interface Integration {
   id: string
   type: 'aws' | 'github' | 'okta' | 'google_workspace'
   status: 'connected' | 'disconnected' | 'error'
-  metadata?: { accountId?: string; alias?: string }
+  metadata?: { 
+    accountId?: string
+    alias?: string
+    orgLogin?: string
+    repoSelection?: string
+  }
   lastSyncAt?: string
   lastError?: string
 }

@@ -1,9 +1,10 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Building2, Cloud, CheckCircle, ArrowRight, Loader2, Sparkles } from 'lucide-react'
 import { api } from '@/lib/api'
-import { isAuthenticated } from '@/lib/auth'
+
+export const dynamic = 'force-dynamic'
 
 const STEPS = [
   { id: 'signup', label: 'Sign Up' },
@@ -13,7 +14,7 @@ const STEPS = [
   { id: 'confirm', label: 'Confirm' },
 ]
 
-export default function OnboardingPage() {
+function OnboardingForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [step, setStep] = useState(0)
@@ -1065,5 +1066,13 @@ export default function OnboardingPage() {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+      <OnboardingForm />
+    </Suspense>
   )
 }

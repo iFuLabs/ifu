@@ -56,6 +56,7 @@ export interface AuthResponse {
   token: string
   user: User
   organization: Organization
+  lastProduct?: 'comply' | 'finops'
 }
 
 export interface Me {
