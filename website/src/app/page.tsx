@@ -51,8 +51,9 @@ export default function HomePage() {
         <ul className="nav-links">
           <li><a href="#services">Services</a></li>
           <li><a href="#products">Products</a></li>
+          <li><a href="/for-startups">For Startups</a></li>
           <li><a href="#pricing">Pricing</a></li>
-          <li><a href="#about">About</a></li>
+          <li><a href="/about">About</a></li>
         </ul>
 
         <div className="nav-actions">
@@ -410,71 +411,6 @@ export default function HomePage() {
 
       <div className="divider" />
 
-      {/* About */}
-      <section className="section reveal" id="about">
-        <div className="section-eyebrow">About iFu Labs</div>
-        <h2 className="section-title">Engineers who've<br/><em>been there.</em></h2>
-        <p className="section-sub">We're not a traditional consultancy. We're AWS engineers who've built, scaled, and secured production systems — and now we help teams do the same.</p>
-
-        <div className="about-grid reveal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginTop: '48px' }}>
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '16px' }}>🏗️</div>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)', marginBottom: '12px' }}>Built for scale</h3>
-            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>
-              Our team has architected systems handling millions of requests per day, managed multi-region deployments, and led cloud transformations for companies from seed stage to IPO.
-            </p>
-          </div>
-
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '16px' }}>🔒</div>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)', marginBottom: '12px' }}>Security first</h3>
-            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>
-              We've passed SOC 2 audits, achieved ISO 27001 certification, and built HIPAA-compliant infrastructure. We know what auditors look for because we've been through it.
-            </p>
-          </div>
-
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '32px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '16px' }}>💡</div>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)', marginBottom: '12px' }}>No vendor lock-in</h3>
-            <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>
-              We deliver infrastructure as code, comprehensive documentation, and knowledge transfer. When we're done, you own everything — no proprietary tools, no dependencies on us.
-            </p>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '64px', padding: '48px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--ink)', marginBottom: '16px' }}>AWS Partner Network Member</h3>
-          <p style={{ fontSize: '15px', color: 'var(--muted)', maxWidth: '600px', margin: '0 auto 24px', lineHeight: '1.6' }}>
-            As an AWS Partner, we help clients access AWS credits, navigate the AWS ecosystem, and leverage partner-exclusive resources. We're also certified in multiple AWS specializations.
-          </p>
-          <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap', fontSize: '13px', color: 'var(--muted)' }}>
-            <div>✓ AWS Solutions Architect</div>
-            <div>✓ AWS DevOps Engineer</div>
-            <div>✓ AWS Security Specialty</div>
-            <div>✓ Kubernetes Certified</div>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '48px', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ink)', marginBottom: '16px' }}>Our principles</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', marginTop: '32px', maxWidth: '900px', margin: '32px auto 0' }}>
-            {[
-              { title: 'Read-only by default', desc: 'We never need write access to your production systems' },
-              { title: 'Document everything', desc: 'Every decision, every architecture choice, fully documented' },
-              { title: 'No surprises', desc: 'Fixed scopes, transparent pricing, honest timelines' },
-              { title: 'Leave you self-sufficient', desc: 'Our goal is to make ourselves unnecessary' }
-            ].map(p => (
-              <div key={p.title} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--ink)', marginBottom: '8px' }}>{p.title}</div>
-                <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.5' }}>{p.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="divider" />
-
       {/* CTA / Contact */}
       <div className="reveal" id="contact">
         <div className="cta-section">
@@ -523,42 +459,54 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer>
-        <div className="footer-brand">
-          <a href="#" className="footer-logo">
-            <svg width="24" height="24" viewBox="0 0 18 18" fill="none">
-              <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#1B3A5C" strokeWidth="1.4" strokeLinejoin="round"/>
-              <circle cx="9" cy="9" r="2.5" fill="#1B3A5C"/>
-            </svg>
-            iFu Labs
-          </a>
-          <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
+      <footer className="footer-new">
+        <div className="footer-main">
+          <div className="footer-brand">
+            <a href="/" className="footer-logo">
+              <svg width="24" height="24" viewBox="0 0 18 18" fill="none">
+                <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#1B3A5C" strokeWidth="1.4" strokeLinejoin="round"/>
+                <circle cx="9" cy="9" r="2.5" fill="#1B3A5C"/>
+              </svg>
+              iFu Labs
+            </a>
+            <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
+          </div>
+          
+          <div className="footer-columns">
+            <div className="footer-col">
+              <h4>Services</h4>
+              <ul>
+                <li><a href="#services">Cost Optimisation</a></li>
+                <li><a href="#services">Compliance</a></li>
+                <li><a href="#services">Cloud Migration</a></li>
+                <li><a href="#services">EKS & Containers</a></li>
+                <li><a href="#services">DevOps & CI/CD</a></li>
+                <li><a href="#services">Managed Services</a></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h4>Products</h4>
+              <ul>
+                <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>iFu Comply</a></li>
+                <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>iFu Costless</a></li>
+                <li><a href={`${PORTAL_URL}/login`}>Client portal</a></li>
+                <li><a href={`${API_URL}/docs`}>API Documentation</a></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h4>Company</h4>
+              <ul>
+                <li><a href="/about">About</a></li>
+                <li><a href="/for-startups">For Startups</a></li>
+                <li><a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener">AWS Partnership</a></li>
+                <li><a href="/schedule-consultation">Schedule consultation</a></li>
+                <li><a href="mailto:info@ifulabs.com">info@ifulabs.com</a></li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <div className="footer-col">
-          <h4>Services</h4>
-          <ul>
-            {['Cost Optimisation', 'Compliance', 'Cloud Migration', 'EKS & Containers', 'DevOps & CI/CD', 'Managed Services'].map(s => <li key={s}><a href="#services">{s}</a></li>)}
-          </ul>
-        </div>
-        <div className="footer-col">
-          <h4>Products</h4>
-          <ul>
-            <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>iFu Comply</a></li>
-            <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>iFu Costless</a></li>
-            <li><a href={`${PORTAL_URL}/login`}>Client portal</a></li>
-            <li><a href={`${API_URL}/docs`}>API Documentation</a></li>
-          </ul>
-        </div>
-        <div className="footer-col">
-          <h4>Company</h4>
-          <ul>
-            <li><a href="#about">About</a></li>
-            <li><a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener">AWS Partnership</a></li>
-            <li><a href="/schedule-consultation">Schedule consultation</a></li>
-            <li><a href="mailto:info@ifulabs.com">info@ifulabs.com</a></li>
-          </ul>
-        </div>
-        <div className="footer-col">
+
+        <div className="footer-legal">
           <h4>Legal</h4>
           <ul>
             <li><a href="/privacy">Privacy Policy</a></li>
@@ -567,6 +515,30 @@ export default function HomePage() {
           </ul>
         </div>
       </footer>
+
+      {/* Certifications & Badges */}
+      <div className="certifications-strip">
+        <div className="cert-text">
+          <p>Our team holds <strong>multiple AWS certifications</strong> across specialized areas. We take pride in our depth of knowledge and continuously invest in staying current with AWS best practices and emerging technologies.</p>
+        </div>
+        <div className="cert-badges">
+          <div className="cert-badge" title="AWS Solutions Architect - Associate">
+            <img src="/badges/solutions-architect-associate.png" alt="AWS Solutions Architect Associate" className="cert-badge-img" />
+          </div>
+          <div className="cert-badge" title="AWS Solutions Architect - Professional">
+            <img src="/badges/solutions-architect-professional.png" alt="AWS Solutions Architect Professional" className="cert-badge-img" />
+          </div>
+          <div className="cert-badge" title="AWS Data Engineer - Associate">
+            <img src="/badges/data-engineer-associate.png" alt="AWS Data Engineer Associate" className="cert-badge-img" />
+          </div>
+          <div className="cert-badge" title="AWS Machine Learning Engineer - Associate">
+            <img src="/badges/ml-engineer-associate.png" alt="AWS ML Engineer Associate" className="cert-badge-img" />
+          </div>
+          <div className="cert-badge" title="AWS DevOps Engineer - Professional">
+            <img src="/badges/devops-engineer-professional.png" alt="AWS DevOps Engineer Professional" className="cert-badge-img" />
+          </div>
+        </div>
+      </div>
 
       <div className="footer-bottom">
         <p>© 2026 iFu Labs Ltd.</p>
