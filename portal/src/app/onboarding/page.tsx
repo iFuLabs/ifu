@@ -251,7 +251,7 @@ function OnboardingForm() {
       const { available } = await checkResponse.json()
       
       if (!available) {
-        setError('An account with this email already exists. Please login instead.')
+        setError('email_exists')
         setLoading(false)
         return
       }
@@ -285,7 +285,11 @@ function OnboardingForm() {
         orgDomain: orgDomain.trim() || undefined 
       })
       
-      // Cookie is set by the backend via Set-Cookie header.
+      // Store token for subsequent authenticated requests
+      if (response.token && typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', response.token)
+      }
+      
       setStep(2)
     } catch (err: any) {
       console.error('Onboard error:', err)
@@ -336,11 +340,15 @@ function OnboardingForm() {
     }
     
     try {
+      // Get auth token from localStorage or cookie
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/billing/initialize`, {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({ plan: selectedPlan })
       })
@@ -690,7 +698,7 @@ function OnboardingForm() {
                 )}
               </div>
 
-              {error && (
+              {error && error !== 'email_exists' && (
                 <div style={{
                   padding: '12px 16px',
                   background: '#FEE2E2',
@@ -701,6 +709,42 @@ function OnboardingForm() {
                   marginBottom: '20px'
                 }}>
                   {error}
+                </div>
+              )}
+
+              {error === 'email_exists' && (
+                <div style={{
+                  padding: '16px',
+                  background: '#FEF3C7',
+                  border: '1px solid #FCD34D',
+                  borderRadius: '8px',
+                  marginBottom: '20px'
+                }}>
+                  <p style={{ fontSize: '14px', color: '#92400E', marginBottom: '12px' }}>
+                    An account with this email already exists.
+                  </p>
+                  <button
+                    onClick={() => {
+                      const loginUrl = `${process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'}/login`
+                      window.location.href = loginUrl
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      background: '#1B3A5C',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = '#2E5F8A'}
+                    onMouseOut={(e) => e.currentTarget.style.background = '#1B3A5C'}
+                  >
+                    Go to Sign In
+                  </button>
                 </div>
               )}
 
