@@ -13,8 +13,8 @@ Multi-tenant SaaS platform for compliance automation and cloud cost optimization
 # Install dependencies
 npm install
 cd portal && npm install && cd ..
-cd comply && npm install --legacy-peer-deps && cd ..
-cd finops && npm install --legacy-peer-deps && cd ..
+cd comply && npm install && cd ..
+cd finops && npm install && cd ..
 cd website && npm install && cd ..
 
 # Configure environment
