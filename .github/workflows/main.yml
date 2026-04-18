@@ -3,7 +3,7 @@ name: Deploy to Render via GHCR
 on:
   push:
     branches:
-      - deploy/api
+      - main
 
 jobs:
   build-and-deploy:
@@ -20,7 +20,7 @@ jobs:
       - name: Prepare Image Metadata
         id: meta
         env:
-          IMAGE_TAG: ${{ vars.GHCR_USERNAME }}
+          IMAGE_TAG: ${{ github.sha }}
           REPOSITORY: ${{ github.repository }}
         run: |
           echo "sha_short=${IMAGE_TAG:0:7}" >> $GITHUB_OUTPUT
@@ -42,10 +42,10 @@ jobs:
           tags: |
             ghcr.io/${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.sha_short }}
 
-#      - name: Deploy to Render
-#        env:
-#          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
-#          REPO: ${{ steps.meta.outputs.repo }}
-#          SHA_SHORT: ${{ steps.meta.outputs.sha_short }}
-#        run: |
-#          curl -X GET "${RENDER_DEPLOY_HOOK}&imgURL=ghcr.io/${REPO}:${SHA_SHORT}"
+      - name: Deploy to Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          REPO: ${{ steps.meta.outputs.repo }}
+          SHA_SHORT: ${{ steps.meta.outputs.sha_short }}
+        run: |
+          curl -X GET "${RENDER_DEPLOY_HOOK}&imgURL=ghcr.io/${REPO}:${SHA_SHORT}"
