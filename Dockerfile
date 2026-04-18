@@ -6,7 +6,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup && chown -R appuser:a
 
 COPY --chown=appuser:appgroup package.json* ./
 
-RUN npm ci --only=production
+RUN npm install
 
 COPY --chown=appuser:appgroup . .
 
