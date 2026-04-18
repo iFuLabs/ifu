@@ -1,0 +1,57 @@
+name: Deploy Website App
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - website
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 24
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.WEBSITE_ENV }}" > .env
+
+      - name: Build Project
+        run: npm build
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: |
+            pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }} --branch=${{ github.ref_name }}
