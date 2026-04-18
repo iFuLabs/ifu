@@ -87,19 +87,20 @@ export default async function authRoutes(fastify) {
       }
     }
   }, async (request, reply) => {
-    const body = onboardSchema.parse(request.body)
+    try {
+      const body = onboardSchema.parse(request.body)
 
-    // Check if user already exists
-    const existingUser = await db.query.users.findFirst({
-      where: eq(users.email, body.email)
-    })
-
-    if (existingUser) {
-      return reply.status(409).send({
-        error: 'Conflict',
-        message: 'User with this email already exists'
+      // Check if user already exists
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.email, body.email)
       })
-    }
+
+      if (existingUser) {
+        return reply.status(409).send({
+          error: 'Conflict',
+          message: 'User with this email already exists'
+        })
+      }
 
     const userEmail = body.email
     const userName = body.name
@@ -195,6 +196,15 @@ export default async function authRoutes(fastify) {
         trialEndsAt: result.org.trialEndsAt
       }
     })
+    } catch (err) {
+      fastify.log.error({ err, email: request.body?.email }, 'Onboarding failed')
+      
+      // Don't expose internal errors to client
+      return reply.status(500).send({
+        error: 'Internal Server Error',
+        message: 'Failed to create account. Please try again or contact support.'
+      })
+    }
   })
 
   // POST /api/v1/auth/login
@@ -212,7 +222,8 @@ export default async function authRoutes(fastify) {
       }
     }
   }, async (request, reply) => {
-    const body = loginSchema.parse(request.body)
+    try {
+      const body = loginSchema.parse(request.body)
 
     // Find user by email
     const user = await db.query.users.findFirst({
@@ -272,6 +283,14 @@ export default async function authRoutes(fastify) {
         plan: user.org.plan
       }
     })
+    } catch (err) {
+      fastify.log.error({ err, email: request.body?.email }, 'Login failed')
+      
+      return reply.status(500).send({
+        error: 'Internal Server Error',
+        message: 'Login failed. Please try again or contact support.'
+      })
+    }
   })
 
   // PATCH /api/v1/auth/me

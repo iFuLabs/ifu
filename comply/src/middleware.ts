@@ -11,7 +11,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Validate token by calling the API
+  // Validate token and product access by calling the API
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
     const response = await fetch(`${apiUrl}/api/v1/auth/me`, {
@@ -26,6 +26,27 @@ export async function middleware(request: NextRequest) {
         ? `${process.env.NEXT_PUBLIC_PORTAL_URL}/login`
         : 'http://localhost:3003/login'
       return NextResponse.redirect(loginUrl)
+    }
+
+    const userData = await response.json()
+    
+    // Check if user has access to Comply product
+    // Comply plans: 'starter' and 'growth'
+    const userPlan = userData.organization?.plan
+    const hasComplyAccess = userPlan === 'starter' || userPlan === 'growth'
+    
+    if (!hasComplyAccess) {
+      // User doesn't have Comply subscription, redirect to FinOps or portal
+      const finopsUrl = process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002'
+      const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'
+      
+      if (userPlan === 'finops') {
+        // Redirect to FinOps dashboard
+        return NextResponse.redirect(`${finopsUrl}/dashboard`)
+      } else {
+        // No valid subscription, redirect to portal
+        return NextResponse.redirect(`${portalUrl}/onboarding?product=comply`)
+      }
     }
   } catch (error) {
     // API is down or error occurred, redirect to login

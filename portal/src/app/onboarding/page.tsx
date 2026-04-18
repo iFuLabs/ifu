@@ -31,18 +31,71 @@ function OnboardingForm() {
     }
   }, [urlStep])
 
-  const [orgName, setOrgName] = useState('')
-  const [orgDomain, setOrgDomain] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [roleArn, setRoleArn] = useState('')
-  const [externalId] = useState(() => `ifu-${Math.random().toString(36).slice(2, 10)}`)
+  // Load state from localStorage on mount
+  const [orgName, setOrgName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_orgName') || ''
+    }
+    return ''
+  })
+  const [orgDomain, setOrgDomain] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_orgDomain') || ''
+    }
+    return ''
+  })
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_email') || ''
+    }
+    return ''
+  })
+  const [password, setPassword] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_password') || ''
+    }
+    return ''
+  })
+  const [name, setName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_name') || ''
+    }
+    return ''
+  })
+  const [roleArn, setRoleArn] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_roleArn') || ''
+    }
+    return ''
+  })
+  const [externalId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('onboarding_externalId')
+      if (saved) return saved
+    }
+    const newId = `ifu-${Math.random().toString(36).slice(2, 10)}`
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboarding_externalId', newId)
+    }
+    return newId
+  })
   const [awsAccountId, setAwsAccountId] = useState('123456789012')
   const [skipAws, setSkipAws] = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [selectedPlan, setSelectedPlan] = useState<string>('comply-starter')
   const [paymentProcessing, setPaymentProcessing] = useState(false)
+
+  // Persist form data to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboarding_orgName', orgName)
+      localStorage.setItem('onboarding_orgDomain', orgDomain)
+      localStorage.setItem('onboarding_email', email)
+      localStorage.setItem('onboarding_password', password)
+      localStorage.setItem('onboarding_name', name)
+      localStorage.setItem('onboarding_roleArn', roleArn)
+    }
+  }, [orgName, orgDomain, email, password, name, roleArn])
 
   useEffect(() => {
     if (urlProduct) {
@@ -190,9 +243,18 @@ function OnboardingForm() {
   }
 
   const handleFinish = () => {
-    // Clear localStorage after successful onboarding
-    localStorage.removeItem('onboarding_plan')
-    localStorage.removeItem('onboarding_product')
+    // Clear all onboarding data from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('onboarding_plan')
+      localStorage.removeItem('onboarding_product')
+      localStorage.removeItem('onboarding_orgName')
+      localStorage.removeItem('onboarding_orgDomain')
+      localStorage.removeItem('onboarding_email')
+      localStorage.removeItem('onboarding_password')
+      localStorage.removeItem('onboarding_name')
+      localStorage.removeItem('onboarding_roleArn')
+      localStorage.removeItem('onboarding_externalId')
+    }
     
     if (selectedProducts.includes('comply')) {
       window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
@@ -617,34 +679,55 @@ function OnboardingForm() {
                 </div>
               )}
 
-              <button
-                onClick={handleCreateOrg}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: loading ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
-              >
-                {loading ? (
-                  <><Loader2 size={18} className="animate-spin" /> Creating...</>
-                ) : (
-                  <>Continue <ArrowRight size={18} /></>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setStep(0)}
+                  disabled={loading}
+                  style={{
+                    padding: '14px 24px',
+                    background: 'transparent',
+                    color: '#6B685F',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: '1px solid #E0DDD5',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#1B3A5C', e.currentTarget.style.color = '#1B3A5C')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = '#E0DDD5', e.currentTarget.style.color = '#6B685F')}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleCreateOrg}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: loading ? '#6B685F' : '#1B3A5C',
+                    color: 'white',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
+                >
+                  {loading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Creating...</>
+                  ) : (
+                    <>Continue <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
             </div>
           )}
 
@@ -746,35 +829,55 @@ function OnboardingForm() {
                 </div>
               )}
 
-              <button
-                onClick={handleConnectAws}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: loading ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  marginBottom: '12px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
-              >
-                {loading ? (
-                  <><Loader2 size={18} className="animate-spin" /> Connecting...</>
-                ) : (
-                  <>Connect AWS <ArrowRight size={18} /></>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setStep(1)}
+                  disabled={loading}
+                  style={{
+                    padding: '14px 24px',
+                    background: 'transparent',
+                    color: '#6B685F',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: '1px solid #E0DDD5',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#1B3A5C', e.currentTarget.style.color = '#1B3A5C')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = '#E0DDD5', e.currentTarget.style.color = '#6B685F')}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleConnectAws}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: loading ? '#6B685F' : '#1B3A5C',
+                    color: 'white',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
+                >
+                  {loading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Connecting...</>
+                  ) : (
+                    <>Connect AWS <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
 
               <button
                 onClick={() => { setSkipAws(true); setStep(3) }}
@@ -786,7 +889,8 @@ function OnboardingForm() {
                   fontSize: '14px',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: 'color 0.2s'
+                  transition: 'color 0.2s',
+                  marginTop: '12px'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.color = '#1A1917'}
                 onMouseOut={(e) => e.currentTarget.style.color = '#6B685F'}
@@ -924,34 +1028,55 @@ function OnboardingForm() {
                 </div>
               )}
 
-              <button
-                onClick={handlePayment}
-                disabled={paymentProcessing}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: paymentProcessing ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: paymentProcessing ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.background = '#1B3A5C')}
-              >
-                {paymentProcessing ? (
-                  <><Loader2 size={18} className="animate-spin" /> Processing...</>
-                ) : (
-                  <>Continue to payment <ArrowRight size={18} /></>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={paymentProcessing}
+                  style={{
+                    padding: '14px 24px',
+                    background: 'transparent',
+                    color: '#6B685F',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: '1px solid #E0DDD5',
+                    borderRadius: '8px',
+                    cursor: paymentProcessing ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = '#1B3A5C', e.currentTarget.style.color = '#1B3A5C')}
+                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = '#E0DDD5', e.currentTarget.style.color = '#6B685F')}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handlePayment}
+                  disabled={paymentProcessing}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: paymentProcessing ? '#6B685F' : '#1B3A5C',
+                    color: 'white',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: paymentProcessing ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.background = '#2E5F8A')}
+                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.background = '#1B3A5C')}
+                >
+                  {paymentProcessing ? (
+                    <><Loader2 size={18} className="animate-spin" /> Processing...</>
+                  ) : (
+                    <>Continue to payment <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
             </div>
           )}
 
