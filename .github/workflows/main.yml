@@ -4,6 +4,15 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - .claude/
+      - .vscode/
+      - comply/
+      - finops/
+      - portal/
+      - scripts/
+      - tests/
+      - website/
 
 jobs:
   build-and-deploy:
