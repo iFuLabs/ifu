@@ -1,5 +1,11 @@
 export async function getAccessToken() {
-  // Token is now stored in an httpOnly cookie and sent automatically.
+  // Try to get token from localStorage first (for password-based auth)
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('auth_token')
+    if (token) return token
+  }
+  
+  // Otherwise rely on httpOnly cookie sent automatically
   return null
 }
 

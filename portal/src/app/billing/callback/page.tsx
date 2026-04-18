@@ -31,8 +31,14 @@ function BillingCallbackContent() {
     const timeoutId = setTimeout(() => controller.abort(), 30000)
 
     try {
+      // Get auth token from localStorage
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      
       const response = await fetch(`${API_URL}/api/v1/billing/verify?reference=${encodeURIComponent(reference)}`, {
         credentials: 'include',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         signal: controller.signal
       })
 
