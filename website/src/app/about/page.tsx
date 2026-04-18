@@ -1,9 +1,8 @@
 'use client'
 import '../globals.css'
 import { useEffect } from 'react'
-
-const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+import { SiteNav } from '@/components/SiteNav'
+import { SiteFooter } from '@/components/SiteFooter'
 
 function useScrollReveal() {
   useEffect(() => {
@@ -22,33 +21,7 @@ export default function AboutPage() {
 
   return (
     <>
-      {/* Nav */}
-      <nav>
-        <a href="/" className="logo">
-          <div className="logo-mark">
-            <svg viewBox="0 0 18 18" fill="none">
-              <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
-              <circle cx="9" cy="9" r="2.5" fill="white"/>
-            </svg>
-          </div>
-          <div className="logo-text">
-            <span className="logo-name">iFu Labs</span>
-          </div>
-        </a>
-
-        <ul className="nav-links">
-          <li><a href="/#services">Services</a></li>
-          <li><a href="/#products">Products</a></li>
-          <li><a href="/for-startups">For Startups</a></li>
-          <li><a href="/#pricing">Pricing</a></li>
-          <li><a href="/about">About</a></li>
-        </ul>
-
-        <div className="nav-actions">
-          <a href="/#contact" className="btn-outline">Talk to us</a>
-          <a href={PORTAL_URL} className="btn-solid">Client portal →</a>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* Hero */}
       <section className="hero" style={{ paddingBottom: '120px' }}>
@@ -225,92 +198,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="footer-new">
-        <div className="footer-main">
-          <div className="footer-brand">
-            <a href="/" className="footer-logo">
-              <svg width="24" height="24" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#1B3A5C" strokeWidth="1.4" strokeLinejoin="round"/>
-                <circle cx="9" cy="9" r="2.5" fill="#1B3A5C"/>
-              </svg>
-              iFu Labs
-            </a>
-            <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
-          </div>
-          
-          <div className="footer-columns">
-            <div className="footer-col">
-              <h4>Services</h4>
-              <ul>
-                <li><a href="/#services">Cost Optimisation</a></li>
-                <li><a href="/#services">Compliance</a></li>
-                <li><a href="/#services">Cloud Migration</a></li>
-                <li><a href="/#services">EKS & Containers</a></li>
-                <li><a href="/#services">DevOps & CI/CD</a></li>
-                <li><a href="/#services">Managed Services</a></li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h4>Products</h4>
-              <ul>
-                <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>iFu Comply</a></li>
-                <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>iFu Costless</a></li>
-                <li><a href={`${PORTAL_URL}/login`}>Client portal</a></li>
-                <li><a href={`${API_URL}/docs`}>API Documentation</a></li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h4>Company</h4>
-              <ul>
-                <li><a href="/about">About</a></li>
-                <li><a href="/for-startups">For Startups</a></li>
-                <li><a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener">AWS Partnership</a></li>
-                <li><a href="/schedule-consultation">Schedule consultation</a></li>
-                <li><a href="mailto:info@ifulabs.com">info@ifulabs.com</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div className="footer-legal">
-          <h4>Legal</h4>
-          <ul>
-            <li><a href="/privacy">Privacy Policy</a></li>
-            <li><a href="/terms">Terms of Service</a></li>
-            <li><a href="/acceptable-use">Acceptable Use</a></li>
-          </ul>
-        </div>
-      </footer>
-
-      {/* Certifications & Badges */}
-      <div className="certifications-strip">
-        <div className="cert-text">
-          <p>Our team holds <strong>multiple AWS certifications</strong> across specialized areas. We take pride in our depth of knowledge and continuously invest in staying current with AWS best practices and emerging technologies.</p>
-        </div>
-        <div className="cert-badges">
-          <div className="cert-badge" title="AWS Solutions Architect - Associate">
-            <img src="/badges/solutions-architect-associate.png" alt="AWS Solutions Architect Associate" className="cert-badge-img" />
-          </div>
-          <div className="cert-badge" title="AWS Solutions Architect - Professional">
-            <img src="/badges/solutions-architect-professional.png" alt="AWS Solutions Architect Professional" className="cert-badge-img" />
-          </div>
-          <div className="cert-badge" title="AWS Data Engineer - Associate">
-            <img src="/badges/data-engineer-associate.png" alt="AWS Data Engineer Associate" className="cert-badge-img" />
-          </div>
-          <div className="cert-badge" title="AWS Machine Learning Engineer - Associate">
-            <img src="/badges/ml-engineer-associate.png" alt="AWS ML Engineer Associate" className="cert-badge-img" />
-          </div>
-          <div className="cert-badge" title="AWS DevOps Engineer - Professional">
-            <img src="/badges/devops-engineer-professional.png" alt="AWS DevOps Engineer Professional" className="cert-badge-img" />
-          </div>
-        </div>
-      </div>
-
-      <div className="footer-bottom">
-        <p>© 2026 iFu Labs Ltd.</p>
-        <p>AWS Partner Network member · Read-only infrastructure access · No lock-in</p>
-      </div>
+      <SiteFooter />
     </>
   )
 }

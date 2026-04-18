@@ -11,6 +11,7 @@
       "name": "Comply Frontend (Next.js)",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+      "autoPort": true,
       "port": 3001,
       "cwd": "comply"
     },
@@ -18,6 +19,7 @@
       "name": "FinOps Frontend (Next.js)",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+      "autoPort": true,
       "port": 3002,
       "cwd": "finops"
     },
@@ -25,6 +27,7 @@
       "name": "Portal (Next.js)",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+      "autoPort": true,
       "port": 3003,
       "cwd": "portal"
     },
@@ -32,8 +35,10 @@
       "name": "Website (Next.js)",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+      "autoPort": true,
       "port": 3004,
-      "cwd": "website"
+      "cwd": "website",
+      "autoPort": true
     }
   ]
 }

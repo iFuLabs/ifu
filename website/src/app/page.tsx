@@ -5,18 +5,15 @@ import { useEffect } from 'react'
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
-// Scroll reveal + pricing tab logic (extracted from original HTML)
 function usePageScripts() {
   useEffect(() => {
-    // Scroll reveal
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target) }
       })
-    }, { threshold: 0.1 })
+    }, { threshold: 0.08 })
     document.querySelectorAll('.reveal, .reveal-grid').forEach(el => observer.observe(el))
 
-    // Pricing tab switcher — attach to window so inline onclick works
     ;(window as any).switchPricing = (tab: string, btn: HTMLElement) => {
       document.querySelectorAll('[id^="pricing-"]').forEach((el: any) => el.style.display = 'none')
       document.querySelectorAll('.pricing-tab').forEach((b: any) => b.classList.remove('active'))
@@ -34,6 +31,28 @@ export default function HomePage() {
 
   return (
     <>
+      {/* Dual Top Bar */}
+      <div className="info-bar">
+        <div className="info-bar-inner">
+          <div className="info-bar-left">
+            <a href="mailto:info@ifulabs.com" className="info-bar-item">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <rect x="1" y="2.5" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M1 4L6 7L11 4" stroke="currentColor" strokeWidth="1.2"/>
+              </svg>
+              info@ifulabs.com
+            </a>
+            <div className="info-bar-sep" />
+            <a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener" className="info-bar-item">
+              AWS Partner Network Member
+            </a>
+          </div>
+          <div className="info-bar-right">
+            <a href={PORTAL_URL} className="info-bar-item">Client portal →</a>
+          </div>
+        </div>
+      </div>
+
       {/* Nav */}
       <nav>
         <a href="#" className="logo">
@@ -43,13 +62,44 @@ export default function HomePage() {
               <circle cx="9" cy="9" r="2.5" fill="white"/>
             </svg>
           </div>
-          <div className="logo-text">
-            <span className="logo-name">iFu Labs</span>
-          </div>
+          <span className="logo-name">iFu Labs</span>
         </a>
 
         <ul className="nav-links">
-          <li><a href="#services">Services</a></li>
+          <li className="nav-has-mega">
+            <a href="/services" className="nav-mega-trigger">
+              Services
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="nav-caret">
+                <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </a>
+            <div className="mega-menu">
+              <div className="mega-menu-inner">
+                <a href="/services#cost-optimisation" className="mega-feature">
+                  <div className="mega-feature-label">FinOps</div>
+                  <div className="mega-feature-title">Cost Optimisation</div>
+                  <div className="mega-feature-desc">We audit your AWS spend, identify waste, and implement Savings Plans. Average client saves 25–40% within 30 days.</div>
+                  <div className="mega-feature-cta">Explore service →</div>
+                </a>
+                <div className="mega-grid">
+                  {[
+                    { slug: 'compliance-security', label: 'Compliance', name: 'Compliance & Security', desc: 'SOC 2, ISO 27001, GDPR, and HIPAA readiness — evidence collection, gap remediation, and audit preparation end-to-end.' },
+                    { slug: 'cloud-migration',     label: 'Migration',  name: 'Cloud Migration',       desc: 'On-premise to AWS, workload re-platforming, or cross-cloud migrations. Zero surprise downtime.' },
+                    { slug: 'eks-ecs',             label: 'Containers', name: 'EKS & ECS Engineering', desc: 'We design, build, and secure Kubernetes clusters on AWS — from architecture to production-grade operations.' },
+                    { slug: 'devops-cicd',         label: 'DevOps',     name: 'DevOps & CI/CD',        desc: 'Infrastructure as code, deployment pipelines, and platform engineering. Fast, reliable, and auditable delivery.' },
+                    { slug: 'managed-services',    label: 'Managed',    name: 'Ongoing AWS Support',   desc: 'Retainer-based support. We act as your embedded cloud team — monitoring, incident response, and quarterly reviews.' },
+                  ].map(s => (
+                    <a key={s.slug} href={`/services#${s.slug}`} className="mega-item">
+                      <div className="mega-item-label">{s.label}</div>
+                      <div className="mega-item-title">{s.name}</div>
+                      <div className="mega-item-desc">{s.desc}</div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </li>
+          <li><a href="#methodology">Methodology</a></li>
           <li><a href="#products">Products</a></li>
           <li><a href="/for-startups">For Startups</a></li>
           <li><a href="#pricing">Pricing</a></li>
@@ -66,7 +116,7 @@ export default function HomePage() {
       <section className="hero">
         <div className="hero-left">
           <div className="hero-eyebrow">
-            <div className="hero-eyebrow-dot"></div>
+            <div className="hero-eyebrow-dot" />
             AWS Partner Network · iFu Labs Cloud Consultancy
           </div>
           <h1>
@@ -88,54 +138,54 @@ export default function HomePage() {
             <a href="#services" className="btn-cta ghost">See our services</a>
           </div>
           <div className="hero-trust">
-            <div className="trust-item">
-              <svg viewBox="0 0 14 14" fill="none"><path d="M2 7L6 11L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              AWS Partner Network member
-            </div>
-            <div className="trust-item">
-              <svg viewBox="0 0 14 14" fill="none"><path d="M2 7L6 11L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Read-only access, always
-            </div>
-            <div className="trust-item">
-              <svg viewBox="0 0 14 14" fill="none"><path d="M2 7L6 11L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              No lock-in contracts
-            </div>
+            {[
+              'AWS Partner Network member',
+              'Read-only access, always',
+              'No lock-in contracts',
+            ].map(item => (
+              <div key={item} className="trust-item">
+                <svg viewBox="0 0 14 14" fill="none">
+                  <path d="M2 7L6 11L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {item}
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="hero-right">
           <div className="hero-card-stack">
             {[
-              { icon: '💰', title: 'Cost Optimisation', desc: 'Found $1,200/month in idle resources — week one', badge: 'Service', badgeStyle: { background: 'var(--green-light)', color: 'var(--green)' } },
-              { icon: '🛡️', title: 'SOC 2 Compliance', desc: 'Audit-ready in 6 weeks, not 6 months', badge: '+ SaaS tool', badgeStyle: { background: 'var(--brand-light)', color: 'var(--brand)' } },
-              { icon: '⎈',  title: 'EKS Migration', desc: '14 services on Kubernetes, zero downtime', badge: 'Service', badgeStyle: { background: 'var(--green-light)', color: 'var(--green)' } },
-              { icon: '🚀', title: 'CI/CD Pipelines', desc: 'Deploy time: 40 mins → 6 mins', badge: 'Service', badgeStyle: { background: 'var(--green-light)', color: 'var(--green)' } },
+              { title: 'Cost Optimisation', desc: 'Found $1,200/month in idle resources — week one', badge: 'Service' },
+              { title: 'SOC 2 Compliance', desc: 'Audit-ready in 6 weeks, not 6 months', badge: '+ SaaS tool' },
+              { title: 'EKS Migration',    desc: '14 services on Kubernetes, zero downtime', badge: 'Service' },
+              { title: 'CI/CD Pipelines',  desc: 'Deploy time: 40 mins → 6 mins', badge: 'Service' },
             ].map(card => (
               <div key={card.title} className="hero-card">
-                <div className="hero-card-icon" style={{ background: 'var(--surface)' }}>{card.icon}</div>
                 <div className="hero-card-body">
                   <div className="hero-card-title">{card.title}</div>
                   <div className="hero-card-desc">{card.desc}</div>
                 </div>
-                <span className="hero-card-badge" style={card.badgeStyle}>{card.badge}</span>
+                <span className="hero-card-badge">{card.badge}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* APN trust strip */}
+      {/* Trust Strip */}
       <div className="apn-strip">
         {[
-          { icon: '🔶', text: 'AWS Partner Network Member' },
-          { icon: '🔒', text: 'Read-only infrastructure access' },
-          { icon: '✅', text: 'SOC 2 compliant practice' },
-          { icon: '💳', text: 'Help clients unlock $100K AWS credits' },
+          { icon: '◈', text: 'AWS Partner Network Member' },
+          { icon: '⬡', text: 'Read-only infrastructure access' },
+          { icon: '◻', text: 'SOC 2 compliant practice' },
+          { icon: '◈', text: 'Help clients unlock $100K AWS credits' },
         ].map((item, i) => (
           <div key={i} style={{ display: 'contents' }}>
             {i > 0 && <div className="apn-sep" />}
             <div className="apn-item">
-              <span className="apn-item-icon">{item.icon}</span> {item.text}
+              <span className="apn-item-icon" style={{ color: 'var(--accent)', fontSize: '12px' }}>{item.icon}</span>
+              {item.text}
             </div>
           </div>
         ))}
@@ -149,14 +199,17 @@ export default function HomePage() {
 
         <div className="services-grid reveal-grid">
           {[
-            { color: '#1B3A5C', icon: '💰', label: 'FinOps',      name: 'Cost Optimisation',      desc: 'We audit your AWS spend, identify waste, and implement Savings Plans. Average client saves 25–40% within 30 days.', items: ['Full spend audit & waste report', 'Rightsizing recommendations', 'RI & Savings Plan strategy', 'Cost anomaly monitoring setup'] },
-            { color: '#D4790A', icon: '🛡️', label: 'Compliance',  name: 'Compliance & Security',  desc: 'SOC 2, ISO 27001, GDPR, and HIPAA readiness — evidence collection, gap remediation, and audit preparation end-to-end.', items: ['Gap assessment & risk report', 'Control remediation delivery', 'Evidence pack preparation', 'Auditor liaison support'] },
-            { color: '#1D6648', icon: '☁️', label: 'Migration',   name: 'Cloud Migration',        desc: 'On-premise to AWS, workload re-platforming, or cross-cloud migrations. Zero surprise downtime.', items: ['Discovery & dependency mapping', 'Migration wave planning', 'Lift-and-shift or re-architect', 'AWS MAP program support'] },
-            { color: '#7C3AED', icon: '⎈',  label: 'Containers',  name: 'EKS & ECS Engineering',  desc: 'We design, build, and secure Kubernetes clusters on AWS — from architecture to production-grade operations.', items: ['Cluster design & provisioning', 'Helm chart & manifest reviews', 'RBAC & network policy hardening', 'Observability stack setup'] },
-            { color: '#DB2777', icon: '🔁', label: 'DevOps',      name: 'DevOps & CI/CD',         desc: 'Infrastructure as code, deployment pipelines, and platform engineering. Fast, reliable, and auditable delivery.', items: ['Terraform & CDK implementation', 'GitHub Actions / CodePipeline', 'Blue/green & canary deployments', 'Developer platform setup'] },
+            { num: '01', icon: '◈', label: 'FinOps',     name: 'Cost Optimisation',     desc: 'We audit your AWS spend, identify waste, and implement Savings Plans. Average client saves 25–40% within 30 days.', items: ['Full spend audit & waste report', 'Rightsizing recommendations', 'RI & Savings Plan strategy', 'Cost anomaly monitoring setup'] },
+            { num: '02', icon: '⬡', label: 'Compliance', name: 'Compliance & Security',  desc: 'SOC 2, ISO 27001, GDPR, and HIPAA readiness — evidence collection, gap remediation, and audit preparation end-to-end.', items: ['Gap assessment & risk report', 'Control remediation delivery', 'Evidence pack preparation', 'Auditor liaison support'] },
+            { num: '03', icon: '☁', label: 'Migration',  name: 'Cloud Migration',        desc: 'On-premise to AWS, workload re-platforming, or cross-cloud migrations. Zero surprise downtime.', items: ['Discovery & dependency mapping', 'Migration wave planning', 'Lift-and-shift or re-architect', 'AWS MAP program support'] },
+            { num: '04', icon: '⎈', label: 'Containers', name: 'EKS & ECS Engineering',  desc: 'We design, build, and secure Kubernetes clusters on AWS — from architecture to production-grade operations.', items: ['Cluster design & provisioning', 'Helm chart & manifest reviews', 'RBAC & network policy hardening', 'Observability stack setup'] },
+            { num: '05', icon: '⟳', label: 'DevOps',     name: 'DevOps & CI/CD',         desc: 'Infrastructure as code, deployment pipelines, and platform engineering. Fast, reliable, and auditable delivery.', items: ['Terraform & CDK implementation', 'GitHub Actions / CodePipeline', 'Blue/green & canary deployments', 'Developer platform setup'] },
+            { num: '06', icon: '⬒', label: 'Managed',    name: 'Ongoing AWS Support',    desc: 'Retainer-based support. We act as your embedded cloud team — monitoring, incident response, and quarterly reviews.', items: ['Dedicated solutions engineer', '24/7 incident response SLA', 'Monthly cost & security reviews', 'Quarterly roadmap planning'] },
           ].map(s => (
-            <div key={s.name} className="service-card" style={{ '--service-color': s.color } as any}>
-              <div className="service-icon">{s.icon}</div>
+            <div key={s.num} className="service-card">
+              <div className="service-top-border" />
+              <span className="service-card-num">{s.num}</span>
+              <span className="service-icon" style={{ color: 'var(--accent)' }}>{s.icon}</span>
               <div className="service-label">{s.label}</div>
               <div className="service-name">{s.name}</div>
               <p className="service-desc">{s.desc}</p>
@@ -165,23 +218,34 @@ export default function HomePage() {
               </ul>
             </div>
           ))}
-
-          {/* Managed services card */}
-          <div className="service-card" style={{ '--service-color': '#0891B2', background: 'var(--brand)', borderColor: 'var(--brand)' } as any}>
-            <div className="service-icon" style={{ background: 'rgba(255,255,255,0.1)' }}>📋</div>
-            <div className="service-label" style={{ color: 'rgba(255,255,255,0.6)' }}>Managed Services</div>
-            <div className="service-name" style={{ color: '#fff' }}>Ongoing AWS Support</div>
-            <p className="service-desc" style={{ color: 'rgba(255,255,255,0.75)' }}>Retainer-based support. We act as your embedded cloud team — monitoring, incident response, and quarterly reviews.</p>
-            <ul className="service-deliverables">
-              {['Dedicated solutions engineer', '24/7 incident response SLA', 'Monthly cost & security reviews', 'Quarterly roadmap planning'].map(item => (
-                <li key={item} style={{ color: 'rgba(255,255,255,0.65)' }}>{item}</li>
-              ))}
-            </ul>
-          </div>
         </div>
       </section>
 
       <div className="divider" />
+
+      {/* Methodology */}
+      <section className="methodology-section" id="methodology">
+        <div className="methodology-inner reveal">
+          <div className="section-eyebrow">Our Methodology</div>
+          <h2 className="section-title">A repeatable delivery<br/>model built for <em>results.</em></h2>
+          <p className="section-sub">Enterprise buyers want to see how you work, not just what you do. Here is our process, every time.</p>
+
+          <div className="methodology-grid reveal-grid">
+            {[
+              { num: '01', title: 'Discovery', desc: 'We review your infrastructure, spend, compliance posture, and team structure within 48 hours. No fluff — an honest read on where you stand and what needs to change.' },
+              { num: '02', title: 'Architecture', desc: 'We design a solution architecture tailored to your constraints, roadmap, and budget. Every decision is documented with clear rationale before a single line of code is written.' },
+              { num: '03', title: 'Delivery', desc: 'Our engineers embed with your team and execute against a shared plan. Weekly standups, full IaC, and no handover black boxes. You see every change before it ships.' },
+              { num: '04', title: 'Handover', desc: 'You own everything. Runbooks, Terraform, access, documentation. We train your team and leave them self-sufficient — no manufactured dependency on iFu Labs.' },
+            ].map(step => (
+              <div key={step.num} className="method-step">
+                <span className="method-num">{step.num}</span>
+                <div className="method-title">{step.title}</div>
+                <p className="method-desc">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Products */}
       <section className="products-section" id="products">
@@ -192,140 +256,36 @@ export default function HomePage() {
 
           <div className="products-grid reveal-grid">
             <div className="product-card">
-              <span className="product-tag" style={{ background: 'var(--brand-light)', color: 'var(--brand)' }}>● iFu Comply</span>
+              <span className="product-tag">● iFu Comply</span>
               <div className="product-name">Compliance Automation</div>
               <p className="product-desc">Automated SOC 2, ISO 27001, and GDPR evidence collection, control monitoring, and audit-ready PDF exports.</p>
               <ul className="product-features">
                 {['Daily automated AWS control checks', 'AI-powered gap explanations & fix steps', 'One-click evidence pack PDF', 'Vendor risk & cert expiry tracking', 'Regulatory change monitoring'].map(f => (
-                  <li key={f} style={{ color: 'var(--muted)' }}>{f}</li>
+                  <li key={f}>{f}</li>
                 ))}
               </ul>
               <div className="product-price">From <strong>$299</strong> / month · or add to your retainer</div>
+              <div className="product-actions">
+                <a href="/demo/comply" className="product-cta primary">Request a demo</a>
+                <a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`} className="product-cta ghost">Start free trial →</a>
+              </div>
             </div>
 
             <div className="product-card">
-              <span className="product-tag" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>● iFu Costless</span>
+              <span className="product-tag">● iFu Costless</span>
               <div className="product-name">Cost Optimisation Tool</div>
               <p className="product-desc">Connect your AWS account and get a live view of waste, savings opportunities, and spend anomalies — updated daily.</p>
               <ul className="product-features">
                 {['Idle resource & waste detection', 'Reserved Instance & Savings Plan gaps', 'Weekly cost anomaly alerts', 'S3 storage class optimisation', 'Monthly executive spend report'].map(f => (
-                  <li key={f} style={{ color: 'var(--muted)' }}>{f}</li>
+                  <li key={f}>{f}</li>
                 ))}
               </ul>
               <div className="product-price">From <strong>$199</strong> / month · or add to your retainer</div>
+              <div className="product-actions">
+                <a href="/demo/costless" className="product-cta primary">Request a demo</a>
+                <a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`} className="product-cta ghost">Start free trial →</a>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Free consultation band */}
-      <section className="reveal" style={{ padding: '0 32px', margin: '80px auto', maxWidth: '1200px' }}>
-        <div style={{
-          background: 'var(--brand)',
-          borderRadius: '20px',
-          padding: 'clamp(40px, 6vw, 64px) clamp(28px, 5vw, 56px)',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 'clamp(28px, 4vw, 48px)',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: '-80px',
-            right: '-80px',
-            width: '320px',
-            height: '320px',
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.04)',
-            pointerEvents: 'none',
-          }} />
-          <div style={{ position: 'relative', zIndex: 1, flex: '1 1 420px', minWidth: 0 }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 14px',
-              background: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '999px',
-              fontSize: '12px',
-              fontWeight: 500,
-              color: 'rgba(255,255,255,0.85)',
-              letterSpacing: '0.02em',
-              marginBottom: '20px',
-            }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ADE80' }} />
-              Free · 30 minutes · No sales pitch
-            </div>
-            <h2 style={{
-              fontSize: 'clamp(28px, 4vw, 42px)',
-              fontWeight: 600,
-              color: '#fff',
-              lineHeight: 1.15,
-              letterSpacing: '-0.02em',
-              marginBottom: '16px',
-            }}>
-              Book a free consultation<br />
-              <span style={{ color: 'rgba(255,255,255,0.7)', fontStyle: 'italic', fontWeight: 400 }}>
-                with an AWS engineer.
-              </span>
-            </h2>
-            <p style={{
-              fontSize: '16px',
-              color: 'rgba(255,255,255,0.75)',
-              lineHeight: 1.6,
-              maxWidth: '560px',
-              marginBottom: '0',
-            }}>
-              Tell us what you&apos;re trying to build, migrate, or secure. We&apos;ll share an honest
-              read on scope, risks, and whether we&apos;re the right fit — before you commit to anything.
-            </p>
-          </div>
-          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '12px', flex: '0 1 auto' }}>
-            <a
-              href="/schedule-consultation"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '16px 28px',
-                background: '#fff',
-                color: 'var(--brand)',
-                borderRadius: '12px',
-                fontSize: '15px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Book a free consultation
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </a>
-            <a
-              href="mailto:info@ifulabs.com"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '14px 28px',
-                background: 'transparent',
-                color: 'rgba(255,255,255,0.85)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: '12px',
-                fontSize: '14px',
-                fontWeight: 500,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Or email us directly
-            </a>
           </div>
         </div>
       </section>
@@ -377,7 +337,7 @@ export default function HomePage() {
               <ul className="pricing-features-list">
                 {p.features.map(f => <li key={f} className="pricing-feature">{f}</li>)}
               </ul>
-              <button 
+              <button
                 onClick={() => window.location.href = `${PORTAL_URL}/onboarding?product=${p.product}&plan=${p.plan}`}
                 className="pricing-cta"
                 style={{ cursor: 'pointer', border: 'none', width: '100%' }}
@@ -403,7 +363,7 @@ export default function HomePage() {
               <ul className="pricing-features-list">
                 {p.features.map(f => <li key={f} className="pricing-feature">{f}</li>)}
               </ul>
-              <a href={p.href} className="pricing-cta">{p.cta}</a>
+              <a href={(p as any).href} className="pricing-cta">{p.cta}</a>
             </div>
           ))}
         </div>
@@ -411,8 +371,8 @@ export default function HomePage() {
 
       <div className="divider" />
 
-      {/* CTA / Contact */}
-      <div className="reveal" id="contact">
+      {/* Contact */}
+      <div className="cta-band reveal" id="contact">
         <div className="cta-section">
           <div>
             <h2>Let&apos;s talk about your AWS infrastructure.</h2>
@@ -433,20 +393,14 @@ export default function HomePage() {
               <option>SaaS product subscription</option>
               <option>Not sure yet</option>
             </select>
-            <button 
+            <button
               className="cta-submit"
               onClick={() => {
                 const name = (document.getElementById('contact-name') as HTMLInputElement)?.value
                 const email = (document.getElementById('contact-email') as HTMLInputElement)?.value
                 const company = (document.getElementById('contact-company') as HTMLInputElement)?.value
                 const need = (document.getElementById('contact-need') as HTMLSelectElement)?.value
-                
-                if (!name || !email || !company) {
-                  alert('Please fill in all required fields')
-                  return
-                }
-                
-                // Create mailto link with pre-filled info
+                if (!name || !email || !company) { alert('Please fill in all required fields'); return }
                 const subject = encodeURIComponent(`Discovery Call Request - ${company}`)
                 const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\nCompany: ${company}\nNeed help with: ${need || 'Not specified'}\n\nI'd like to book a discovery call to discuss our AWS infrastructure.`)
                 window.location.href = `mailto:info@ifulabs.com?subject=${subject}&body=${body}`
@@ -460,18 +414,36 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="footer-new">
-        <div className="footer-main">
+        <div className="footer-main-inner">
           <div className="footer-brand">
             <a href="/" className="footer-logo">
-              <svg width="24" height="24" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#1B3A5C" strokeWidth="1.4" strokeLinejoin="round"/>
-                <circle cx="9" cy="9" r="2.5" fill="#1B3A5C"/>
-              </svg>
+              <div className="footer-logo-mark">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
+                  <circle cx="9" cy="9" r="2.5" fill="white"/>
+                </svg>
+              </div>
               iFu Labs
             </a>
             <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
+            <div className="footer-contact-links">
+              <a href="mailto:info@ifulabs.com" className="footer-contact-link">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <rect x="1" y="2.5" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M1 4L6 7L11 4" stroke="currentColor" strokeWidth="1.2"/>
+                </svg>
+                info@ifulabs.com
+              </a>
+              <a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener" className="footer-contact-link">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M6 1.5V6L8.5 8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                AWS Partner Network Member
+              </a>
+            </div>
           </div>
-          
+
           <div className="footer-columns">
             <div className="footer-col">
               <h4>Services</h4>
@@ -506,6 +478,7 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Legal */}
         <div className="footer-legal">
           <h4>Legal</h4>
           <ul>
@@ -514,31 +487,27 @@ export default function HomePage() {
             <li><a href="/acceptable-use">Acceptable Use</a></li>
           </ul>
         </div>
-      </footer>
 
-      {/* Certifications & Badges */}
-      <div className="certifications-strip">
-        <div className="cert-text">
-          <p>Our team holds <strong>multiple AWS certifications</strong> across specialized areas. We take pride in our depth of knowledge and continuously invest in staying current with AWS best practices and emerging technologies.</p>
-        </div>
-        <div className="cert-badges">
-          <div className="cert-badge" title="AWS Solutions Architect - Associate">
-            <img src="/badges/solutions-architect-associate.png" alt="AWS Solutions Architect Associate" className="cert-badge-img" />
+        {/* Certifications */}
+        <div className="footer-certifications">
+          <div className="footer-cert-text">
+            <p>Our team holds <strong>multiple AWS certifications</strong> across specialized areas. We take pride in our depth of knowledge and continuously invest in staying current with AWS best practices and emerging technologies.</p>
           </div>
-          <div className="cert-badge" title="AWS Solutions Architect - Professional">
-            <img src="/badges/solutions-architect-professional.png" alt="AWS Solutions Architect Professional" className="cert-badge-img" />
-          </div>
-          <div className="cert-badge" title="AWS Data Engineer - Associate">
-            <img src="/badges/data-engineer-associate.png" alt="AWS Data Engineer Associate" className="cert-badge-img" />
-          </div>
-          <div className="cert-badge" title="AWS Machine Learning Engineer - Associate">
-            <img src="/badges/ml-engineer-associate.png" alt="AWS ML Engineer Associate" className="cert-badge-img" />
-          </div>
-          <div className="cert-badge" title="AWS DevOps Engineer - Professional">
-            <img src="/badges/devops-engineer-professional.png" alt="AWS DevOps Engineer Professional" className="cert-badge-img" />
+          <div className="footer-cert-badges">
+            {[
+              { file: 'solutions-architect-associate.png', label: 'AWS Solutions Architect Associate' },
+              { file: 'solutions-architect-professional.png', label: 'AWS Solutions Architect Professional' },
+              { file: 'data-engineer-associate.png', label: 'AWS Data Engineer Associate' },
+              { file: 'ml-engineer-associate.png', label: 'AWS ML Engineer Associate' },
+              { file: 'devops-engineer-professional.png', label: 'AWS DevOps Engineer Professional' },
+            ].map(badge => (
+              <div key={badge.file} className="footer-cert-badge" title={badge.label}>
+                <img src={`/badges/${badge.file}`} alt={badge.label} />
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      </footer>
 
       <div className="footer-bottom">
         <p>© 2026 iFu Labs Ltd.</p>
