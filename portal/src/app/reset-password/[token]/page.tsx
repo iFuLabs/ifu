@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: '#FAFAF8',
+        background: '#0F1115',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -90,21 +90,21 @@ export default function ResetPasswordPage() {
           <h1 style={{ 
             fontSize: '32px', 
             fontWeight: '600', 
-            color: '#1A1917', 
+            color: '#F5F5F5', 
             marginBottom: '8px',
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
           }}>
             Password reset successful
           </h1>
-          <p style={{ fontSize: '15px', color: '#6B685F', marginBottom: '24px' }}>
+          <p style={{ fontSize: '15px', color: '#9AA0A6', marginBottom: '24px' }}>
             Your password has been updated. Redirecting to login...
           </p>
           <div style={{
             width: '32px',
             height: '32px',
             border: '3px solid #E0DDD5',
-            borderTopColor: '#1B3A5C',
+            borderTopColor: '#E8820A',
             borderRadius: '50%',
             margin: '0 auto',
             animation: 'spin 1s linear infinite'
@@ -123,7 +123,7 @@ export default function ResetPasswordPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#FAFAF8',
+      background: '#0F1115',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -135,7 +135,7 @@ export default function ResetPasswordPage() {
           <div style={{
             width: '56px',
             height: '56px',
-            background: '#1B3A5C',
+            background: '#E8820A',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
@@ -147,20 +147,20 @@ export default function ResetPasswordPage() {
           <h1 style={{ 
             fontSize: '32px', 
             fontWeight: '600', 
-            color: '#1A1917', 
+            color: '#F5F5F5', 
             marginBottom: '8px',
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
           }}>
             Set new password
           </h1>
-          <p style={{ fontSize: '15px', color: '#6B685F' }}>
+          <p style={{ fontSize: '15px', color: '#9AA0A6' }}>
             Choose a strong password for your account
           </p>
         </div>
 
         <div style={{
-          background: 'white',
+          background: '#14161B',
           border: '1px solid #E0DDD5',
           borderRadius: '16px',
           padding: '40px',
@@ -171,7 +171,7 @@ export default function ResetPasswordPage() {
               display: 'block', 
               fontSize: '14px', 
               fontWeight: '500', 
-              color: '#1A1917', 
+              color: '#F5F5F5', 
               marginBottom: '8px' 
             }}>
               New password
@@ -187,21 +187,21 @@ export default function ResetPasswordPage() {
                   width: '100%',
                   padding: '12px 40px 12px 16px',
                   fontSize: '15px',
-                  background: '#FAFAF8',
+                  background: '#0F1115',
                   border: '1px solid #E0DDD5',
                   borderRadius: '8px',
-                  color: '#1A1917',
+                  color: '#F5F5F5',
                   outline: 'none',
                   transition: 'all 0.2s',
                   fontFamily: "'DM Sans', sans-serif"
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#1B3A5C'
+                  e.target.style.borderColor = '#E8820A'
                   e.target.style.background = 'white'
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#E0DDD5'
-                  e.target.style.background = '#FAFAF8'
+                  e.target.style.borderColor = '#25282F'
+                  e.target.style.background = '#0F1115'
                 }}
               />
               <button
@@ -215,7 +215,7 @@ export default function ResetPasswordPage() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#6B685F',
+                  color: '#9AA0A6',
                   padding: '4px'
                 }}
               >
@@ -229,7 +229,7 @@ export default function ResetPasswordPage() {
               display: 'block', 
               fontSize: '14px', 
               fontWeight: '500', 
-              color: '#1A1917', 
+              color: '#F5F5F5', 
               marginBottom: '8px' 
             }}>
               Confirm password
@@ -245,21 +245,21 @@ export default function ResetPasswordPage() {
                   width: '100%',
                   padding: '12px 40px 12px 16px',
                   fontSize: '15px',
-                  background: '#FAFAF8',
+                  background: '#0F1115',
                   border: '1px solid #E0DDD5',
                   borderRadius: '8px',
-                  color: '#1A1917',
+                  color: '#F5F5F5',
                   outline: 'none',
                   transition: 'all 0.2s',
                   fontFamily: "'DM Sans', sans-serif"
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#1B3A5C'
+                  e.target.style.borderColor = '#E8820A'
                   e.target.style.background = 'white'
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#E0DDD5'
-                  e.target.style.background = '#FAFAF8'
+                  e.target.style.borderColor = '#25282F'
+                  e.target.style.background = '#0F1115'
                 }}
               />
               <button
@@ -273,7 +273,7 @@ export default function ResetPasswordPage() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#6B685F',
+                  color: '#9AA0A6',
                   padding: '4px'
                 }}
               >
@@ -285,11 +285,11 @@ export default function ResetPasswordPage() {
           {error && (
             <div style={{
               padding: '12px 16px',
-              background: '#FEE2E2',
+              background: 'rgba(239, 68, 68, 0.08)',
               border: '1px solid #FCA5A5',
               borderRadius: '8px',
               fontSize: '14px',
-              color: '#991B1B',
+              color: '#FCA5A5',
               marginBottom: '20px'
             }}>
               {error}
@@ -302,8 +302,8 @@ export default function ResetPasswordPage() {
             style={{
               width: '100%',
               padding: '14px',
-              background: loading ? '#6B685F' : '#1B3A5C',
-              color: 'white',
+              background: loading ? '#9AA0A6' : '#E8820A',
+              color: '#0B0C0F',
               fontSize: '15px',
               fontWeight: '600',
               border: 'none',
@@ -315,8 +315,8 @@ export default function ResetPasswordPage() {
               gap: '8px',
               transition: 'all 0.2s'
             }}
-            onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-            onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
+            onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
+            onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
           >
             {loading ? (
               <><Loader2 size={18} className="animate-spin" /> Resetting...</>

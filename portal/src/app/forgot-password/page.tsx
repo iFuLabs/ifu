@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: '#FAFAF8',
+        background: '#0F1115',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -71,26 +71,26 @@ export default function ForgotPasswordPage() {
             <h1 style={{ 
               fontSize: '32px', 
               fontWeight: '600', 
-              color: '#1A1917', 
+              color: '#F5F5F5', 
               marginBottom: '8px',
               fontFamily: "'Fraunces', serif",
               letterSpacing: '-0.02em'
             }}>
               Check your email
             </h1>
-            <p style={{ fontSize: '15px', color: '#6B685F', lineHeight: '1.6' }}>
+            <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
               If an account exists for <strong>{email}</strong>, you'll receive a password reset link shortly.
             </p>
           </div>
 
           <div style={{
-            background: 'white',
+            background: '#14161B',
             border: '1px solid #E0DDD5',
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px'
           }}>
-            <p style={{ fontSize: '14px', color: '#6B685F', marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', color: '#9AA0A6', marginBottom: '16px' }}>
               The email may take a few minutes to arrive. Be sure to check your spam folder.
             </p>
             <Link 
@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
                 alignItems: 'center',
                 gap: '8px',
                 fontSize: '14px',
-                color: '#1B3A5C',
+                color: '#E8820A',
                 textDecoration: 'none',
                 fontWeight: '500'
               }}
@@ -117,7 +117,7 @@ export default function ForgotPasswordPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#FAFAF8',
+      background: '#0F1115',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -129,7 +129,7 @@ export default function ForgotPasswordPage() {
           <div style={{
             width: '56px',
             height: '56px',
-            background: '#1B3A5C',
+            background: '#E8820A',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
@@ -141,20 +141,20 @@ export default function ForgotPasswordPage() {
           <h1 style={{ 
             fontSize: '32px', 
             fontWeight: '600', 
-            color: '#1A1917', 
+            color: '#F5F5F5', 
             marginBottom: '8px',
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
           }}>
             Reset your password
           </h1>
-          <p style={{ fontSize: '15px', color: '#6B685F' }}>
+          <p style={{ fontSize: '15px', color: '#9AA0A6' }}>
             Enter your email and we'll send you a reset link
           </p>
         </div>
 
         <div style={{
-          background: 'white',
+          background: '#14161B',
           border: '1px solid #E0DDD5',
           borderRadius: '16px',
           padding: '40px',
@@ -165,7 +165,7 @@ export default function ForgotPasswordPage() {
               display: 'block', 
               fontSize: '14px', 
               fontWeight: '500', 
-              color: '#1A1917', 
+              color: '#F5F5F5', 
               marginBottom: '8px' 
             }}>
               Email address
@@ -181,21 +181,21 @@ export default function ForgotPasswordPage() {
                 width: '100%',
                 padding: '12px 16px',
                 fontSize: '15px',
-                background: '#FAFAF8',
+                background: '#0F1115',
                 border: '1px solid #E0DDD5',
                 borderRadius: '8px',
-                color: '#1A1917',
+                color: '#F5F5F5',
                 outline: 'none',
                 transition: 'all 0.2s',
                 fontFamily: "'DM Sans', sans-serif"
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#1B3A5C'
+                e.target.style.borderColor = '#E8820A'
                 e.target.style.background = 'white'
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#E0DDD5'
-                e.target.style.background = '#FAFAF8'
+                e.target.style.borderColor = '#25282F'
+                e.target.style.background = '#0F1115'
               }}
             />
           </div>
@@ -203,11 +203,11 @@ export default function ForgotPasswordPage() {
           {error && (
             <div style={{
               padding: '12px 16px',
-              background: '#FEE2E2',
+              background: 'rgba(239, 68, 68, 0.08)',
               border: '1px solid #FCA5A5',
               borderRadius: '8px',
               fontSize: '14px',
-              color: '#991B1B',
+              color: '#FCA5A5',
               marginBottom: '20px'
             }}>
               {error}
@@ -220,8 +220,8 @@ export default function ForgotPasswordPage() {
             style={{
               width: '100%',
               padding: '14px',
-              background: loading ? '#6B685F' : '#1B3A5C',
-              color: 'white',
+              background: loading ? '#9AA0A6' : '#E8820A',
+              color: '#0B0C0F',
               fontSize: '15px',
               fontWeight: '600',
               border: 'none',
@@ -234,8 +234,8 @@ export default function ForgotPasswordPage() {
               transition: 'all 0.2s',
               marginBottom: '16px'
             }}
-            onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-            onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
+            onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
+            onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
           >
             {loading ? (
               <><Loader2 size={18} className="animate-spin" /> Sending...</>
@@ -252,7 +252,7 @@ export default function ForgotPasswordPage() {
                 alignItems: 'center',
                 gap: '8px',
                 fontSize: '14px',
-                color: '#6B685F',
+                color: '#9AA0A6',
                 textDecoration: 'none'
               }}
             >

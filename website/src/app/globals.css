@@ -2865,3 +2865,68 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
   .svc-section { padding: 72px 24px; }
   .svc-hero { padding: 120px 24px 64px; }
 }
+
+/* =========================================================
+   Subtle light-grey section accents
+   Breaks up the deep-dark monotony with a whisper of warmth.
+   ========================================================= */
+:root {
+  --surface-soft: #14171F;
+  --surface-soft2: #1A1E28;
+  --hairline-glow: rgba(232, 130, 10, 0.08);
+}
+
+/* Gentle horizontal band — use on alternating sections */
+.section--soft {
+  background:
+    linear-gradient(180deg, transparent 0%, var(--surface-soft) 12%, var(--surface-soft) 88%, transparent 100%);
+  position: relative;
+}
+.section--soft::before,
+.section--soft::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border2), transparent);
+  opacity: 0.6;
+}
+.section--soft::before { top: 0; }
+.section--soft::after { bottom: 0; }
+
+/* Radial lift — draws attention without harsh edges */
+.section--lift {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, var(--surface-soft2) 0%, transparent 70%),
+    var(--bg);
+}
+
+/* Make existing light sections a touch warmer and lighter */
+.svc-section--light {
+  background:
+    linear-gradient(180deg, var(--surface-soft) 0%, var(--surface-soft2) 100%);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.svc-section--light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 50% 0%, var(--hairline-glow), transparent 60%);
+  pointer-events: none;
+}
+.svc-section--light > * { position: relative; }
+
+/* Services grid section gets a soft lift */
+.services-grid-section {
+  background:
+    radial-gradient(ellipse 90% 50% at 50% 0%, var(--surface-soft) 0%, transparent 70%),
+    var(--bg);
+}
+
+/* Soft card variant — for use on elevated surfaces */
+.card-soft {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+}

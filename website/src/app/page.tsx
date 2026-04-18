@@ -146,7 +146,7 @@ export default function HomePage() {
       <div className="divider" />
 
       {/* Methodology */}
-      <section className="methodology-section" id="methodology">
+      <section className="methodology-section section--soft" id="methodology">
         <div className="methodology-inner reveal">
           <div className="section-eyebrow">Our Methodology</div>
           <h2 className="section-title">A repeatable delivery<br/>model built for <em>results.</em></h2>
@@ -213,7 +213,7 @@ export default function HomePage() {
       </section>
 
       {/* Pricing */}
-      <section className="section reveal" id="pricing">
+      <section className="section section--lift reveal" id="pricing">
         <div className="section-eyebrow">Pricing</div>
         <h2 className="section-title">Services, products,<br/>or <em>both.</em></h2>
         <p className="section-sub">Choose the model that fits. Mix consultancy with product subscriptions.</p>
