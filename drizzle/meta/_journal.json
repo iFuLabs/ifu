@@ -64,6 +64,20 @@
       "when": 1776026649166,
       "tag": "0008_add_password_reset_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1776026649167,
+      "tag": "0009_add_subscriptions_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1776026649168,
+      "tag": "0010_fix_subscription_constraints",
+      "breakpoints": true
     }
   ]
 }

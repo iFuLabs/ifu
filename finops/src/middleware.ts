@@ -31,16 +31,22 @@ export async function middleware(request: NextRequest) {
     const userData = await response.json()
     
     // Check if user has access to FinOps product
-    // FinOps plan: 'finops'
-    const userPlan = userData.organization?.plan
-    const hasFinOpsAccess = userPlan === 'finops'
+    // Look for active FinOps subscription in subscriptions array
+    const hasFinOpsAccess = userData.subscriptions?.some((sub: any) => 
+      sub.product === 'finops' && (sub.status === 'active' || sub.status === 'trialing')
+    )
     
     if (!hasFinOpsAccess) {
       // User doesn't have FinOps subscription, redirect to Comply or portal
       const complyUrl = process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001'
       const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'
       
-      if (userPlan === 'starter' || userPlan === 'growth') {
+      // Check if they have Comply subscription
+      const hasComplyAccess = userData.subscriptions?.some((sub: any) => 
+        sub.product === 'comply' && (sub.status === 'active' || sub.status === 'trialing')
+      )
+      
+      if (hasComplyAccess) {
         // Redirect to Comply dashboard
         return NextResponse.redirect(`${complyUrl}/dashboard`)
       } else {

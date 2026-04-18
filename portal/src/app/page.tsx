@@ -1,6 +1,63 @@
 'use client'
+import { useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 export default function PortalPage() {
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchUser()
+  }, [])
+
+  async function fetchUser() {
+    try {
+      const res = await fetch(`${API_URL}/api/v1/auth/me`, { credentials: 'include' })
+      if (res.ok) {
+        const data = await res.json()
+        setUser(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch user:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleProductClick(product: 'comply' | 'finops') {
+    // Check if user has active subscription for this product
+    const hasSubscription = user?.subscriptions?.some((sub: any) => 
+      sub.product === product && (sub.status === 'active' || sub.status === 'trialing')
+    )
+    
+    if (hasSubscription) {
+      // User has subscription, open dashboard
+      if (product === 'comply') {
+        window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard' || 'http://localhost:3001/dashboard'
+      } else {
+        window.location.href = process.env.NEXT_PUBLIC_FINOPS_URL + '/dashboard' || 'http://localhost:3002/dashboard'
+      }
+    } else {
+      // User doesn't have subscription, go to subscribe page
+      window.location.href = `/subscribe?product=${product}`
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #1B3A5C 0%, #2E5F8A 100%)'
+      }}>
+        <Loader2 size={32} className="animate-spin" style={{ color: 'white' }} />
+      </div>
+    )
+  }
   return (
     <div style={{
       minHeight: '100vh',
@@ -42,8 +99,8 @@ export default function PortalPage() {
           gap: '24px'
         }}>
           {/* Comply Card */}
-          <a
-            href={process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001'}
+          <button
+            onClick={() => handleProductClick('comply')}
             style={{
               background: 'white',
               borderRadius: '16px',
@@ -51,7 +108,10 @@ export default function PortalPage() {
               textDecoration: 'none',
               transition: 'transform 0.2s, box-shadow 0.2s',
               boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              border: 'none',
+              textAlign: 'left',
+              width: '100%'
             }}
             onMouseOver={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)'
@@ -80,24 +140,40 @@ export default function PortalPage() {
             <p style={{ fontSize: '14px', color: '#6B7280', lineHeight: '1.6', marginBottom: '16px' }}>
               SOC 2, ISO 27001, and GDPR compliance automation. Automated evidence collection and control monitoring.
             </p>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '14px',
-              color: '#1A4D3C',
-              fontWeight: '500'
-            }}>
-              Open iFu Comply
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-          </a>
+            {user?.subscriptions?.some((sub: any) => sub.product === 'comply' && (sub.status === 'active' || sub.status === 'trialing')) ? (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '14px',
+                color: '#1A4D3C',
+                fontWeight: '500'
+              }}>
+                Open Dashboard
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+            ) : (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '14px',
+                color: '#1B3A5C',
+                fontWeight: '500'
+              }}>
+                Subscribe to iFu Comply
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+            )}
+          </button>
 
           {/* FinOps Card */}
-          <a
-            href={process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002'}
+          <button
+            onClick={() => handleProductClick('finops')}
             style={{
               background: 'white',
               borderRadius: '16px',
@@ -105,7 +181,10 @@ export default function PortalPage() {
               textDecoration: 'none',
               transition: 'transform 0.2s, box-shadow 0.2s',
               boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              border: 'none',
+              textAlign: 'left',
+              width: '100%'
             }}
             onMouseOver={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)'
@@ -134,20 +213,36 @@ export default function PortalPage() {
             <p style={{ fontSize: '14px', color: '#6B7280', lineHeight: '1.6', marginBottom: '16px' }}>
               AWS cost optimization and waste detection. Find savings opportunities and reduce your cloud spend.
             </p>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: '14px',
-              color: '#1D6648',
-              fontWeight: '500'
-            }}>
-              Open iFu Costless
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-          </a>
+            {user?.subscriptions?.some((sub: any) => sub.product === 'finops' && (sub.status === 'active' || sub.status === 'trialing')) ? (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '14px',
+                color: '#1D6648',
+                fontWeight: '500'
+              }}>
+                Open Dashboard
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+            ) : (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '14px',
+                color: '#1B3A5C',
+                fontWeight: '500'
+              }}>
+                Subscribe to iFu Costless
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+            )}
+          </button>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -174,6 +269,16 @@ export default function PortalPage() {
           </a>
         </div>
       </div>
+
+      <style>{`
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
