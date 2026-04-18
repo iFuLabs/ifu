@@ -12,4 +12,7 @@ const nextConfig = {
 
 module.exports = nextConfig
 
-import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+// Only initialize Cloudflare dev mode when not building
+if (process.env.NODE_ENV !== 'production' && process.argv.includes('dev')) {
+  import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+}

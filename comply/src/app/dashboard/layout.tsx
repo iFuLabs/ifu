@@ -29,8 +29,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userEmail, setUserEmail] = useState('')
 
   useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/me`, {
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
     })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
@@ -41,12 +45,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/logout`, {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
       })
       if (!res.ok) {
         console.error('Logout failed:', res.status)
+      }
+      // Clear token from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token')
       }
     } catch (err) {
       console.error('Logout error:', err)

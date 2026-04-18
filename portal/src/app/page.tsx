@@ -14,7 +14,13 @@ export default function PortalPage() {
 
   async function fetchUser() {
     try {
-      const res = await fetch(`${API_URL}/api/v1/auth/me`, { credentials: 'include' })
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const res = await fetch(`${API_URL}/api/v1/auth/me`, { 
+        credentials: 'include',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      })
       if (res.ok) {
         const data = await res.json()
         setUser(data)

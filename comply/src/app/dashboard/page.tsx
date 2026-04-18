@@ -9,14 +9,20 @@ import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
 
 export default function DashboardPage() {
-  const { data: score, isLoading: scoreLoading } = useSWR('score', api.controls.score, { refreshInterval: 30000 })
-  const { data: controls } = useSWR('controls', () => api.controls.list())
-  const { data: scans } = useSWR('scans', api.scans.list)
-  const { data: planFeatures } = useSWR('plan-features', api.plan.features)
+  const { data: score, isLoading: scoreLoading } = useSWR<any>('score', api.controls.score, { refreshInterval: 30000 })
+  const { data: controls } = useSWR<any[]>('controls', api.controls.list)
+  const { data: scans } = useSWR<any[]>('scans', api.scans.list)
+  const { data: planFeatures } = useSWR<any>('plan-features', api.plan.features)
 
-  const { data: finopsSummary } = useSWR('finops-summary', () =>
-    fetch('/api/v1/finops/summary').then(r => r.json()).catch(() => null)
-  )
+  const { data: finopsSummary } = useSWR<any>('finops-summary', async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    return fetch('/api/v1/finops/summary', {
+      credentials: 'include',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
+    }).then(r => r.json()).catch(() => null)
+  })
   const failingControls = controls?.filter(c => c.status === 'fail') || []
   const latestScan = scans?.[0]
 

@@ -1,11 +1,16 @@
+import { getAccessToken } from './auth'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = await getAccessToken()
+
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
-    credentials: 'include', // Send httpOnly auth cookie
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options?.headers,
     },
   })
@@ -18,72 +23,11 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json()
 }
 
-// ── FinOps API ─────────────────────────────────────────────────────────────
-export const api = {
-  finops: {
-    getFindings: (refresh = false) => 
-      apiFetch<FinOpsFindings>(`/api/v1/finops${refresh ? '?refresh=true' : ''}`),
-    getSummary: () => 
-      apiFetch<FinOpsSummary>('/api/v1/finops/summary'),
-  },
-}
-
-// ── Types ──────────────────────────────────────────────────────────────────
-export interface FinOpsFindings {
-  monthlyCost: number
-  forecastedCost: number
-  totalMonthlySavings: number
-  waste: WasteItem[]
-  rightsizing: RightsizingItem[]
-  reservations: CoverageItem[]
-  savingsPlans: CoverageItem[]
-  topServices: ServiceCost[]
-  summary: FinOpsSummary
-  cached?: boolean
-}
-
-export interface FinOpsSummary {
-  wasteItems: number
-  rightsizingItems: number
-  totalMonthlySavings: number
-  totalAnnualSavings: number
-  coverageGaps: number
-  checkedAt: string
-  available?: boolean
-  message?: string
-}
-
-export interface WasteItem {
-  type: string
-  resourceId: string
-  resourceType: string
-  description: string
-  estimatedMonthlySavings: number
-  recommendation: string
-  severity: 'high' | 'medium' | 'low'
-  metadata?: Record<string, any>
-}
-
-export interface RightsizingItem {
-  resourceId: string
-  currentType: string
-  targetType: string | null
-  action: 'downsize' | 'terminate'
-  estimatedMonthlySavings: number
-  cpuUtilization: number
-  memUtilization: number
-  recommendation: string
-}
-
-export interface CoverageItem {
-  service: string
-  coveragePercentage: number
-  onDemandCost: number
-  recommendation: string
-}
-
-export interface ServiceCost {
-  service: string
-  cost: number
-  unit: string
+// Helper to get auth headers for direct fetch calls
+export function getAuthHeaders() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  }
 }

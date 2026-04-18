@@ -4,6 +4,15 @@ import { CreditCard, Calendar, Loader2, AlertCircle, CheckCircle, X } from 'luci
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
+// Helper to get auth headers
+function getAuthHeaders() {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  }
+}
+
 interface BillingData {
   plan: string
   status: 'active' | 'trialing' | 'expired'
@@ -32,7 +41,10 @@ export default function BillingPage() {
 
   async function fetchBilling() {
     try {
-      const res = await fetch(`${API_URL}/api/v1/billing`, { credentials: 'include' })
+      const res = await fetch(`${API_URL}/api/v1/billing`, { 
+        credentials: 'include',
+        headers: getAuthHeaders()
+      })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.message || data.error || `Failed to load billing (${res.status})`)
@@ -61,7 +73,7 @@ export default function BillingPage() {
       const res = await fetch(`${API_URL}/api/v1/billing/initialize`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ plan: 'finops' })
       })
       const data = await res.json()
@@ -80,7 +92,8 @@ export default function BillingPage() {
     try {
       const res = await fetch(`${API_URL}/api/v1/billing/cancel`, {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: getAuthHeaders()
       })
       if (!res.ok) {
         const data = await res.json()
