@@ -373,14 +373,17 @@ function OnboardingForm() {
       localStorage.removeItem('onboarding_roleArn')
       localStorage.removeItem('onboarding_externalId')
     }
+
+    const complyBaseUrl = process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001'
+    const finopsBaseUrl = process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002'
     
     if (selectedProducts.includes('comply')) {
-      window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
+      window.location.href = `${complyBaseUrl}/dashboard`
     } else if (selectedProducts.includes('finops')) {
-      window.location.href = process.env.NEXT_PUBLIC_FINOPS_URL + '/dashboard'
+      window.location.href = `${finopsBaseUrl}/dashboard`
     } else {
       // Default to Comply if no product selected
-      window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
+      window.location.href = `${complyBaseUrl}/dashboard`
     }
   }
 
