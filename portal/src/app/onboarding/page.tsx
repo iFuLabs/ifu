@@ -21,6 +21,11 @@ function OnboardingForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Validation states
+  const [emailError, setEmailError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null)
+
   const urlProduct = searchParams.get('product')
   const urlPlan = searchParams.get('plan')
   const urlStep = searchParams.get('step')
@@ -31,18 +36,71 @@ function OnboardingForm() {
     }
   }, [urlStep])
 
-  const [orgName, setOrgName] = useState('')
-  const [orgDomain, setOrgDomain] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [roleArn, setRoleArn] = useState('')
-  const [externalId] = useState(() => `ifu-${Math.random().toString(36).slice(2, 10)}`)
+  // Load state from localStorage on mount
+  const [orgName, setOrgName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_orgName') || ''
+    }
+    return ''
+  })
+  const [orgDomain, setOrgDomain] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_orgDomain') || ''
+    }
+    return ''
+  })
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_email') || ''
+    }
+    return ''
+  })
+  const [password, setPassword] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_password') || ''
+    }
+    return ''
+  })
+  const [name, setName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_name') || ''
+    }
+    return ''
+  })
+  const [roleArn, setRoleArn] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_roleArn') || ''
+    }
+    return ''
+  })
+  const [externalId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('onboarding_externalId')
+      if (saved) return saved
+    }
+    const newId = `ifu-${Math.random().toString(36).slice(2, 10)}`
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboarding_externalId', newId)
+    }
+    return newId
+  })
   const [awsAccountId, setAwsAccountId] = useState('123456789012')
   const [skipAws, setSkipAws] = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [selectedPlan, setSelectedPlan] = useState<string>('comply-starter')
   const [paymentProcessing, setPaymentProcessing] = useState(false)
+
+  // Persist form data to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboarding_orgName', orgName)
+      localStorage.setItem('onboarding_orgDomain', orgDomain)
+      localStorage.setItem('onboarding_email', email)
+      localStorage.setItem('onboarding_password', password)
+      localStorage.setItem('onboarding_name', name)
+      localStorage.setItem('onboarding_roleArn', roleArn)
+    }
+  }, [orgName, orgDomain, email, password, name, roleArn])
 
   useEffect(() => {
     if (urlProduct) {
@@ -75,24 +133,136 @@ function OnboardingForm() {
       .catch(err => console.error('Failed to fetch AWS setup info:', err))
   }, [])
 
+  // Email validation
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email) {
+      setEmailError('Email is required')
+      return false
+    }
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address')
+      return false
+    }
+    setEmailError('')
+    return true
+  }
+
+  // Password validation
+  const validatePassword = (pwd: string) => {
+    if (!pwd) {
+      setPasswordError('Password is required')
+      setPasswordStrength(null)
+      return false
+    }
+    
+    if (pwd.length < 8) {
+      setPasswordError('Password must be at least 8 characters')
+      setPasswordStrength('weak')
+      return false
+    }
+
+    const hasUpperCase = /[A-Z]/.test(pwd)
+    const hasLowerCase = /[a-z]/.test(pwd)
+    const hasNumber = /[0-9]/.test(pwd)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(pwd)
+
+    const strengthScore = [hasUpperCase, hasLowerCase, hasNumber, hasSpecialChar].filter(Boolean).length
+
+    if (strengthScore < 3) {
+      setPasswordError('Password must include uppercase, lowercase, number, and special character')
+      setPasswordStrength('weak')
+      return false
+    }
+
+    if (strengthScore === 3) {
+      setPasswordStrength('medium')
+    } else {
+      setPasswordStrength('strong')
+    }
+
+    setPasswordError('')
+    return true
+  }
+
   const handleSignup = async () => {
-    if (!email.trim() || !password.trim() || !name.trim()) {
-      setError('All fields are required')
+    // Clear previous errors
+    setError('')
+    
+    // Validate name
+    if (!name.trim()) {
+      setError('Name is required')
       return
     }
-    if (password.length < 8) {
+    
+    // Validate email - always run validation
+    if (!email || !email.trim()) {
+      setEmailError('Email is required')
+      setError('Please enter a valid email address')
+      return
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address')
+      setError('Please enter a valid email address')
+      return
+    }
+    setEmailError('')
+    
+    // Validate password - always run validation
+    if (!password || password.length < 8) {
+      setPasswordError('Password must be at least 8 characters')
       setError('Password must be at least 8 characters')
       return
     }
+
+    const hasUpperCase = /[A-Z]/.test(password)
+    const hasLowerCase = /[a-z]/.test(password)
+    const hasNumber = /[0-9]/.test(password)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+      setPasswordError('Password must include uppercase, lowercase, number, and special character')
+      setError('Password must include uppercase, lowercase, number, and special character')
+      return
+    }
+    setPasswordError('')
+    
     setLoading(true)
-    setError('')
     
     try {
-      // In development, just move to next step
-      // In production, this would call Auth0 signup
+      // Check if email already exists
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+      const checkResponse = await fetch(`${API_URL}/api/v1/auth/check-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email.trim() })
+      })
+
+      if (!checkResponse.ok) {
+        const errorData = await checkResponse.json().catch(() => ({}))
+        setError(errorData.message || 'Email check failed')
+        setLoading(false)
+        return
+      }
+
+      const { available } = await checkResponse.json()
+      
+      if (!available) {
+        setError('An account with this email already exists. Please login instead.')
+        setLoading(false)
+        return
+      }
+
+      // Email is available, proceed to next step
       setStep(1)
     } catch (err: any) {
-      setError(err.message)
+      console.error('Email check error:', err)
+      // If email check fails (API down, network error), still allow to proceed
+      // The onboard endpoint will catch duplicates
+      setStep(1)
     } finally {
       setLoading(false)
     }
@@ -118,9 +288,10 @@ function OnboardingForm() {
       // Cookie is set by the backend via Set-Cookie header.
       setStep(2)
     } catch (err: any) {
-      setError(err.message)
+      console.error('Onboard error:', err)
+      setError(err.message || 'Failed to create account')
       // If user already onboarded, skip to AWS step
-      if (err.message.includes('already onboarded')) {
+      if (err.message && err.message.includes('already onboarded')) {
         setStep(2)
       }
     } finally {
@@ -190,9 +361,18 @@ function OnboardingForm() {
   }
 
   const handleFinish = () => {
-    // Clear localStorage after successful onboarding
-    localStorage.removeItem('onboarding_plan')
-    localStorage.removeItem('onboarding_product')
+    // Clear all onboarding data from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('onboarding_plan')
+      localStorage.removeItem('onboarding_product')
+      localStorage.removeItem('onboarding_orgName')
+      localStorage.removeItem('onboarding_orgDomain')
+      localStorage.removeItem('onboarding_email')
+      localStorage.removeItem('onboarding_password')
+      localStorage.removeItem('onboarding_name')
+      localStorage.removeItem('onboarding_roleArn')
+      localStorage.removeItem('onboarding_externalId')
+    }
     
     if (selectedProducts.includes('comply')) {
       window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
@@ -225,9 +405,8 @@ function OnboardingForm() {
           <div style={{
             width: '56px',
             height: '56px',
-            background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
-            boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
-            borderRadius: '14px',
+            background: '#E8820A',
+            borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -239,9 +418,9 @@ function OnboardingForm() {
             </svg>
           </div>
           <h1 style={{ 
-            fontSize: '34px',
-            fontWeight: '500',
-            color: '#F5F5F5',
+            fontSize: '32px', 
+            fontWeight: '600', 
+            color: '#F5F5F5', 
             marginBottom: '8px',
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
@@ -255,7 +434,7 @@ function OnboardingForm() {
               gap: '6px',
               padding: '6px 14px',
               background: 'rgba(232, 130, 10, 0.08)',
-              border: '1px solid rgba(232, 130, 10, 0.3)',
+              border: '1px solid #25282F',
               borderRadius: '20px',
               fontSize: '13px',
               color: '#E8820A',
@@ -289,12 +468,11 @@ function OnboardingForm() {
 
         {/* Card */}
         <div style={{
-          background: 'rgba(20, 22, 27, 0.8)',
-          backdropFilter: 'blur(8px)',
+          background: '#14161B',
           border: '1px solid #25282F',
           borderRadius: '16px',
           padding: '40px',
-          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
         }}>
 
           {/* Step 0: Sign Up */}
@@ -304,8 +482,7 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: 'rgba(232, 130, 10, 0.1)',
-                  border: '1px solid rgba(232, 130, 10, 0.2)',
+                  background: 'rgba(232, 130, 10, 0.08)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
@@ -318,9 +495,9 @@ function OnboardingForm() {
                   </svg>
                 </div>
                 <h2 style={{ 
-                  fontSize: '26px',
-                  fontWeight: '500',
-                  color: '#F5F5F5',
+                  fontSize: '24px', 
+                  fontWeight: '600', 
+                  color: '#F5F5F5', 
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
@@ -334,12 +511,10 @@ function OnboardingForm() {
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#C4C7CC',
-                  marginBottom: '8px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  color: '#F5F5F5', 
+                  marginBottom: '8px' 
                 }}>
                   Full name *
                 </label>
@@ -353,21 +528,21 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
-                    border: '1px solid #E0DDD5',
+                    background: '#0F1115',
+                    border: '1px solid #25282F',
                     borderRadius: '8px',
-                    color: '#1A1917',
+                    color: '#F5F5F5',
                     outline: 'none',
                     transition: 'all 0.2s',
                     fontFamily: "'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#1B3A5C'
+                    e.target.style.borderColor = '#E8820A'
                     e.target.style.background = 'white'
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#E0DDD5'
-                    e.target.style.background = '#FAFAF8'
+                    e.target.style.borderColor = '#25282F'
+                    e.target.style.background = '#0F1115'
                   }}
                 />
               </div>
@@ -375,12 +550,10 @@ function OnboardingForm() {
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#C4C7CC',
-                  marginBottom: '8px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  color: '#F5F5F5', 
+                  marginBottom: '8px' 
                 }}>
                   Email address *
                 </label>
@@ -393,77 +566,135 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
-                    border: '1px solid #E0DDD5',
+                    background: '#0F1115',
+                    border: `1px solid ${emailError ? 'rgba(239, 68, 68, 0.3)' : '#25282F'}`,
                     borderRadius: '8px',
-                    color: '#1A1917',
+                    color: '#F5F5F5',
                     outline: 'none',
                     transition: 'all 0.2s',
                     fontFamily: "'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#1B3A5C'
-                    e.target.style.background = 'white'
+                    if (!emailError) {
+                      e.target.style.borderColor = '#E8820A'
+                      e.target.style.background = 'white'
+                    }
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#E0DDD5'
-                    e.target.style.background = '#FAFAF8'
+                    validateEmail(email)
+                    if (!emailError) {
+                      e.target.style.borderColor = '#25282F'
+                      e.target.style.background = '#0F1115'
+                    }
                   }}
                 />
+                {emailError && (
+                  <p style={{ fontSize: '13px', color: '#FCA5A5', marginTop: '6px' }}>
+                    {emailError}
+                  </p>
+                )}
               </div>
 
               <div style={{ marginBottom: '28px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#C4C7CC',
-                  marginBottom: '8px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  color: '#F5F5F5', 
+                  marginBottom: '8px' 
                 }}>
                   Password *
                 </label>
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    if (e.target.value) validatePassword(e.target.value)
+                  }}
                   onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
-                  placeholder="At least 8 characters"
+                  placeholder="Create a strong password"
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
-                    border: '1px solid #E0DDD5',
+                    background: '#0F1115',
+                    border: `1px solid ${passwordError ? 'rgba(239, 68, 68, 0.3)' : '#25282F'}`,
                     borderRadius: '8px',
-                    color: '#1A1917',
+                    color: '#F5F5F5',
                     outline: 'none',
                     transition: 'all 0.2s',
                     fontFamily: "'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#1B3A5C'
-                    e.target.style.background = 'white'
+                    if (!passwordError) {
+                      e.target.style.borderColor = '#E8820A'
+                      e.target.style.background = 'white'
+                    }
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#E0DDD5'
-                    e.target.style.background = '#FAFAF8'
+                    if (password) validatePassword(password)
+                    if (!passwordError) {
+                      e.target.style.borderColor = '#25282F'
+                      e.target.style.background = '#0F1115'
+                    }
                   }}
                 />
-                <p style={{ fontSize: '13px', color: '#9C9890', marginTop: '6px' }}>
-                  Must be at least 8 characters
-                </p>
+                
+                {/* Password strength indicator */}
+                {password && passwordStrength && (
+                  <div style={{ marginTop: '8px' }}>
+                    <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+                      <div style={{
+                        flex: 1,
+                        height: '4px',
+                        background: passwordStrength === 'weak' ? 'rgba(239, 68, 68, 0.3)' : passwordStrength === 'medium' ? '#FCD34D' : '#34D399',
+                        borderRadius: '2px'
+                      }} />
+                      <div style={{
+                        flex: 1,
+                        height: '4px',
+                        background: passwordStrength === 'medium' || passwordStrength === 'strong' ? (passwordStrength === 'medium' ? '#FCD34D' : '#34D399') : '#25282F',
+                        borderRadius: '2px'
+                      }} />
+                      <div style={{
+                        flex: 1,
+                        height: '4px',
+                        background: passwordStrength === 'strong' ? '#34D399' : '#25282F',
+                        borderRadius: '2px'
+                      }} />
+                    </div>
+                    <p style={{ 
+                      fontSize: '13px', 
+                      color: passwordStrength === 'weak' ? '#FCA5A5' : passwordStrength === 'medium' ? '#92400E' : '#065F46',
+                      marginTop: '4px'
+                    }}>
+                      Password strength: {passwordStrength}
+                    </p>
+                  </div>
+                )}
+                
+                {passwordError && (
+                  <p style={{ fontSize: '13px', color: '#FCA5A5', marginTop: '6px' }}>
+                    {passwordError}
+                  </p>
+                )}
+                
+                {!passwordError && !password && (
+                  <p style={{ fontSize: '13px', color: '#6B7078', marginTop: '6px' }}>
+                    Must include uppercase, lowercase, number, and special character
+                  </p>
+                )}
               </div>
 
               {error && (
                 <div style={{
                   padding: '12px 16px',
-                  background: '#FEE2E2',
+                  background: 'rgba(239, 68, 68, 0.08)',
                   border: '1px solid #FCA5A5',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  color: '#991B1B',
+                  color: '#FCA5A5',
                   marginBottom: '20px'
                 }}>
                   {error}
@@ -476,8 +707,8 @@ function OnboardingForm() {
                 style={{
                   width: '100%',
                   padding: '14px',
-                  background: loading ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
+                  background: loading ? '#9AA0A6' : '#E8820A',
+                  color: '#0B0C0F',
                   fontSize: '15px',
                   fontWeight: '600',
                   border: 'none',
@@ -489,8 +720,8 @@ function OnboardingForm() {
                   gap: '8px',
                   transition: 'all 0.2s'
                 }}
-                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
+                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
+                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
               >
                 {loading ? (
                   <><Loader2 size={18} className="animate-spin" /> Creating account...</>
@@ -508,8 +739,7 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: 'rgba(232, 130, 10, 0.1)',
-                  border: '1px solid rgba(232, 130, 10, 0.2)',
+                  background: 'rgba(232, 130, 10, 0.08)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
@@ -519,9 +749,9 @@ function OnboardingForm() {
                   <Building2 size={24} style={{ color: '#E8820A' }} />
                 </div>
                 <h2 style={{ 
-                  fontSize: '26px',
-                  fontWeight: '500',
-                  color: '#F5F5F5',
+                  fontSize: '24px', 
+                  fontWeight: '600', 
+                  color: '#F5F5F5', 
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
@@ -535,12 +765,10 @@ function OnboardingForm() {
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#C4C7CC',
-                  marginBottom: '8px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  color: '#F5F5F5', 
+                  marginBottom: '8px' 
                 }}>
                   Organization name *
                 </label>
@@ -555,21 +783,21 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
-                    border: '1px solid #E0DDD5',
+                    background: '#0F1115',
+                    border: '1px solid #25282F',
                     borderRadius: '8px',
-                    color: '#1A1917',
+                    color: '#F5F5F5',
                     outline: 'none',
                     transition: 'all 0.2s',
                     fontFamily: "'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#1B3A5C'
+                    e.target.style.borderColor = '#E8820A'
                     e.target.style.background = 'white'
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#E0DDD5'
-                    e.target.style.background = '#FAFAF8'
+                    e.target.style.borderColor = '#25282F'
+                    e.target.style.background = '#0F1115'
                   }}
                 />
               </div>
@@ -577,12 +805,10 @@ function OnboardingForm() {
               <div style={{ marginBottom: '28px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#C4C7CC',
-                  marginBottom: '8px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  color: '#F5F5F5', 
+                  marginBottom: '8px' 
                 }}>
                   Company domain (optional)
                 </label>
@@ -595,24 +821,24 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
-                    border: '1px solid #E0DDD5',
+                    background: '#0F1115',
+                    border: '1px solid #25282F',
                     borderRadius: '8px',
-                    color: '#1A1917',
+                    color: '#F5F5F5',
                     outline: 'none',
                     transition: 'all 0.2s',
                     fontFamily: "'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#1B3A5C'
+                    e.target.style.borderColor = '#E8820A'
                     e.target.style.background = 'white'
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#E0DDD5'
-                    e.target.style.background = '#FAFAF8'
+                    e.target.style.borderColor = '#25282F'
+                    e.target.style.background = '#0F1115'
                   }}
                 />
-                <p style={{ fontSize: '13px', color: '#9C9890', marginTop: '6px' }}>
+                <p style={{ fontSize: '13px', color: '#6B7078', marginTop: '6px' }}>
                   Auto-verify teammates with this email domain
                 </p>
               </div>
@@ -620,45 +846,66 @@ function OnboardingForm() {
               {error && (
                 <div style={{
                   padding: '12px 16px',
-                  background: '#FEE2E2',
+                  background: 'rgba(239, 68, 68, 0.08)',
                   border: '1px solid #FCA5A5',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  color: '#991B1B',
+                  color: '#FCA5A5',
                   marginBottom: '20px'
                 }}>
                   {error}
                 </div>
               )}
 
-              <button
-                onClick={handleCreateOrg}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: loading ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
-              >
-                {loading ? (
-                  <><Loader2 size={18} className="animate-spin" /> Creating...</>
-                ) : (
-                  <>Continue <ArrowRight size={18} /></>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setStep(0)}
+                  disabled={loading}
+                  style={{
+                    padding: '14px 24px',
+                    background: 'transparent',
+                    color: '#9AA0A6',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: '1px solid #25282F',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#E8820A', e.currentTarget.style.color = '#E8820A')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = '#25282F', e.currentTarget.style.color = '#9AA0A6')}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleCreateOrg}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: loading ? '#9AA0A6' : '#E8820A',
+                    color: '#0B0C0F',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
+                >
+                  {loading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Creating...</>
+                  ) : (
+                    <>Continue <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
             </div>
           )}
 
@@ -669,19 +916,19 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: '#FDF3E7',
+                  background: 'rgba(232, 130, 10, 0.1)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <Cloud size={24} style={{ color: '#D4790A' }} />
+                  <Cloud size={24} style={{ color: '#E8820A' }} />
                 </div>
                 <h2 style={{ 
-                  fontSize: '26px',
-                  fontWeight: '500',
-                  color: '#F5F5F5',
+                  fontSize: '24px', 
+                  fontWeight: '600', 
+                  color: '#F5F5F5', 
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
@@ -693,21 +940,21 @@ function OnboardingForm() {
               </div>
 
               <div style={{
-                background: '#EEF3F9',
-                border: '1px solid #C8C4BB',
+                background: 'rgba(232, 130, 10, 0.08)',
+                border: '1px solid #25282F',
                 borderRadius: '12px',
                 padding: '16px',
                 marginBottom: '24px',
                 fontSize: '13px',
-                color: '#1B3A5C',
+                color: '#E8820A',
                 lineHeight: '1.7'
               }}>
                 <p style={{ fontWeight: '600', marginBottom: '10px' }}>Quick setup:</p>
                 <ol style={{ marginLeft: '18px', lineHeight: '1.8' }}>
                   <li>Open AWS IAM → Roles → Create role</li>
                   <li>Select "Another AWS account"</li>
-                  <li>Account ID: <code style={{ background: 'white', padding: '2px 6px', borderRadius: '4px', fontFamily: "'DM Mono', monospace" }}>{awsAccountId}</code></li>
-                  <li>External ID: <code style={{ background: 'white', padding: '2px 6px', borderRadius: '4px', fontFamily: "'DM Mono', monospace" }}>{externalId}</code></li>
+                  <li>Account ID: <code style={{ background: '#14161B', padding: '2px 6px', borderRadius: '4px', fontFamily: "'DM Mono', monospace" }}>{awsAccountId}</code></li>
+                  <li>External ID: <code style={{ background: '#14161B', padding: '2px 6px', borderRadius: '4px', fontFamily: "'DM Mono', monospace" }}>{externalId}</code></li>
                   <li>Attach policy: SecurityAudit</li>
                   <li>Copy the Role ARN</li>
                 </ol>
@@ -716,12 +963,10 @@ function OnboardingForm() {
               <div style={{ marginBottom: '28px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#C4C7CC',
-                  marginBottom: '8px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  color: '#F5F5F5', 
+                  marginBottom: '8px' 
                 }}>
                   Role ARN
                 </label>
@@ -736,61 +981,81 @@ function OnboardingForm() {
                     padding: '12px 16px',
                     fontSize: '14px',
                     fontFamily: "'DM Mono', monospace",
-                    background: skipAws ? '#F4F3EF' : '#FAFAF8',
-                    border: '1px solid #E0DDD5',
+                    background: skipAws ? '#14161B' : '#0F1115',
+                    border: '1px solid #25282F',
                     borderRadius: '8px',
-                    color: skipAws ? '#9C9890' : '#1A1917',
+                    color: skipAws ? '#6B7078' : '#F5F5F5',
                     outline: 'none',
                     transition: 'all 0.2s'
                   }}
-                  onFocus={(e) => !skipAws && (e.target.style.borderColor = '#1B3A5C', e.target.style.background = 'white')}
-                  onBlur={(e) => (e.target.style.borderColor = '#E0DDD5', e.target.style.background = '#FAFAF8')}
+                  onFocus={(e) => !skipAws && (e.target.style.borderColor = '#E8820A', e.target.style.background = 'white')}
+                  onBlur={(e) => (e.target.style.borderColor = '#25282F', e.target.style.background = '#0F1115')}
                 />
               </div>
 
               {error && (
                 <div style={{
                   padding: '12px 16px',
-                  background: '#FEE2E2',
+                  background: 'rgba(239, 68, 68, 0.08)',
                   border: '1px solid #FCA5A5',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  color: '#991B1B',
+                  color: '#FCA5A5',
                   marginBottom: '20px'
                 }}>
                   {error}
                 </div>
               )}
 
-              <button
-                onClick={handleConnectAws}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: loading ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  marginBottom: '12px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
-              >
-                {loading ? (
-                  <><Loader2 size={18} className="animate-spin" /> Connecting...</>
-                ) : (
-                  <>Connect AWS <ArrowRight size={18} /></>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setStep(1)}
+                  disabled={loading}
+                  style={{
+                    padding: '14px 24px',
+                    background: 'transparent',
+                    color: '#9AA0A6',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: '1px solid #25282F',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#E8820A', e.currentTarget.style.color = '#E8820A')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = '#25282F', e.currentTarget.style.color = '#9AA0A6')}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleConnectAws}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: loading ? '#9AA0A6' : '#E8820A',
+                    color: '#0B0C0F',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
+                >
+                  {loading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Connecting...</>
+                  ) : (
+                    <>Connect AWS <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
 
               <button
                 onClick={() => { setSkipAws(true); setStep(3) }}
@@ -798,14 +1063,15 @@ function OnboardingForm() {
                   width: '100%',
                   padding: '14px',
                   background: 'transparent',
-                  color: '#6B685F',
+                  color: '#9AA0A6',
                   fontSize: '14px',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: 'color 0.2s'
+                  transition: 'color 0.2s',
+                  marginTop: '12px'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.color = '#1A1917'}
-                onMouseOut={(e) => e.currentTarget.style.color = '#6B685F'}
+                onMouseOver={(e) => e.currentTarget.style.color = '#F5F5F5'}
+                onMouseOut={(e) => e.currentTarget.style.color = '#9AA0A6'}
               >
                 Skip for now — I'll connect later
               </button>
@@ -819,22 +1085,22 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: '#F3E8FF',
+                  background: 'rgba(167, 139, 250, 0.1)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2">
                     <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
                     <line x1="1" y1="10" x2="23" y2="10"/>
                   </svg>
                 </div>
                 <h2 style={{ 
-                  fontSize: '26px',
-                  fontWeight: '500',
-                  color: '#F5F5F5',
+                  fontSize: '24px', 
+                  fontWeight: '600', 
+                  color: '#F5F5F5', 
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
@@ -850,22 +1116,22 @@ function OnboardingForm() {
                 <div style={{ marginBottom: '24px' }}>
                   <div style={{
                     padding: '20px',
-                    background: '#EEF3F9',
-                    border: '2px solid #1B3A5C',
+                    background: 'rgba(232, 130, 10, 0.08)',
+                    border: '2px solid #E8820A',
                     borderRadius: '12px'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '18px', fontWeight: '600', color: '#1A1917' }}>
+                      <span style={{ fontSize: '18px', fontWeight: '600', color: '#F5F5F5' }}>
                         {selectedPlan === 'comply-starter' ? 'iFu Comply Starter' : 
                          selectedPlan === 'comply-growth' ? 'iFu Comply Growth' : 'iFu Costless'}
                       </span>
-                      <span style={{ fontSize: '20px', fontWeight: '700', color: '#1B3A5C' }}>
+                      <span style={{ fontSize: '20px', fontWeight: '700', color: '#E8820A' }}>
                         {selectedPlan === 'comply-starter' ? '$299' : 
                          selectedPlan === 'comply-growth' ? '$799' : '$199'}
-                        <span style={{ fontSize: '14px', fontWeight: '400', color: '#6B685F' }}>/mo</span>
+                        <span style={{ fontSize: '14px', fontWeight: '400', color: '#9AA0A6' }}>/mo</span>
                       </span>
                     </div>
-                    <p style={{ fontSize: '14px', color: '#6B685F', margin: 0 }}>
+                    <p style={{ fontSize: '14px', color: '#9AA0A6', margin: 0 }}>
                       {selectedPlan === 'comply-starter' ? 'Essential compliance monitoring' : 
                        selectedPlan === 'comply-growth' ? 'Advanced compliance features' : 'AWS cost optimization'}
                     </p>
@@ -878,7 +1144,7 @@ function OnboardingForm() {
                     display: 'block', 
                     fontSize: '14px', 
                     fontWeight: '500', 
-                    color: '#1A1917', 
+                    color: '#F5F5F5', 
                     marginBottom: '12px' 
                   }}>
                     Select your plan
@@ -895,18 +1161,18 @@ function OnboardingForm() {
                         onClick={() => setSelectedPlan(plan.id)}
                         style={{
                           padding: '16px',
-                          background: selectedPlan === plan.id ? '#EEF3F9' : '#FAFAF8',
-                          border: selectedPlan === plan.id ? '2px solid #1B3A5C' : '1px solid #E0DDD5',
+                          background: selectedPlan === plan.id ? 'rgba(232, 130, 10, 0.08)' : '#0F1115',
+                          border: selectedPlan === plan.id ? '2px solid #E8820A' : '1px solid #25282F',
                           borderRadius: '8px',
                           cursor: 'pointer',
                           transition: 'all 0.2s'
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '16px', fontWeight: '600', color: '#1A1917' }}>{plan.name}</span>
-                          <span style={{ fontSize: '18px', fontWeight: '700', color: '#1B3A5C' }}>{plan.price}<span style={{ fontSize: '14px', fontWeight: '400', color: '#6B685F' }}>/mo</span></span>
+                          <span style={{ fontSize: '16px', fontWeight: '600', color: '#F5F5F5' }}>{plan.name}</span>
+                          <span style={{ fontSize: '18px', fontWeight: '700', color: '#E8820A' }}>{plan.price}<span style={{ fontSize: '14px', fontWeight: '400', color: '#9AA0A6' }}>/mo</span></span>
                         </div>
-                        <p style={{ fontSize: '13px', color: '#6B685F', margin: 0 }}>{plan.desc}</p>
+                        <p style={{ fontSize: '13px', color: '#9AA0A6', margin: 0 }}>{plan.desc}</p>
                       </div>
                     ))}
                   </div>
@@ -915,12 +1181,12 @@ function OnboardingForm() {
 
               <div style={{
                 padding: '16px',
-                background: '#F3E8FF',
+                background: 'rgba(167, 139, 250, 0.1)',
                 border: '1px solid #C4B5FD',
                 borderRadius: '8px',
                 marginBottom: '24px',
                 fontSize: '13px',
-                color: '#5B21B6',
+                color: '#C4B5FD',
                 lineHeight: '1.6'
               }}>
                 <strong>3-day free trial</strong> — Your card will be charged after the trial period ends. Cancel anytime.
@@ -929,45 +1195,66 @@ function OnboardingForm() {
               {error && (
                 <div style={{
                   padding: '12px 16px',
-                  background: '#FEE2E2',
+                  background: 'rgba(239, 68, 68, 0.08)',
                   border: '1px solid #FCA5A5',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  color: '#991B1B',
+                  color: '#FCA5A5',
                   marginBottom: '20px'
                 }}>
                   {error}
                 </div>
               )}
 
-              <button
-                onClick={handlePayment}
-                disabled={paymentProcessing}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: paymentProcessing ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: paymentProcessing ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.background = '#1B3A5C')}
-              >
-                {paymentProcessing ? (
-                  <><Loader2 size={18} className="animate-spin" /> Processing...</>
-                ) : (
-                  <>Continue to payment <ArrowRight size={18} /></>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={paymentProcessing}
+                  style={{
+                    padding: '14px 24px',
+                    background: 'transparent',
+                    color: '#9AA0A6',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: '1px solid #25282F',
+                    borderRadius: '8px',
+                    cursor: paymentProcessing ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = '#E8820A', e.currentTarget.style.color = '#E8820A')}
+                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = '#25282F', e.currentTarget.style.color = '#9AA0A6')}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handlePayment}
+                  disabled={paymentProcessing}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: paymentProcessing ? '#9AA0A6' : '#E8820A',
+                    color: '#0B0C0F',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: paymentProcessing ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.background = '#FF9820')}
+                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.background = '#E8820A')}
+                >
+                  {paymentProcessing ? (
+                    <><Loader2 size={18} className="animate-spin" /> Processing...</>
+                  ) : (
+                    <>Continue to payment <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
             </div>
           )}
 
@@ -978,19 +1265,19 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: '#EAF3EE',
+                  background: 'rgba(74, 222, 128, 0.1)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <CheckCircle size={24} style={{ color: '#1D6648' }} />
+                  <CheckCircle size={24} style={{ color: '#4ADE80' }} />
                 </div>
                 <h2 style={{ 
-                  fontSize: '26px',
-                  fontWeight: '500',
-                  color: '#F5F5F5',
+                  fontSize: '24px', 
+                  fontWeight: '600', 
+                  color: '#F5F5F5', 
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
@@ -1007,8 +1294,8 @@ function OnboardingForm() {
               {productName && (
                 <div style={{
                   padding: '20px',
-                  background: '#EEF3F9',
-                  border: '1px solid #C8C4BB',
+                  background: 'rgba(232, 130, 10, 0.08)',
+                  border: '1px solid #25282F',
                   borderRadius: '12px',
                   marginBottom: '28px'
                 }}>
@@ -1017,17 +1304,17 @@ function OnboardingForm() {
                       {productName === 'iFu Comply' ? '🛡️' : '💰'}
                     </div>
                     <div>
-                      <div style={{ fontSize: '18px', fontWeight: '600', color: '#1A1917', fontFamily: "'Fraunces', serif" }}>
+                      <div style={{ fontSize: '18px', fontWeight: '600', color: '#F5F5F5', fontFamily: "'Fraunces', serif" }}>
                         {productName}
                       </div>
                       {planName && (
-                        <div style={{ fontSize: '13px', color: '#6B685F' }}>
+                        <div style={{ fontSize: '13px', color: '#9AA0A6' }}>
                           {planName} Plan
                         </div>
                       )}
                     </div>
                   </div>
-                  <p style={{ fontSize: '14px', color: '#6B685F', lineHeight: '1.6', margin: 0 }}>
+                  <p style={{ fontSize: '14px', color: '#9AA0A6', lineHeight: '1.6', margin: 0 }}>
                     {productName === 'iFu Comply' 
                       ? 'Automated compliance monitoring for SOC 2, ISO 27001, and GDPR'
                       : 'AWS cost optimization and waste detection'
@@ -1041,8 +1328,8 @@ function OnboardingForm() {
                 style={{
                   width: '100%',
                   padding: '16px',
-                  background: '#1B3A5C',
-                  color: 'white',
+                  background: '#E8820A',
+                  color: '#0B0C0F',
                   fontSize: '16px',
                   fontWeight: '600',
                   border: 'none',
@@ -1054,8 +1341,8 @@ function OnboardingForm() {
                   gap: '8px',
                   transition: 'all 0.2s'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.background = '#2E5F8A'}
-                onMouseOut={(e) => e.currentTarget.style.background = '#1B3A5C'}
+                onMouseOver={(e) => e.currentTarget.style.background = '#FF9820'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#E8820A'}
               >
                 {productName ? `Open ${productName}` : 'Go to dashboard'} <ArrowRight size={20} />
               </button>
@@ -1066,7 +1353,7 @@ function OnboardingForm() {
 
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <p style={{ fontSize: '13px', color: '#9C9890' }}>
+          <p style={{ fontSize: '13px', color: '#6B7078' }}>
             Step {step + 1} of {STEPS.length}
           </p>
         </div>

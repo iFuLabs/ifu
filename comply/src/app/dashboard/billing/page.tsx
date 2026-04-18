@@ -42,7 +42,15 @@ export default function BillingPage() {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.message || data.error || `Failed to load billing (${res.status})`)
       }
-      setBilling(await res.json())
+      const data = await res.json()
+      
+      // Check if user has Comply subscription
+      const hasComplyAccess = data.plan === 'starter' || data.plan === 'growth'
+      if (!hasComplyAccess) {
+        setError(`You don't have an active iFu Comply subscription. Your current plan is: ${data.plan === 'finops' ? 'iFu Costless' : 'None'}`)
+      }
+      
+      setBilling(data)
     } catch (err: any) {
       setError(err.message || 'Failed to load billing information')
     } finally {

@@ -37,7 +37,16 @@ export default function BillingPage() {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.message || data.error || `Failed to load billing (${res.status})`)
       }
-      setBilling(await res.json())
+      const data = await res.json()
+      
+      // Check if user has FinOps subscription
+      const hasFinOpsAccess = data.plan === 'finops'
+      if (!hasFinOpsAccess) {
+        const planName = data.plan === 'starter' ? 'iFu Comply Starter' : data.plan === 'growth' ? 'iFu Comply Growth' : 'None'
+        setError(`You don't have an active iFu Costless subscription. Your current plan is: ${planName}`)
+      }
+      
+      setBilling(data)
     } catch (err: any) {
       setError(err.message || 'Failed to load billing information')
     } finally {

@@ -10,21 +10,62 @@ import { auditAction } from '../services/audit.js'
 import { slugify } from '../services/utils.js'
 import { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS, TRIAL_DURATION_MS } from '../services/config.js'
 import { sendWelcomeEmail } from '../services/email.js'
+import { getActiveSubscriptions } from '../services/subscriptions.js'
 
 const onboardSchema = z.object({
   name: z.string().optional(),
-  email: z.string().email().optional(),
-  password: z.string().min(8).optional(),
+  email: z.string().email('Invalid email address').optional(),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character')
+    .optional(),
   orgName: z.string().min(2).max(100),
   orgDomain: z.string().optional()
 })
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string()
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required')
 })
 
 export default async function authRoutes(fastify) {
+
+  // POST /api/v1/auth/check-email
+  // Check if email is available for registration
+  fastify.post('/check-email', {
+    schema: {
+      tags: ['Auth'],
+      body: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: { type: 'string', format: 'email' }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { email } = request.body
+
+    if (!email || !email.trim()) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Email is required'
+      })
+    }
+
+    // Check if user exists
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.email, email.trim().toLowerCase())
+    })
+
+    return reply.send({
+      available: !existingUser,
+      message: existingUser ? 'Email already registered' : 'Email available'
+    })
+  })
 
   // GET /api/v1/auth/me
   // Returns the current user + org. Called by frontend on every load.
@@ -49,6 +90,9 @@ export default async function authRoutes(fastify) {
       where: eq(organizations.id, request.user.orgId)
     })
 
+    // Get active subscriptions
+    const activeSubscriptions = await getActiveSubscriptions(request.user.orgId)
+
     return reply.send({
       authenticated: true,
       onboarded: true,
@@ -65,7 +109,13 @@ export default async function authRoutes(fastify) {
         slug: org.slug,
         plan: org.plan,
         trialEndsAt: org.trialEndsAt
-      }
+      },
+      subscriptions: activeSubscriptions.map(sub => ({
+        product: sub.product,
+        plan: sub.plan,
+        status: sub.status,
+        trialEndsAt: sub.trialEndsAt
+      }))
     })
   })
 
@@ -87,21 +137,25 @@ export default async function authRoutes(fastify) {
       }
     }
   }, async (request, reply) => {
-    const body = onboardSchema.parse(request.body)
+    try {
+      const body = onboardSchema.parse(request.body)
 
-    // Check if user already exists
-    const existingUser = await db.query.users.findFirst({
-      where: eq(users.email, body.email)
-    })
+      // Normalize email
+      const normalizedEmail = body.email.trim().toLowerCase()
 
-    if (existingUser) {
-      return reply.status(409).send({
-        error: 'Conflict',
-        message: 'User with this email already exists'
+      // Check if user already exists
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.email, normalizedEmail)
       })
-    }
 
-    const userEmail = body.email
+      if (existingUser) {
+        return reply.status(409).send({
+          error: 'Conflict',
+          message: 'User with this email already exists'
+        })
+      }
+
+    const userEmail = normalizedEmail
     const userName = body.name
     const passwordHash = await bcrypt.hash(body.password, 10)
 
@@ -195,6 +249,24 @@ export default async function authRoutes(fastify) {
         trialEndsAt: result.org.trialEndsAt
       }
     })
+    } catch (err) {
+      // Handle Zod validation errors
+      if (err.name === 'ZodError') {
+        const firstError = err.errors[0]
+        return reply.status(400).send({
+          error: 'Validation Error',
+          message: firstError.message
+        })
+      }
+      
+      fastify.log.error({ err, email: request.body?.email }, 'Onboarding failed')
+      
+      // Don't expose internal errors to client
+      return reply.status(500).send({
+        error: 'Internal Server Error',
+        message: 'Failed to create account. Please try again or contact support.'
+      })
+    }
   })
 
   // POST /api/v1/auth/login
@@ -212,11 +284,15 @@ export default async function authRoutes(fastify) {
       }
     }
   }, async (request, reply) => {
-    const body = loginSchema.parse(request.body)
+    try {
+      const body = loginSchema.parse(request.body)
+
+    // Normalize email
+    const normalizedEmail = body.email.trim().toLowerCase()
 
     // Find user by email
     const user = await db.query.users.findFirst({
-      where: eq(users.email, body.email),
+      where: eq(users.email, normalizedEmail),
       with: { org: true }
     })
 
@@ -272,6 +348,14 @@ export default async function authRoutes(fastify) {
         plan: user.org.plan
       }
     })
+    } catch (err) {
+      fastify.log.error({ err, email: request.body?.email }, 'Login failed')
+      
+      return reply.status(500).send({
+        error: 'Internal Server Error',
+        message: 'Login failed. Please try again or contact support.'
+      })
+    }
   })
 
   // PATCH /api/v1/auth/me
@@ -401,7 +485,11 @@ export default async function authRoutes(fastify) {
         required: ['token', 'newPassword'],
         properties: {
           token: { type: 'string' },
-          newPassword: { type: 'string', minLength: 8 }
+          newPassword: { 
+            type: 'string', 
+            minLength: 8,
+            pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$'
+          }
         }
       }
     }
@@ -413,6 +501,18 @@ export default async function authRoutes(fastify) {
       return reply.status(400).send({
         error: 'Bad Request',
         message: 'Password must be at least 8 characters'
+      })
+    }
+
+    const hasUpperCase = /[A-Z]/.test(newPassword)
+    const hasLowerCase = /[a-z]/.test(newPassword)
+    const hasNumber = /[0-9]/.test(newPassword)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+      return reply.status(400).send({
+        error: 'Bad Request',
+        message: 'Password must include uppercase, lowercase, number, and special character'
       })
     }
 

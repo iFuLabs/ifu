@@ -26,6 +26,9 @@ docker-compose up -d        # PostgreSQL + Redis
 npm run migrate             # Run database migrations
 node src/db/seed.js         # Seed control definitions (optional)
 
+# If migrations fail on existing database, run:
+./scripts/fix-migrations.sh # Marks existing migrations as complete
+
 # Start all apps
 ./scripts/start-all.sh
 
