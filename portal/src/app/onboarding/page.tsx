@@ -210,7 +210,7 @@ function OnboardingForm() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#FAFAF8',
+      background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -225,8 +225,9 @@ function OnboardingForm() {
           <div style={{
             width: '56px',
             height: '56px',
-            background: '#1B3A5C',
-            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
+            boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
+            borderRadius: '14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -238,9 +239,9 @@ function OnboardingForm() {
             </svg>
           </div>
           <h1 style={{ 
-            fontSize: '32px', 
-            fontWeight: '600', 
-            color: '#1A1917', 
+            fontSize: '34px',
+            fontWeight: '500',
+            color: '#F5F5F5',
             marginBottom: '8px',
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
@@ -253,11 +254,11 @@ function OnboardingForm() {
               alignItems: 'center',
               gap: '6px',
               padding: '6px 14px',
-              background: '#EEF3F9',
-              border: '1px solid #E0DDD5',
+              background: 'rgba(232, 130, 10, 0.08)',
+              border: '1px solid rgba(232, 130, 10, 0.3)',
               borderRadius: '20px',
               fontSize: '13px',
-              color: '#1B3A5C',
+              color: '#E8820A',
               fontWeight: '500',
               marginTop: '8px'
             }}>
@@ -279,7 +280,7 @@ function OnboardingForm() {
             <div key={s.id} style={{
               flex: 1,
               height: '4px',
-              background: i <= step ? '#1B3A5C' : '#E0DDD5',
+              background: i <= step ? '#E8820A' : '#25282F',
               borderRadius: '2px',
               transition: 'all 0.3s ease'
             }} />
@@ -288,11 +289,12 @@ function OnboardingForm() {
 
         {/* Card */}
         <div style={{
-          background: 'white',
-          border: '1px solid #E0DDD5',
+          background: 'rgba(20, 22, 27, 0.8)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid #25282F',
           borderRadius: '16px',
           padding: '40px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4)'
         }}>
 
           {/* Step 0: Sign Up */}
@@ -302,28 +304,29 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: '#EEF3F9',
+                  background: 'rgba(232, 130, 10, 0.1)',
+                  border: '1px solid rgba(232, 130, 10, 0.2)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1B3A5C" strokeWidth="2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8820A" strokeWidth="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                   </svg>
                 </div>
                 <h2 style={{ 
-                  fontSize: '24px', 
-                  fontWeight: '600', 
-                  color: '#1A1917', 
+                  fontSize: '26px',
+                  fontWeight: '500',
+                  color: '#F5F5F5',
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
                   Create your account
                 </h2>
-                <p style={{ fontSize: '15px', color: '#6B685F', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
                   Get started with your free trial. No credit card required.
                 </p>
               </div>
@@ -331,10 +334,12 @@ function OnboardingForm() {
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  color: '#1A1917', 
-                  marginBottom: '8px' 
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#C4C7CC',
+                  marginBottom: '8px',
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase'
                 }}>
                   Full name *
                 </label>
@@ -348,7 +353,7 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#FAFAF8',
+                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
                     border: '1px solid #E0DDD5',
                     borderRadius: '8px',
                     color: '#1A1917',
@@ -370,10 +375,12 @@ function OnboardingForm() {
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  color: '#1A1917', 
-                  marginBottom: '8px' 
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#C4C7CC',
+                  marginBottom: '8px',
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase'
                 }}>
                   Email address *
                 </label>
@@ -386,7 +393,7 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#FAFAF8',
+                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
                     border: '1px solid #E0DDD5',
                     borderRadius: '8px',
                     color: '#1A1917',
@@ -408,10 +415,12 @@ function OnboardingForm() {
               <div style={{ marginBottom: '28px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  color: '#1A1917', 
-                  marginBottom: '8px' 
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#C4C7CC',
+                  marginBottom: '8px',
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase'
                 }}>
                   Password *
                 </label>
@@ -425,7 +434,7 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#FAFAF8',
+                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
                     border: '1px solid #E0DDD5',
                     borderRadius: '8px',
                     color: '#1A1917',
@@ -499,25 +508,26 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: '#EEF3F9',
+                  background: 'rgba(232, 130, 10, 0.1)',
+                  border: '1px solid rgba(232, 130, 10, 0.2)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <Building2 size={24} style={{ color: '#1B3A5C' }} />
+                  <Building2 size={24} style={{ color: '#E8820A' }} />
                 </div>
                 <h2 style={{ 
-                  fontSize: '24px', 
-                  fontWeight: '600', 
-                  color: '#1A1917', 
+                  fontSize: '26px',
+                  fontWeight: '500',
+                  color: '#F5F5F5',
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
                   Create your organization
                 </h2>
-                <p style={{ fontSize: '15px', color: '#6B685F', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
                   This creates your team workspace. You can invite team members later.
                 </p>
               </div>
@@ -525,10 +535,12 @@ function OnboardingForm() {
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  color: '#1A1917', 
-                  marginBottom: '8px' 
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#C4C7CC',
+                  marginBottom: '8px',
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase'
                 }}>
                   Organization name *
                 </label>
@@ -543,7 +555,7 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#FAFAF8',
+                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
                     border: '1px solid #E0DDD5',
                     borderRadius: '8px',
                     color: '#1A1917',
@@ -565,10 +577,12 @@ function OnboardingForm() {
               <div style={{ marginBottom: '28px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  color: '#1A1917', 
-                  marginBottom: '8px' 
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#C4C7CC',
+                  marginBottom: '8px',
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase'
                 }}>
                   Company domain (optional)
                 </label>
@@ -581,7 +595,7 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#FAFAF8',
+                    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
                     border: '1px solid #E0DDD5',
                     borderRadius: '8px',
                     color: '#1A1917',
@@ -665,15 +679,15 @@ function OnboardingForm() {
                   <Cloud size={24} style={{ color: '#D4790A' }} />
                 </div>
                 <h2 style={{ 
-                  fontSize: '24px', 
-                  fontWeight: '600', 
-                  color: '#1A1917', 
+                  fontSize: '26px',
+                  fontWeight: '500',
+                  color: '#F5F5F5',
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
                   Connect your AWS account
                 </h2>
-                <p style={{ fontSize: '15px', color: '#6B685F', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
                   We need read-only access to scan your AWS environment. Takes about 5 minutes.
                 </p>
               </div>
@@ -702,10 +716,12 @@ function OnboardingForm() {
               <div style={{ marginBottom: '28px' }}>
                 <label style={{ 
                   display: 'block', 
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  color: '#1A1917', 
-                  marginBottom: '8px' 
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#C4C7CC',
+                  marginBottom: '8px',
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase'
                 }}>
                   Role ARN
                 </label>
@@ -816,15 +832,15 @@ function OnboardingForm() {
                   </svg>
                 </div>
                 <h2 style={{ 
-                  fontSize: '24px', 
-                  fontWeight: '600', 
-                  color: '#1A1917', 
+                  fontSize: '26px',
+                  fontWeight: '500',
+                  color: '#F5F5F5',
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
                   Add payment method
                 </h2>
-                <p style={{ fontSize: '15px', color: '#6B685F', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
                   Start your 3-day free trial. Your card will be charged after the trial ends.
                 </p>
               </div>
@@ -972,15 +988,15 @@ function OnboardingForm() {
                   <CheckCircle size={24} style={{ color: '#1D6648' }} />
                 </div>
                 <h2 style={{ 
-                  fontSize: '24px', 
-                  fontWeight: '600', 
-                  color: '#1A1917', 
+                  fontSize: '26px',
+                  fontWeight: '500',
+                  color: '#F5F5F5',
                   marginBottom: '8px',
                   fontFamily: "'Fraunces', serif"
                 }}>
                   You're all set!
                 </h2>
-                <p style={{ fontSize: '15px', color: '#6B685F', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
                   {productName 
                     ? `Your ${productName} ${planName ? planName + ' ' : ''}account is ready.`
                     : 'Your account is ready.'

@@ -1,37 +1,12 @@
 'use client'
 import '../globals.css'
-
-const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'
+import { SiteNav } from '@/components/SiteNav'
+import { SiteFooter } from '@/components/SiteFooter'
 
 export default function PrivacyPage() {
   return (
     <>
-      {/* Nav */}
-      <nav>
-        <a href="/" className="logo">
-          <div className="logo-mark">
-            <svg viewBox="0 0 18 18" fill="none">
-              <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
-              <circle cx="9" cy="9" r="2.5" fill="white"/>
-            </svg>
-          </div>
-          <div className="logo-text">
-            <span className="logo-name">iFu Labs</span>
-          </div>
-        </a>
-
-        <ul className="nav-links">
-          <li><a href="/#services">Services</a></li>
-          <li><a href="/#products">Products</a></li>
-          <li><a href="/#pricing">Pricing</a></li>
-          <li><a href="/#about">About</a></li>
-        </ul>
-
-        <div className="nav-actions">
-          <a href="mailto:info@ifulabs.com" className="btn-outline">Email us</a>
-          <a href={PORTAL_URL} className="btn-solid">Client portal →</a>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* Content */}
       <article style={{ maxWidth: '800px', margin: '0 auto', padding: '120px 32px 80px' }}>
@@ -201,40 +176,7 @@ export default function PrivacyPage() {
         </div>
       </article>
 
-      {/* Footer */}
-      <footer>
-        <div className="footer-brand">
-          <a href="/" className="footer-logo">
-            <svg width="24" height="24" viewBox="0 0 18 18" fill="none">
-              <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#1B3A5C" strokeWidth="1.4" strokeLinejoin="round"/>
-              <circle cx="9" cy="9" r="2.5" fill="#1B3A5C"/>
-            </svg>
-            iFu Labs
-          </a>
-          <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
-        </div>
-        <div className="footer-col">
-          <h4>Legal</h4>
-          <ul>
-            <li><a href="/privacy">Privacy Policy</a></li>
-            <li><a href="/terms">Terms of Service</a></li>
-            <li><a href="/acceptable-use">Acceptable Use</a></li>
-          </ul>
-        </div>
-        <div className="footer-col">
-          <h4>Company</h4>
-          <ul>
-            <li><a href="/#about">About</a></li>
-            <li><a href="/schedule-consultation">Schedule consultation</a></li>
-            <li><a href="mailto:info@ifulabs.com">info@ifulabs.com</a></li>
-          </ul>
-        </div>
-      </footer>
-
-      <div className="footer-bottom">
-        <p>© 2026 iFu Labs Ltd.</p>
-        <p>AWS Partner Network member · Read-only infrastructure access · No lock-in</p>
-      </div>
+      <SiteFooter />
     </>
   )
 }

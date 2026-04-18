@@ -14,7 +14,9 @@
     { "key": "scanId",        "value": "",                "type": "string" },
     { "key": "evidenceId",    "value": "",                "type": "string" },
     { "key": "vendorId",      "value": "",                "type": "string" },
-    { "key": "userId",        "value": "",                "type": "string" }
+    { "key": "userId",        "value": "",                "type": "string" },
+    { "key": "invitationId",  "value": "",                "type": "string" },
+    { "key": "invitationToken", "value": "",              "type": "string" }
   ],
   "auth": {
     "type": "bearer",
@@ -53,16 +55,34 @@
           "name": "Onboard — create org",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type",  "value": "application/json" }],
             "url": "{{baseUrl}}/api/v1/auth/onboard",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orgName\": \"Acme Corp\",\n  \"orgDomain\": \"acme.com\"\n}"
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"orgName\": \"Acme Corp\",\n  \"orgDomain\": \"acme.com\"\n}"
             },
-            "description": "Creates the user's organisation on first login. Call this when `GET /auth/me` returns `onboarded: false`.\n\n**orgDomain** is optional — used to auto-verify teammates who sign up with the same email domain."
+            "description": "Creates organization and user account on first signup. No authentication required.\n\n**orgDomain** is optional — used to auto-verify teammates who sign up with the same email domain.\n\nReturns JWT token for immediate login."
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "description": "Login with email and password. Returns JWT token and sets auth cookie."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/logout",
+            "description": "Clears the auth cookie. No authentication required."
           }
         },
         {
@@ -79,6 +99,32 @@
               "raw": "{\n  \"name\": \"Jane Smith\",\n  \"avatarUrl\": \"https://example.com/avatar.png\"\n}"
             },
             "description": "Updates the authenticated user's display name or avatar URL."
+          }
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/auth/forgot-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}"
+            },
+            "description": "Sends password reset email with token. Always returns success (doesn't reveal if email exists)."
+          }
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/auth/reset-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"RESET_TOKEN_FROM_EMAIL\",\n  \"newPassword\": \"NewSecurePassword123!\"\n}"
+            },
+            "description": "Resets password using token from email. Token expires after 1 hour and can only be used once."
           }
         }
       ]
@@ -146,6 +192,14 @@
       "name": "Integrations",
       "description": "Connect cloud accounts to enable automated compliance scanning. Currently supports AWS and GitHub.",
       "item": [
+        {
+          "name": "Get AWS setup info",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/integrations/aws/setup-info",
+            "description": "Returns AWS account ID and external ID needed for setting up the cross-account IAM role. No authentication required."
+          }
+        },
         {
           "name": "List integrations",
           "request": {
@@ -467,6 +521,184 @@
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/v1/finops/summary",
             "description": "Lightweight summary for the dashboard card. Returns `available: false` if no FinOps scan has been run yet.\n\nWhen available, returns: monthlyCost, totalMonthlySavings, totalAnnualSavings, wasteItems, rightsizingItems, coverageGaps, checkedAt."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Billing",
+      "description": "Paystack subscription management and billing webhooks.",
+      "item": [
+        {
+          "name": "Get subscription status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/billing",
+            "description": "Returns current subscription status including plan, trial info, and payment method status."
+          }
+        },
+        {
+          "name": "Initialize payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/billing/initialize",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan\": \"comply-starter\"\n}"
+            },
+            "description": "Initializes Paystack checkout to tokenize card and create subscription.\n\n**Plans:** comply-starter | comply-growth | finops\n\nReturns authorization URL to redirect user to Paystack payment page."
+          }
+        },
+        {
+          "name": "Verify payment",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/billing/verify?reference=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "billing", "verify"],
+              "query": [
+                { "key": "reference", "value": "", "description": "Paystack transaction reference from callback" }
+              ]
+            },
+            "description": "Verifies payment and creates subscription after user completes Paystack checkout. Called from the billing callback page."
+          }
+        },
+        {
+          "name": "Cancel subscription",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/billing/cancel",
+            "description": "Cancels the active subscription. Requires owner role."
+          }
+        },
+        {
+          "name": "Paystack webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-paystack-signature", "value": "SIGNATURE_FROM_PAYSTACK" }
+            ],
+            "url": "{{baseUrl}}/api/v1/billing/webhook",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"charge.success\",\n  \"data\": {}\n}"
+            },
+            "description": "Receives Paystack webhook events for subscription lifecycle.\n\n**Events handled:**\n- subscription.create\n- charge.success\n- subscription.disable\n- subscription.not_renew\n- invoice.payment_failed"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Team",
+      "description": "Team member invitations and management.",
+      "item": [
+        {
+          "name": "List team members",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/team/members",
+            "description": "Returns all team members in the organization."
+          }
+        },
+        {
+          "name": "List pending invitations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/team/invitations",
+            "description": "Returns all pending team invitations. Requires admin role."
+          }
+        },
+        {
+          "name": "Invite team member",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/team/invite",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"teammate@example.com\",\n  \"role\": \"member\",\n  \"product\": \"comply\"\n}"
+            },
+            "description": "Sends a team invitation email with signup link.\n\n**Roles:** admin | member\n**Products:** comply | finops\n\nRequires admin role. Subject to plan limits."
+          }
+        },
+        {
+          "name": "Get invitation details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/team/invitation/{{invitationToken}}",
+            "description": "Gets invitation details by token. Public endpoint (no auth required). Used on the invitation acceptance page."
+          }
+        },
+        {
+          "name": "Accept invitation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/team/accept-invitation",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"INVITATION_TOKEN\",\n  \"name\": \"Jane Doe\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "description": "Accepts invitation and creates user account. Returns JWT token for immediate login."
+          }
+        },
+        {
+          "name": "Cancel invitation",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/team/invitations/{{invitationId}}",
+            "description": "Cancels a pending invitation. Requires admin role."
+          }
+        },
+        {
+          "name": "Remove team member",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/team/members/{{userId}}",
+            "description": "Removes a team member from the organization. Requires admin role. Cannot remove yourself or the owner."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Plan",
+      "description": "Plan features and limits for feature gating.",
+      "item": [
+        {
+          "name": "Get plan features",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/plan/features",
+            "description": "Returns current plan features, limits, and usage.\n\nIncludes:\n- Available frameworks\n- AI features enabled\n- Team member limits\n- Regulatory alerts\n- Current usage vs limits"
+          }
+        },
+        {
+          "name": "Check feature availability",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/plan/check/aiFeatures",
+            "description": "Checks if a specific feature is available on the current plan.\n\n**Features:** aiFeatures | regulatoryAlerts\n\nReturns whether feature is available and which plan is required if not."
           }
         }
       ]

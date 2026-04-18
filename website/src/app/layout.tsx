@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { CookieBanner } from '@/components/CookieBanner'
 
 export const metadata: Metadata = {
   title: 'iFu Labs — AWS Cloud Consultancy & SaaS Products',
@@ -20,7 +21,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <CookieBanner />
+      </body>
     </html>
   )
 }
