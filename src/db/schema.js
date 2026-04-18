@@ -195,7 +195,8 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
   evidenceItems: many(evidenceItems),
   vendors: many(vendors),
   auditLogs: many(auditLog),
-  invitations: many(invitations)
+  invitations: many(invitations),
+  subscriptions: many(subscriptions)
 }))
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -285,3 +286,29 @@ export const passwordResetTokens = pgTable('password_reset_tokens', {
   index('idx_password_reset_tokens_token').on(table.token),
   index('idx_password_reset_tokens_user_id').on(table.userId)
 ])
+
+// ── Subscriptions ──────────────────────────────────────────────────────────
+// Multi-product subscription tracking
+export const subscriptions = pgTable('subscriptions', {
+  id:                      uuid('id').primaryKey().defaultRandom(),
+  orgId:                   uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  product:                 text('product').notNull(), // 'comply' | 'finops'
+  plan:                    text('plan').notNull(), // 'starter' | 'growth' | 'finops'
+  status:                  text('status').notNull().default('active'), // 'active' | 'trialing' | 'cancelled' | 'expired'
+  paystackSubscriptionCode: text('paystack_subscription_code').unique(),
+  paystackPlanCode:        text('paystack_plan_code'),
+  trialEndsAt:             timestamp('trial_ends_at'),
+  createdAt:               timestamp('created_at').notNull().defaultNow(),
+  updatedAt:               timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_subscriptions_org_id').on(table.orgId),
+  index('idx_subscriptions_org_product').on(table.orgId, table.product),
+  index('idx_subscriptions_status').on(table.status)
+])
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  org: one(organizations, {
+    fields: [subscriptions.orgId],
+    references: [organizations.id]
+  })
+}))

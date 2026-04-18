@@ -10,6 +10,7 @@ import {
   disableSubscription,
   verifyWebhookSignature
 } from '../services/paystack.js'
+import { upsertSubscription } from '../services/subscriptions.js'
 import { logger } from '../services/logger.js'
 import { auditAction } from '../services/audit.js'
 import { TRIAL_DURATION_MS } from '../services/config.js'
@@ -32,6 +33,13 @@ const PLAN_NAMES = {
 const PLAN_TIERS = {
   'comply-starter': 'starter',
   'comply-growth': 'growth',
+  'finops': 'finops'
+}
+
+// Maps plan to product
+const PLAN_TO_PRODUCT = {
+  'comply-starter': 'comply',
+  'comply-growth': 'comply',
   'finops': 'finops'
 }
 
@@ -235,15 +243,28 @@ export default async function billingRoutes(fastify) {
       }
     }
 
-    // Update organization with Paystack details
+    // Update organization with Paystack details (for backward compatibility)
+    // Note: We no longer update paystackSubscriptionCode here since we support
+    // multiple subscriptions per org. Each subscription is tracked separately.
     await db.update(organizations).set({
       paystackCustomerCode: customerCode,
-      paystackSubscriptionCode: subscription.subscription_code,
       paystackAuthCode: authorizationCode,
       plan: planTier,
       trialEndsAt,
       updatedAt: new Date()
     }).where(eq(organizations.id, request.orgId))
+
+    // Create or update subscription in the new subscriptions table
+    const product = PLAN_TO_PRODUCT[plan] || 'comply'
+    await upsertSubscription({
+      orgId: request.orgId,
+      product,
+      plan: planTier,
+      status: 'trialing',
+      paystackSubscriptionCode: subscription.subscription_code,
+      paystackPlanCode: planCode,
+      trialEndsAt
+    })
 
     if (!alreadyProvisioned) {
       await auditAction({
@@ -253,6 +274,7 @@ export default async function billingRoutes(fastify) {
         metadata: {
           plan,
           planTier,
+          product,
           subscriptionCode: subscription.subscription_code,
           reference
         }
@@ -260,6 +282,7 @@ export default async function billingRoutes(fastify) {
       logger.info({
         orgId: request.orgId,
         plan,
+        product,
         subscriptionCode: subscription.subscription_code
       }, 'Subscription created with free trial')
     } else {
@@ -272,6 +295,7 @@ export default async function billingRoutes(fastify) {
     return reply.send({
       status: 'success',
       plan: planTier,
+      product,
       planName: PLAN_NAMES[plan] || plan,
       trialEndsAt: trialEndsAt.toISOString(),
       subscription: {

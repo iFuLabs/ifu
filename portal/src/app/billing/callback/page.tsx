@@ -44,13 +44,20 @@ function BillingCallbackContent() {
       const data = await response.json()
 
       setStatus('success')
-      setMessage('Payment successful! Redirecting...')
+      setMessage('Payment successful! Redirecting to dashboard...')
 
-      // Redirect to onboarding confirm step with plan info
+      // Redirect directly to the appropriate dashboard based on product
       setTimeout(() => {
-        const plan = data.plan || 'finops'
-        const planName = data.planName || 'FinOps'
-        router.push(`/onboarding?step=4&plan=${plan}&planName=${encodeURIComponent(planName)}`)
+        const product = data.product || 'comply'
+        
+        if (product === 'comply') {
+          window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard' || 'http://localhost:3001/dashboard'
+        } else if (product === 'finops') {
+          window.location.href = process.env.NEXT_PUBLIC_FINOPS_URL + '/dashboard' || 'http://localhost:3002/dashboard'
+        } else {
+          // Fallback to portal homepage
+          window.location.href = '/'
+        }
       }, 2000)
 
     } catch (err: any) {

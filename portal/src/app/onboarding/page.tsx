@@ -21,6 +21,11 @@ function OnboardingForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Validation states
+  const [emailError, setEmailError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null)
+
   const urlProduct = searchParams.get('product')
   const urlPlan = searchParams.get('plan')
   const urlStep = searchParams.get('step')
@@ -31,18 +36,71 @@ function OnboardingForm() {
     }
   }, [urlStep])
 
-  const [orgName, setOrgName] = useState('')
-  const [orgDomain, setOrgDomain] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [roleArn, setRoleArn] = useState('')
-  const [externalId] = useState(() => `ifu-${Math.random().toString(36).slice(2, 10)}`)
+  // Load state from localStorage on mount
+  const [orgName, setOrgName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_orgName') || ''
+    }
+    return ''
+  })
+  const [orgDomain, setOrgDomain] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_orgDomain') || ''
+    }
+    return ''
+  })
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_email') || ''
+    }
+    return ''
+  })
+  const [password, setPassword] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_password') || ''
+    }
+    return ''
+  })
+  const [name, setName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_name') || ''
+    }
+    return ''
+  })
+  const [roleArn, setRoleArn] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('onboarding_roleArn') || ''
+    }
+    return ''
+  })
+  const [externalId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('onboarding_externalId')
+      if (saved) return saved
+    }
+    const newId = `ifu-${Math.random().toString(36).slice(2, 10)}`
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboarding_externalId', newId)
+    }
+    return newId
+  })
   const [awsAccountId, setAwsAccountId] = useState('123456789012')
   const [skipAws, setSkipAws] = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [selectedPlan, setSelectedPlan] = useState<string>('comply-starter')
   const [paymentProcessing, setPaymentProcessing] = useState(false)
+
+  // Persist form data to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboarding_orgName', orgName)
+      localStorage.setItem('onboarding_orgDomain', orgDomain)
+      localStorage.setItem('onboarding_email', email)
+      localStorage.setItem('onboarding_password', password)
+      localStorage.setItem('onboarding_name', name)
+      localStorage.setItem('onboarding_roleArn', roleArn)
+    }
+  }, [orgName, orgDomain, email, password, name, roleArn])
 
   useEffect(() => {
     if (urlProduct) {
@@ -75,24 +133,136 @@ function OnboardingForm() {
       .catch(err => console.error('Failed to fetch AWS setup info:', err))
   }, [])
 
+  // Email validation
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email) {
+      setEmailError('Email is required')
+      return false
+    }
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address')
+      return false
+    }
+    setEmailError('')
+    return true
+  }
+
+  // Password validation
+  const validatePassword = (pwd: string) => {
+    if (!pwd) {
+      setPasswordError('Password is required')
+      setPasswordStrength(null)
+      return false
+    }
+    
+    if (pwd.length < 8) {
+      setPasswordError('Password must be at least 8 characters')
+      setPasswordStrength('weak')
+      return false
+    }
+
+    const hasUpperCase = /[A-Z]/.test(pwd)
+    const hasLowerCase = /[a-z]/.test(pwd)
+    const hasNumber = /[0-9]/.test(pwd)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(pwd)
+
+    const strengthScore = [hasUpperCase, hasLowerCase, hasNumber, hasSpecialChar].filter(Boolean).length
+
+    if (strengthScore < 3) {
+      setPasswordError('Password must include uppercase, lowercase, number, and special character')
+      setPasswordStrength('weak')
+      return false
+    }
+
+    if (strengthScore === 3) {
+      setPasswordStrength('medium')
+    } else {
+      setPasswordStrength('strong')
+    }
+
+    setPasswordError('')
+    return true
+  }
+
   const handleSignup = async () => {
-    if (!email.trim() || !password.trim() || !name.trim()) {
-      setError('All fields are required')
+    // Clear previous errors
+    setError('')
+    
+    // Validate name
+    if (!name.trim()) {
+      setError('Name is required')
       return
     }
-    if (password.length < 8) {
+    
+    // Validate email - always run validation
+    if (!email || !email.trim()) {
+      setEmailError('Email is required')
+      setError('Please enter a valid email address')
+      return
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address')
+      setError('Please enter a valid email address')
+      return
+    }
+    setEmailError('')
+    
+    // Validate password - always run validation
+    if (!password || password.length < 8) {
+      setPasswordError('Password must be at least 8 characters')
       setError('Password must be at least 8 characters')
       return
     }
+
+    const hasUpperCase = /[A-Z]/.test(password)
+    const hasLowerCase = /[a-z]/.test(password)
+    const hasNumber = /[0-9]/.test(password)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+      setPasswordError('Password must include uppercase, lowercase, number, and special character')
+      setError('Password must include uppercase, lowercase, number, and special character')
+      return
+    }
+    setPasswordError('')
+    
     setLoading(true)
-    setError('')
     
     try {
-      // In development, just move to next step
-      // In production, this would call Auth0 signup
+      // Check if email already exists
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+      const checkResponse = await fetch(`${API_URL}/api/v1/auth/check-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email.trim() })
+      })
+
+      if (!checkResponse.ok) {
+        const errorData = await checkResponse.json().catch(() => ({}))
+        setError(errorData.message || 'Email check failed')
+        setLoading(false)
+        return
+      }
+
+      const { available } = await checkResponse.json()
+      
+      if (!available) {
+        setError('An account with this email already exists. Please login instead.')
+        setLoading(false)
+        return
+      }
+
+      // Email is available, proceed to next step
       setStep(1)
     } catch (err: any) {
-      setError(err.message)
+      console.error('Email check error:', err)
+      // If email check fails (API down, network error), still allow to proceed
+      // The onboard endpoint will catch duplicates
+      setStep(1)
     } finally {
       setLoading(false)
     }
@@ -118,9 +288,10 @@ function OnboardingForm() {
       // Cookie is set by the backend via Set-Cookie header.
       setStep(2)
     } catch (err: any) {
-      setError(err.message)
+      console.error('Onboard error:', err)
+      setError(err.message || 'Failed to create account')
       // If user already onboarded, skip to AWS step
-      if (err.message.includes('already onboarded')) {
+      if (err.message && err.message.includes('already onboarded')) {
         setStep(2)
       }
     } finally {
@@ -190,9 +361,18 @@ function OnboardingForm() {
   }
 
   const handleFinish = () => {
-    // Clear localStorage after successful onboarding
-    localStorage.removeItem('onboarding_plan')
-    localStorage.removeItem('onboarding_product')
+    // Clear all onboarding data from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('onboarding_plan')
+      localStorage.removeItem('onboarding_product')
+      localStorage.removeItem('onboarding_orgName')
+      localStorage.removeItem('onboarding_orgDomain')
+      localStorage.removeItem('onboarding_email')
+      localStorage.removeItem('onboarding_password')
+      localStorage.removeItem('onboarding_name')
+      localStorage.removeItem('onboarding_roleArn')
+      localStorage.removeItem('onboarding_externalId')
+    }
     
     if (selectedProducts.includes('comply')) {
       window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard'
@@ -387,7 +567,7 @@ function OnboardingForm() {
                     padding: '12px 16px',
                     fontSize: '15px',
                     background: '#FAFAF8',
-                    border: '1px solid #E0DDD5',
+                    border: `1px solid ${emailError ? '#FCA5A5' : '#E0DDD5'}`,
                     borderRadius: '8px',
                     color: '#1A1917',
                     outline: 'none',
@@ -395,14 +575,24 @@ function OnboardingForm() {
                     fontFamily: "'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#1B3A5C'
-                    e.target.style.background = 'white'
+                    if (!emailError) {
+                      e.target.style.borderColor = '#1B3A5C'
+                      e.target.style.background = 'white'
+                    }
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#E0DDD5'
-                    e.target.style.background = '#FAFAF8'
+                    validateEmail(email)
+                    if (!emailError) {
+                      e.target.style.borderColor = '#E0DDD5'
+                      e.target.style.background = '#FAFAF8'
+                    }
                   }}
                 />
+                {emailError && (
+                  <p style={{ fontSize: '13px', color: '#991B1B', marginTop: '6px' }}>
+                    {emailError}
+                  </p>
+                )}
               </div>
 
               <div style={{ marginBottom: '28px' }}>
@@ -418,15 +608,18 @@ function OnboardingForm() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    if (e.target.value) validatePassword(e.target.value)
+                  }}
                   onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
-                  placeholder="At least 8 characters"
+                  placeholder="Create a strong password"
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
                     background: '#FAFAF8',
-                    border: '1px solid #E0DDD5',
+                    border: `1px solid ${passwordError ? '#FCA5A5' : '#E0DDD5'}`,
                     borderRadius: '8px',
                     color: '#1A1917',
                     outline: 'none',
@@ -434,17 +627,64 @@ function OnboardingForm() {
                     fontFamily: "'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#1B3A5C'
-                    e.target.style.background = 'white'
+                    if (!passwordError) {
+                      e.target.style.borderColor = '#1B3A5C'
+                      e.target.style.background = 'white'
+                    }
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#E0DDD5'
-                    e.target.style.background = '#FAFAF8'
+                    if (password) validatePassword(password)
+                    if (!passwordError) {
+                      e.target.style.borderColor = '#E0DDD5'
+                      e.target.style.background = '#FAFAF8'
+                    }
                   }}
                 />
-                <p style={{ fontSize: '13px', color: '#9C9890', marginTop: '6px' }}>
-                  Must be at least 8 characters
-                </p>
+                
+                {/* Password strength indicator */}
+                {password && passwordStrength && (
+                  <div style={{ marginTop: '8px' }}>
+                    <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+                      <div style={{
+                        flex: 1,
+                        height: '4px',
+                        background: passwordStrength === 'weak' ? '#FCA5A5' : passwordStrength === 'medium' ? '#FCD34D' : '#34D399',
+                        borderRadius: '2px'
+                      }} />
+                      <div style={{
+                        flex: 1,
+                        height: '4px',
+                        background: passwordStrength === 'medium' || passwordStrength === 'strong' ? (passwordStrength === 'medium' ? '#FCD34D' : '#34D399') : '#E0DDD5',
+                        borderRadius: '2px'
+                      }} />
+                      <div style={{
+                        flex: 1,
+                        height: '4px',
+                        background: passwordStrength === 'strong' ? '#34D399' : '#E0DDD5',
+                        borderRadius: '2px'
+                      }} />
+                    </div>
+                    <p style={{ 
+                      fontSize: '13px', 
+                      color: passwordStrength === 'weak' ? '#991B1B' : passwordStrength === 'medium' ? '#92400E' : '#065F46',
+                      marginTop: '4px'
+                    }}>
+                      Password strength: {passwordStrength}
+                    </p>
+                  </div>
+                )}
+                
+                {passwordError && (
+                  <p style={{ fontSize: '13px', color: '#991B1B', marginTop: '6px' }}>
+                    {passwordError}
+                  </p>
+                )}
+                
+                {!passwordError && !password && (
+                  <p style={{ fontSize: '13px', color: '#9C9890', marginTop: '6px' }}>
+                    Must include uppercase, lowercase, number, and special character
+                  </p>
+                )}
               </div>
 
               {error && (
@@ -617,34 +857,55 @@ function OnboardingForm() {
                 </div>
               )}
 
-              <button
-                onClick={handleCreateOrg}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: loading ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
-              >
-                {loading ? (
-                  <><Loader2 size={18} className="animate-spin" /> Creating...</>
-                ) : (
-                  <>Continue <ArrowRight size={18} /></>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setStep(0)}
+                  disabled={loading}
+                  style={{
+                    padding: '14px 24px',
+                    background: 'transparent',
+                    color: '#6B685F',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: '1px solid #E0DDD5',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#1B3A5C', e.currentTarget.style.color = '#1B3A5C')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = '#E0DDD5', e.currentTarget.style.color = '#6B685F')}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleCreateOrg}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: loading ? '#6B685F' : '#1B3A5C',
+                    color: 'white',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
+                >
+                  {loading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Creating...</>
+                  ) : (
+                    <>Continue <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
             </div>
           )}
 
@@ -746,35 +1007,55 @@ function OnboardingForm() {
                 </div>
               )}
 
-              <button
-                onClick={handleConnectAws}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: loading ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  marginBottom: '12px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
-              >
-                {loading ? (
-                  <><Loader2 size={18} className="animate-spin" /> Connecting...</>
-                ) : (
-                  <>Connect AWS <ArrowRight size={18} /></>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setStep(1)}
+                  disabled={loading}
+                  style={{
+                    padding: '14px 24px',
+                    background: 'transparent',
+                    color: '#6B685F',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: '1px solid #E0DDD5',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#1B3A5C', e.currentTarget.style.color = '#1B3A5C')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = '#E0DDD5', e.currentTarget.style.color = '#6B685F')}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleConnectAws}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: loading ? '#6B685F' : '#1B3A5C',
+                    color: 'white',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
+                >
+                  {loading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Connecting...</>
+                  ) : (
+                    <>Connect AWS <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
 
               <button
                 onClick={() => { setSkipAws(true); setStep(3) }}
@@ -786,7 +1067,8 @@ function OnboardingForm() {
                   fontSize: '14px',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: 'color 0.2s'
+                  transition: 'color 0.2s',
+                  marginTop: '12px'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.color = '#1A1917'}
                 onMouseOut={(e) => e.currentTarget.style.color = '#6B685F'}
@@ -924,34 +1206,55 @@ function OnboardingForm() {
                 </div>
               )}
 
-              <button
-                onClick={handlePayment}
-                disabled={paymentProcessing}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: paymentProcessing ? '#6B685F' : '#1B3A5C',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: paymentProcessing ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.background = '#2E5F8A')}
-                onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.background = '#1B3A5C')}
-              >
-                {paymentProcessing ? (
-                  <><Loader2 size={18} className="animate-spin" /> Processing...</>
-                ) : (
-                  <>Continue to payment <ArrowRight size={18} /></>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={paymentProcessing}
+                  style={{
+                    padding: '14px 24px',
+                    background: 'transparent',
+                    color: '#6B685F',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: '1px solid #E0DDD5',
+                    borderRadius: '8px',
+                    cursor: paymentProcessing ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = '#1B3A5C', e.currentTarget.style.color = '#1B3A5C')}
+                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = '#E0DDD5', e.currentTarget.style.color = '#6B685F')}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handlePayment}
+                  disabled={paymentProcessing}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: paymentProcessing ? '#6B685F' : '#1B3A5C',
+                    color: 'white',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: paymentProcessing ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.background = '#2E5F8A')}
+                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.background = '#1B3A5C')}
+                >
+                  {paymentProcessing ? (
+                    <><Loader2 size={18} className="animate-spin" /> Processing...</>
+                  ) : (
+                    <>Continue to payment <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
             </div>
           )}
 

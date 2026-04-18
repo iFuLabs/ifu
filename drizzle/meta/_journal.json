@@ -10,10 +10,73 @@
       "breakpoints": true
     },
     {
+      "idx": 1,
+      "version": "7",
+      "when": 1776026649159,
+      "tag": "0001_add_password_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776026649160,
+      "tag": "0002_add_invitations",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776026649161,
+      "tag": "0003_add_invitation_product",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776026649162,
+      "tag": "0004_add_unique_control_results",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1776026649163,
+      "tag": "0005_paystack_billing_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1776026649164,
+      "tag": "0006_paystack_constraints_and_finops_plan",
+      "breakpoints": true
+    },
+    {
       "idx": 7,
       "version": "7",
       "when": 1776026649165,
       "tag": "0007_add_invitation_unique_constraint",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1776026649166,
+      "tag": "0008_add_password_reset_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1776026649167,
+      "tag": "0009_add_subscriptions_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1776026649168,
+      "tag": "0010_fix_subscription_constraints",
       "breakpoints": true
     }
   ]
