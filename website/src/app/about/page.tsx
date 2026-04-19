@@ -25,7 +25,7 @@ export default function AboutPage() {
 
       {/* Hero */}
       <section className="hero" style={{ paddingBottom: '120px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+        <div className="hero-left">
           <div className="hero-eyebrow" style={{ display: 'inline-flex' }}>
             <div className="hero-eyebrow-dot"></div>
             About iFu Labs
@@ -34,9 +34,36 @@ export default function AboutPage() {
             AWS consultancy built for<br/>
             <em>startups and scale-ups.</em>
           </h1>
-          <p className="hero-sub" style={{ maxWidth: '700px', fontSize: '18px' }}>
+          <p className="hero-sub" style={{ fontSize: '18px' }}>
             We're a remote-first team of AWS-certified engineers who specialize in helping startups and fast-growing companies build, scale, and secure their AWS infrastructure — without the overhead of hiring a full platform team.
           </p>
+        </div>
+
+        <div className="about-hero-card">
+          <div className="about-hero-card-label">HOW WE WORK</div>
+          <div className="about-hero-steps">
+            {[
+              { num: '01', title: 'Discovery', desc: 'We review your infrastructure, spend, compliance posture, and team structure within 48 hours. No fluff — an honest read on where you stand and what needs to change.' },
+              { num: '02', title: 'Architecture', desc: 'We design a solution architecture tailored to your constraints, roadmap, and budget. Every decision is documented with clear rationale before a single line of code is written.' },
+              { num: '03', title: 'Delivery', desc: 'Our engineers embed with your team and execute against a shared plan. Weekly standups, full IaC, and no handover black boxes. You see every change before it ships.' },
+              { num: '04', title: 'Handover', desc: 'You own everything. Runbooks, Terraform, access, documentation. We train your team and leave them self-sufficient — no manufactured dependency on iFu Labs.' },
+            ].map((step, i, arr) => (
+              <div key={step.num} className="about-hero-step">
+                <div className="about-hero-step-rail">
+                  <span className="about-hero-step-num">{step.num}</span>
+                  {i < arr.length - 1 && <div className="about-hero-step-line" />}
+                </div>
+                <div className="about-hero-step-body">
+                  <div className="about-hero-step-title">{step.title}</div>
+                  <p className="about-hero-step-desc">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="about-hero-card-footer">
+            <span className="about-hero-card-diamond">◆</span>
+            Our most common engagement — 2–3 service areas over 6–12 weeks with a dedicated engineer.
+          </div>
         </div>
       </section>
 
@@ -105,21 +132,19 @@ export default function AboutPage() {
         <p className="section-sub" style={{ margin: '0 auto' }}>
           Our team holds multiple AWS certifications spanning Solutions Architecture, DevOps, Security, Data Engineering, and Machine Learning. We invest continuously in staying current with AWS best practices.
         </p>
-        <div style={{ 
-          display: 'flex', 
-          gap: '24px', 
-          justifyContent: 'center', 
-          flexWrap: 'wrap', 
-          marginTop: '48px',
-          fontSize: '14px',
-          color: 'var(--muted)',
-          fontFamily: 'var(--mono)'
-        }}>
-          <div>✓ Solutions Architect (Associate & Professional)</div>
-          <div>✓ DevOps Engineer (Professional)</div>
-          <div>✓ Security Specialty</div>
-          <div>✓ Data Engineer (Associate)</div>
-          <div>✓ ML Engineer (Associate)</div>
+        <div className="about-cert-grid">
+          {[
+            { file: 'solutions-architect-associate.png', label: 'Solutions Architect (Associate & Professional)' },
+            { file: 'devops-engineer-professional.png', label: 'DevOps Engineer (Professional)' },
+            { file: 'solutions-architect-professional.png', label: 'Security Specialty' },
+            { file: 'data-engineer-associate.png', label: 'Data Engineer (Associate)' },
+            { file: 'ml-engineer-associate.png', label: 'ML Engineer (Associate)' },
+          ].map(b => (
+            <div key={b.label} className="about-cert-item">
+              <img src={`/badges/${b.file}`} alt={b.label} />
+              <div className="about-cert-label">{b.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 

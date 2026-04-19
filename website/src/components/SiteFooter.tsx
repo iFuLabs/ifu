@@ -12,6 +12,14 @@ const SERVICES = [
   { slug: 'managed-services', name: 'Managed Services' },
 ]
 
+const BADGES = [
+  { file: 'solutions-architect-associate.png', label: 'AWS Solutions Architect Associate' },
+  { file: 'solutions-architect-professional.png', label: 'AWS Solutions Architect Professional' },
+  { file: 'data-engineer-associate.png', label: 'AWS Data Engineer Associate' },
+  { file: 'ml-engineer-associate.png', label: 'AWS ML Engineer Associate' },
+  { file: 'devops-engineer-professional.png', label: 'AWS DevOps Engineer Professional' },
+]
+
 export function SiteFooter() {
   return (
     <>
@@ -28,12 +36,28 @@ export function SiteFooter() {
               iFu Labs
             </a>
             <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
+            <div className="footer-contact-links">
+              <a href="mailto:info@ifulabs.com" className="footer-contact-link">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <rect x="1" y="2.5" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M1 4L6 7L11 4" stroke="currentColor" strokeWidth="1.2"/>
+                </svg>
+                info@ifulabs.com
+              </a>
+              <a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener" className="footer-contact-link">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M6 1.5V6L8.5 8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                AWS Partner Network Member
+              </a>
+            </div>
           </div>
           <div className="footer-columns">
             <div className="footer-col">
               <h4>Services</h4>
               <ul>
-                {SERVICES.map(s => <li key={s.slug}><a href={`/services#${s.slug}`}>{s.name}</a></li>)}
+                {SERVICES.map(s => <li key={s.slug}><a href={`/services/${s.slug}`}>{s.name}</a></li>)}
               </ul>
             </div>
             <div className="footer-col">
@@ -57,6 +81,7 @@ export function SiteFooter() {
             </div>
           </div>
         </div>
+
         <div className="footer-legal">
           <h4>Legal</h4>
           <ul>
@@ -64,6 +89,19 @@ export function SiteFooter() {
             <li><a href="/terms">Terms of Service</a></li>
             <li><a href="/acceptable-use">Acceptable Use</a></li>
           </ul>
+        </div>
+
+        <div className="footer-certifications">
+          <div className="footer-cert-text">
+            <p>Our team holds <strong>multiple AWS certifications</strong> across specialized areas. We take pride in our depth of knowledge and continuously invest in staying current with AWS best practices and emerging technologies.</p>
+          </div>
+          <div className="footer-cert-badges">
+            {BADGES.map(badge => (
+              <div key={badge.file} className="footer-cert-badge" title={badge.label}>
+                <img src={`/badges/${badge.file}`} alt={badge.label} />
+              </div>
+            ))}
+          </div>
         </div>
       </footer>
       <div className="footer-bottom">

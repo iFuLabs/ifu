@@ -1,7 +1,67 @@
 'use client'
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Lock, CheckCircle, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Lock, CheckCircle, Loader2, Eye, EyeOff, ArrowRight } from 'lucide-react'
+
+const PAGE_BG: React.CSSProperties = {
+  minHeight: '100vh',
+  background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '40px 20px',
+  fontFamily: "'DM Sans', system-ui, sans-serif"
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '13px',
+  fontWeight: 500,
+  color: '#C4C7CC',
+  marginBottom: '8px',
+  letterSpacing: '0.02em',
+  textTransform: 'uppercase'
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '14px 44px 14px 16px',
+  fontSize: '15px',
+  background: '#0F1115',
+  border: '1px solid #25282F',
+  borderRadius: '10px',
+  color: '#F5F5F5',
+  outline: 'none',
+  transition: 'all 0.2s',
+  fontFamily: "'DM Sans', sans-serif"
+}
+
+function onFocus(e: React.FocusEvent<HTMLInputElement>) {
+  e.target.style.borderColor = '#E8820A'
+  e.target.style.background = '#14161B'
+  e.target.style.boxShadow = '0 0 0 3px rgba(232, 130, 10, 0.15)'
+}
+function onBlur(e: React.FocusEvent<HTMLInputElement>) {
+  e.target.style.borderColor = '#25282F'
+  e.target.style.background = '#0F1115'
+  e.target.style.boxShadow = 'none'
+}
+
+const LOGO_MARK = (icon: React.ReactNode) => (
+  <div style={{
+    width: '56px',
+    height: '56px',
+    background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
+    borderRadius: '14px',
+    boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 20px'
+  }}>
+    {icon}
+  </div>
+)
 
 export default function ResetPasswordPage() {
   const params = useParams()
@@ -51,8 +111,7 @@ export default function ResetPasswordPage() {
       }
 
       setSuccess(true)
-      
-      // Redirect to login after 3 seconds
+
       setTimeout(() => {
         router.push('/login')
       }, 3000)
@@ -65,89 +124,41 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: '#0F1115',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px',
-        fontFamily: "'DM Sans', system-ui, sans-serif"
-      }}>
-        <div style={{ maxWidth: '420px', width: '100%', textAlign: 'center' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            background: '#10B981',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 20px'
-          }}>
-            <CheckCircle size={32} color="white" />
-          </div>
-          <h1 style={{ 
-            fontSize: '32px', 
-            fontWeight: '600', 
-            color: '#F5F5F5', 
-            marginBottom: '8px',
+      <div style={PAGE_BG}>
+        <div style={{ maxWidth: '440px', width: '100%', textAlign: 'center' }}>
+          {LOGO_MARK(<CheckCircle size={30} color="white" strokeWidth={1.8} />)}
+          <h1 style={{
+            fontSize: '34px',
+            fontWeight: 500,
+            color: '#F5F5F5',
+            marginBottom: '10px',
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
           }}>
             Password reset successful
           </h1>
-          <p style={{ fontSize: '15px', color: '#9AA0A6', marginBottom: '24px' }}>
+          <p style={{ fontSize: '15px', color: '#9AA0A6', marginBottom: '28px' }}>
             Your password has been updated. Redirecting to login...
           </p>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            border: '3px solid #E0DDD5',
-            borderTopColor: '#E8820A',
-            borderRadius: '50%',
-            margin: '0 auto',
-            animation: 'spin 1s linear infinite'
-          }} />
+          <Loader2 size={26} className="animate-spin" style={{ color: '#E8820A' }} />
         </div>
         <style>{`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
+          .animate-spin { animation: spin 1s linear infinite; }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         `}</style>
       </div>
     )
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#0F1115',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 20px',
-      fontFamily: "'DM Sans', system-ui, sans-serif"
-    }}>
-      <div style={{ maxWidth: '420px', width: '100%' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            background: '#E8820A',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 20px'
-          }}>
-            <Lock size={28} color="white" />
-          </div>
-          <h1 style={{ 
-            fontSize: '32px', 
-            fontWeight: '600', 
-            color: '#F5F5F5', 
+    <div style={PAGE_BG}>
+      <div style={{ maxWidth: '440px', width: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          {LOGO_MARK(<Lock size={26} color="white" strokeWidth={1.8} />)}
+          <h1 style={{
+            fontSize: '34px',
+            fontWeight: 500,
+            color: '#F5F5F5',
             marginBottom: '8px',
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
@@ -160,22 +171,15 @@ export default function ResetPasswordPage() {
         </div>
 
         <div style={{
-          background: '#14161B',
-          border: '1px solid #E0DDD5',
+          background: 'rgba(20, 22, 27, 0.8)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid #25282F',
           borderRadius: '16px',
           padding: '40px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4)'
         }}>
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '14px', 
-              fontWeight: '500', 
-              color: '#F5F5F5', 
-              marginBottom: '8px' 
-            }}>
-              New password
-            </label>
+            <label style={labelStyle}>New password</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -183,26 +187,9 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="At least 8 characters"
                 autoFocus
-                style={{
-                  width: '100%',
-                  padding: '12px 40px 12px 16px',
-                  fontSize: '15px',
-                  background: '#0F1115',
-                  border: '1px solid #E0DDD5',
-                  borderRadius: '8px',
-                  color: '#F5F5F5',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  fontFamily: "'DM Sans', sans-serif"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#E8820A'
-                  e.target.style.background = 'white'
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#25282F'
-                  e.target.style.background = '#0F1115'
-                }}
+                style={inputStyle}
+                onFocus={onFocus}
+                onBlur={onBlur}
               />
               <button
                 type="button"
@@ -216,7 +203,8 @@ export default function ResetPasswordPage() {
                   border: 'none',
                   cursor: 'pointer',
                   color: '#9AA0A6',
-                  padding: '4px'
+                  padding: '4px',
+                  display: 'flex'
                 }}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -225,15 +213,7 @@ export default function ResetPasswordPage() {
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '14px', 
-              fontWeight: '500', 
-              color: '#F5F5F5', 
-              marginBottom: '8px' 
-            }}>
-              Confirm password
-            </label>
+            <label style={labelStyle}>Confirm password</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showConfirm ? 'text' : 'password'}
@@ -241,26 +221,9 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                 placeholder="Re-enter your password"
-                style={{
-                  width: '100%',
-                  padding: '12px 40px 12px 16px',
-                  fontSize: '15px',
-                  background: '#0F1115',
-                  border: '1px solid #E0DDD5',
-                  borderRadius: '8px',
-                  color: '#F5F5F5',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  fontFamily: "'DM Sans', sans-serif"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#E8820A'
-                  e.target.style.background = 'white'
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#25282F'
-                  e.target.style.background = '#0F1115'
-                }}
+                style={inputStyle}
+                onFocus={onFocus}
+                onBlur={onBlur}
               />
               <button
                 type="button"
@@ -274,7 +237,8 @@ export default function ResetPasswordPage() {
                   border: 'none',
                   cursor: 'pointer',
                   color: '#9AA0A6',
-                  padding: '4px'
+                  padding: '4px',
+                  display: 'flex'
                 }}
               >
                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -286,8 +250,8 @@ export default function ResetPasswordPage() {
             <div style={{
               padding: '12px 16px',
               background: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid #FCA5A5',
-              borderRadius: '8px',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '10px',
               fontSize: '14px',
               color: '#FCA5A5',
               marginBottom: '20px'
@@ -302,18 +266,19 @@ export default function ResetPasswordPage() {
             style={{
               width: '100%',
               padding: '14px',
-              background: loading ? '#9AA0A6' : '#E8820A',
-              color: '#0B0C0F',
+              background: loading ? '#2A2D34' : '#E8820A',
+              color: loading ? '#9AA0A6' : '#0B0C0F',
               fontSize: '15px',
-              fontWeight: '600',
+              fontWeight: 600,
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '10px',
               cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              boxShadow: loading ? 'none' : '0 6px 16px rgba(232, 130, 10, 0.25)'
             }}
             onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
             onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
@@ -321,20 +286,15 @@ export default function ResetPasswordPage() {
             {loading ? (
               <><Loader2 size={18} className="animate-spin" /> Resetting...</>
             ) : (
-              <>Reset password</>
+              <>Reset password <ArrowRight size={18} /></>
             )}
           </button>
         </div>
       </div>
 
       <style>{`
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </div>
   )

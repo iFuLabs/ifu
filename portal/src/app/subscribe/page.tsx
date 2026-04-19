@@ -1,14 +1,24 @@
 'use client'
-import { useState, useEffect, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Loader2, ArrowRight, CheckCircle } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
+const PAGE_BG: React.CSSProperties = {
+  minHeight: '100vh',
+  background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '40px 20px',
+  fontFamily: "'DM Sans', system-ui, sans-serif"
+}
+
 function SubscribeForm() {
   const searchParams = useSearchParams()
   const product = searchParams.get('product') || 'comply'
-  
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedPlan, setSelectedPlan] = useState<string>(
@@ -65,12 +75,16 @@ function SubscribeForm() {
   async function handleSubscribe() {
     setLoading(true)
     setError('')
-    
+
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
       const res = await fetch(`${API_URL}/api/v1/billing/initialize`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         body: JSON.stringify({ plan: selectedPlan })
       })
 
@@ -80,8 +94,6 @@ function SubscribeForm() {
       }
 
       const data = await res.json()
-      
-      // Redirect to Paystack checkout
       window.location.href = data.authorizationUrl
     } catch (err: any) {
       setError(err.message || 'Failed to initialize payment')
@@ -90,155 +102,160 @@ function SubscribeForm() {
   }
 
   const productName = product === 'comply' ? 'iFu Comply' : 'iFu Costless'
-  const productEmoji = product === 'comply' ? '🛡️' : '💰'
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#FAFAF8',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 20px',
-      fontFamily: "'DM Sans', system-ui, sans-serif"
-    }}>
+    <div style={PAGE_BG}>
       <div style={{ maxWidth: '900px', width: '100%' }}>
-        
-        {/* Header */}
+
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{
             width: '56px',
             height: '56px',
-            background: '#1B3A5C',
-            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
+            borderRadius: '14px',
+            boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 20px'
           }}>
-            <span style={{ fontSize: '32px' }}>{productEmoji}</span>
+            <svg width="32" height="32" viewBox="0 0 18 18" fill="none">
+              <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
+              <circle cx="9" cy="9" r="2.5" fill="white"/>
+            </svg>
           </div>
-          <h1 style={{ 
-            fontSize: '32px', 
-            fontWeight: '600', 
-            color: '#1A1917', 
+          <h1 style={{
+            fontSize: '34px',
+            fontWeight: 500,
+            color: '#F5F5F5',
             marginBottom: '8px',
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
           }}>
             Subscribe to {productName}
           </h1>
-          <p style={{ fontSize: '15px', color: '#6B685F', lineHeight: '1.6' }}>
+          <p style={{ fontSize: '15px', color: '#9AA0A6' }}>
             Choose your plan and start your 3-day free trial
           </p>
         </div>
 
-        {/* Plans */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: product === 'comply' ? 'repeat(2, 1fr)' : '1fr',
-          gap: '24px',
-          marginBottom: '32px'
+          gridTemplateColumns: product === 'comply' ? 'repeat(auto-fit, minmax(320px, 1fr))' : '1fr',
+          gap: '20px',
+          marginBottom: '28px'
         }}>
-          {plans.map(plan => (
-            <div
-              key={plan.id}
-              onClick={() => setSelectedPlan(plan.id)}
-              style={{
-                background: 'white',
-                border: selectedPlan === plan.id ? '2px solid #1B3A5C' : '1px solid #E0DDD5',
-                borderRadius: '16px',
-                padding: '32px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                position: 'relative'
-              }}
-            >
-              {selectedPlan === plan.id && (
-                <div style={{
-                  position: 'absolute',
-                  top: '16px',
-                  right: '16px',
-                  width: '24px',
-                  height: '24px',
-                  background: '#1B3A5C',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <CheckCircle size={16} style={{ color: 'white' }} />
-                </div>
-              )}
-              
-              <h3 style={{ 
-                fontSize: '20px', 
-                fontWeight: '600', 
-                color: '#1A1917', 
-                marginBottom: '8px',
-                fontFamily: "'Fraunces', serif"
-              }}>
-                {plan.name}
-              </h3>
-              
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '36px', fontWeight: '700', color: '#1B3A5C', fontFamily: "'DM Mono', monospace" }}>
-                  ${plan.price}
-                </span>
-                <span style={{ fontSize: '14px', color: '#6B685F' }}>/month</span>
-              </div>
-              
-              <p style={{ fontSize: '14px', color: '#6B685F', marginBottom: '24px' }}>
-                {plan.description}
-              </p>
-              
-              <div style={{ borderTop: '1px solid #E0DDD5', paddingTop: '20px' }}>
-                {plan.features.map((feature, idx) => (
-                  <div key={idx} style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px', 
-                    marginBottom: '12px',
-                    fontSize: '14px',
-                    color: '#1A1917'
+          {plans.map(plan => {
+            const active = selectedPlan === plan.id
+            return (
+              <div
+                key={plan.id}
+                onClick={() => setSelectedPlan(plan.id)}
+                style={{
+                  background: 'rgba(20, 22, 27, 0.8)',
+                  backdropFilter: 'blur(8px)',
+                  border: active ? '1px solid #E8820A' : '1px solid #25282F',
+                  boxShadow: active ? '0 0 0 3px rgba(232, 130, 10, 0.15), 0 12px 32px rgba(0, 0, 0, 0.35)' : '0 12px 32px rgba(0, 0, 0, 0.35)',
+                  borderRadius: '16px',
+                  padding: '32px',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                  position: 'relative'
+                }}
+              >
+                {active && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    width: '24px',
+                    height: '24px',
+                    background: '#E8820A',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 10px rgba(232, 130, 10, 0.35)'
                   }}>
-                    <CheckCircle size={16} style={{ color: '#1D6648', flexShrink: 0 }} />
-                    {feature}
+                    <CheckCircle size={16} style={{ color: '#0B0C0F' }} />
                   </div>
-                ))}
+                )}
+
+                <h3 style={{
+                  fontSize: '22px',
+                  fontWeight: 500,
+                  color: '#F5F5F5',
+                  marginBottom: '10px',
+                  fontFamily: "'Fraunces', serif",
+                  letterSpacing: '-0.015em'
+                }}>
+                  {plan.name}
+                </h3>
+
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '38px', fontWeight: 600, color: '#E8820A', fontFamily: "'DM Mono', monospace" }}>
+                    ${plan.price}
+                  </span>
+                  <span style={{ fontSize: '14px', color: '#9AA0A6' }}>/month</span>
+                </div>
+
+                <p style={{ fontSize: '14px', color: '#9AA0A6', marginBottom: '22px' }}>
+                  {plan.description}
+                </p>
+
+                <div style={{ borderTop: '1px solid #25282F', paddingTop: '20px' }}>
+                  {plan.features.map((feature, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '12px',
+                      fontSize: '14px',
+                      color: '#C4C7CC'
+                    }}>
+                      <CheckCircle size={16} style={{ color: '#E8820A', flexShrink: 0 }} />
+                      {feature}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
-        {/* Trial info */}
         <div style={{
-          background: 'white',
-          border: '1px solid #E0DDD5',
+          background: 'rgba(20, 22, 27, 0.8)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid #25282F',
           borderRadius: '12px',
           padding: '20px',
-          marginBottom: '24px'
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '14px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: '#F3E8FF',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <span style={{ fontSize: '20px' }}>🎉</span>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            background: 'rgba(232, 130, 10, 0.12)',
+            border: '1px solid rgba(232, 130, 10, 0.35)',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            color: '#E8820A'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L15 8l6 1-4.5 4.4L18 20l-6-3-6 3 1.5-6.6L3 9l6-1z"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: '15px', fontWeight: 600, color: '#F5F5F5', marginBottom: '4px' }}>
+              3-day free trial included
             </div>
-            <div>
-              <div style={{ fontSize: '15px', fontWeight: '600', color: '#1A1917', marginBottom: '4px' }}>
-                3-day free trial included
-              </div>
-              <div style={{ fontSize: '13px', color: '#6B685F' }}>
-                Your card will be charged after the trial period ends. Cancel anytime.
-              </div>
+            <div style={{ fontSize: '13px', color: '#9AA0A6' }}>
+              Your card will be charged after the trial period ends. Cancel anytime.
             </div>
           </div>
         </div>
@@ -246,55 +263,54 @@ function SubscribeForm() {
         {error && (
           <div style={{
             padding: '12px 16px',
-            background: '#FEE2E2',
-            border: '1px solid #FCA5A5',
-            borderRadius: '8px',
+            background: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '10px',
             fontSize: '14px',
-            color: '#991B1B',
+            color: '#FCA5A5',
             marginBottom: '20px'
           }}>
             {error}
           </div>
         )}
 
-        {/* Subscribe button */}
         <button
           onClick={handleSubscribe}
           disabled={loading}
           style={{
             width: '100%',
             padding: '16px',
-            background: loading ? '#6B685F' : '#1B3A5C',
-            color: 'white',
-            fontSize: '16px',
-            fontWeight: '600',
+            background: loading ? '#2A2D34' : '#E8820A',
+            color: loading ? '#9AA0A6' : '#0B0C0F',
+            fontSize: '15px',
+            fontWeight: 600,
             border: 'none',
-            borderRadius: '12px',
+            borderRadius: '10px',
             cursor: loading ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
             transition: 'all 0.2s',
-            marginBottom: '16px'
+            marginBottom: '18px',
+            boxShadow: loading ? 'none' : '0 6px 16px rgba(232, 130, 10, 0.25)'
           }}
-          onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#2E5F8A')}
-          onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#1B3A5C')}
+          onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
+          onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
         >
           {loading ? (
-            <><Loader2 size={20} className="animate-spin" /> Processing...</>
+            <><Loader2 size={18} className="animate-spin" /> Processing...</>
           ) : (
-            <>Continue to payment <ArrowRight size={20} /></>
+            <>Continue to payment <ArrowRight size={18} /></>
           )}
         </button>
 
-        {/* Back link */}
         <div style={{ textAlign: 'center' }}>
           <a
             href="/"
             style={{
-              fontSize: '14px',
-              color: '#6B685F',
+              fontSize: '13px',
+              color: '#6B7078',
               textDecoration: 'none'
             }}
           >
@@ -304,13 +320,8 @@ function SubscribeForm() {
       </div>
 
       <style>{`
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </div>
   )
@@ -319,14 +330,12 @@ function SubscribeForm() {
 export default function SubscribePage() {
   return (
     <Suspense fallback={
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#FAFAF8'
-      }}>
-        <Loader2 size={32} className="animate-spin" style={{ color: '#1B3A5C' }} />
+      <div style={PAGE_BG}>
+        <Loader2 size={32} className="animate-spin" style={{ color: '#E8820A' }} />
+        <style>{`
+          .animate-spin { animation: spin 1s linear infinite; }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `}</style>
       </div>
     }>
       <SubscribeForm />

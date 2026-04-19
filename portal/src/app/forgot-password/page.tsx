@@ -47,48 +47,51 @@ export default function ForgotPasswordPage() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: '#0F1115',
+        background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '40px 20px',
         fontFamily: "'DM Sans', system-ui, sans-serif"
       }}>
-        <div style={{ maxWidth: '420px', width: '100%' }}>
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <div style={{ maxWidth: '440px', width: '100%' }}>
+          <div style={{ textAlign: 'center', marginBottom: '36px' }}>
             <div style={{
               width: '56px',
               height: '56px',
-              background: '#10B981',
-              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
+              borderRadius: '14px',
+              boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 20px'
             }}>
-              <CheckCircle size={32} color="white" />
+              <CheckCircle size={30} color="white" strokeWidth={1.8} />
             </div>
-            <h1 style={{ 
-              fontSize: '32px', 
-              fontWeight: '600', 
-              color: '#F5F5F5', 
+            <h1 style={{
+              fontSize: '34px',
+              fontWeight: 500,
+              color: '#F5F5F5',
               marginBottom: '8px',
               fontFamily: "'Fraunces', serif",
               letterSpacing: '-0.02em'
             }}>
               Check your email
             </h1>
-            <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
-              If an account exists for <strong>{email}</strong>, you'll receive a password reset link shortly.
+            <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: 1.6 }}>
+              If an account exists for <strong style={{ color: '#F5F5F5', fontWeight: 500 }}>{email}</strong>, you'll receive a password reset link shortly.
             </p>
           </div>
 
           <div style={{
-            background: '#14161B',
-            border: '1px solid #E0DDD5',
+            background: 'rgba(20, 22, 27, 0.8)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid #25282F',
             borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px'
+            padding: '28px',
+            marginBottom: '24px',
+            boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4)'
           }}>
             <p style={{ fontSize: '14px', color: '#9AA0A6', marginBottom: '16px' }}>
               The email may take a few minutes to arrive. Be sure to check your spam folder.
@@ -117,31 +120,32 @@ export default function ForgotPasswordPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0F1115',
+      background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '40px 20px',
       fontFamily: "'DM Sans', system-ui, sans-serif"
     }}>
-      <div style={{ maxWidth: '420px', width: '100%' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+      <div style={{ maxWidth: '440px', width: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
           <div style={{
             width: '56px',
             height: '56px',
-            background: '#E8820A',
-            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
+            borderRadius: '14px',
+            boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 20px'
           }}>
-            <Mail size={28} color="white" />
+            <Mail size={28} color="white" strokeWidth={1.8} />
           </div>
-          <h1 style={{ 
-            fontSize: '32px', 
-            fontWeight: '600', 
-            color: '#F5F5F5', 
+          <h1 style={{
+            fontSize: '34px',
+            fontWeight: 500,
+            color: '#F5F5F5',
             marginBottom: '8px',
             fontFamily: "'Fraunces', serif",
             letterSpacing: '-0.02em'
@@ -154,19 +158,22 @@ export default function ForgotPasswordPage() {
         </div>
 
         <div style={{
-          background: '#14161B',
-          border: '1px solid #E0DDD5',
+          background: 'rgba(20, 22, 27, 0.8)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid #25282F',
           borderRadius: '16px',
           padding: '40px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4)'
         }}>
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '14px', 
-              fontWeight: '500', 
-              color: '#F5F5F5', 
-              marginBottom: '8px' 
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#C4C7CC',
+              marginBottom: '8px',
+              letterSpacing: '0.02em',
+              textTransform: 'uppercase'
             }}>
               Email address
             </label>
@@ -179,11 +186,11 @@ export default function ForgotPasswordPage() {
               autoFocus
               style={{
                 width: '100%',
-                padding: '12px 16px',
+                padding: '14px 16px',
                 fontSize: '15px',
                 background: '#0F1115',
-                border: '1px solid #E0DDD5',
-                borderRadius: '8px',
+                border: '1px solid #25282F',
+                borderRadius: '10px',
                 color: '#F5F5F5',
                 outline: 'none',
                 transition: 'all 0.2s',
@@ -191,11 +198,13 @@ export default function ForgotPasswordPage() {
               }}
               onFocus={(e) => {
                 e.target.style.borderColor = '#E8820A'
-                e.target.style.background = 'white'
+                e.target.style.background = '#14161B'
+                e.target.style.boxShadow = '0 0 0 3px rgba(232, 130, 10, 0.15)'
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = '#25282F'
                 e.target.style.background = '#0F1115'
+                e.target.style.boxShadow = 'none'
               }}
             />
           </div>
@@ -204,8 +213,8 @@ export default function ForgotPasswordPage() {
             <div style={{
               padding: '12px 16px',
               background: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid #FCA5A5',
-              borderRadius: '8px',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '10px',
               fontSize: '14px',
               color: '#FCA5A5',
               marginBottom: '20px'
@@ -220,19 +229,20 @@ export default function ForgotPasswordPage() {
             style={{
               width: '100%',
               padding: '14px',
-              background: loading ? '#9AA0A6' : '#E8820A',
-              color: '#0B0C0F',
+              background: loading ? '#2A2D34' : '#E8820A',
+              color: loading ? '#9AA0A6' : '#0B0C0F',
               fontSize: '15px',
-              fontWeight: '600',
+              fontWeight: 600,
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '10px',
               cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
               transition: 'all 0.2s',
-              marginBottom: '16px'
+              marginBottom: '16px',
+              boxShadow: loading ? 'none' : '0 6px 16px rgba(232, 130, 10, 0.25)'
             }}
             onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
             onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
@@ -245,7 +255,7 @@ export default function ForgotPasswordPage() {
           </button>
 
           <div style={{ textAlign: 'center' }}>
-            <Link 
+            <Link
               href="/login"
               style={{
                 display: 'inline-flex',
@@ -253,7 +263,8 @@ export default function ForgotPasswordPage() {
                 gap: '8px',
                 fontSize: '14px',
                 color: '#9AA0A6',
-                textDecoration: 'none'
+                textDecoration: 'none',
+                fontWeight: 500
               }}
             >
               <ArrowLeft size={16} />

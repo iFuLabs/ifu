@@ -13,8 +13,16 @@ const SECONDARY_SERVICES = [
 
 export function SiteNav() {
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const wrapRef = useRef<HTMLLIElement | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -58,7 +66,7 @@ export function SiteNav() {
         </div>
       </div>
 
-      <nav>
+      <nav className={scrolled ? 'scrolled' : ''}>
         <a href="/" className="logo">
           <div className="logo-mark">
             <svg viewBox="0 0 18 18" fill="none">
