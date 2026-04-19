@@ -1,27 +1,11 @@
-import { createAuth0Client, Auth0Client } from '@auth0/auth0-spa-js'
-
-let auth0Client: Auth0Client | null = null
-
-export async function getAuth0Client() {
-  if (auth0Client) return auth0Client
-
-  auth0Client = await createAuth0Client({
-    domain: process.env.NEXT_PUBLIC_AUTH0_DOMAIN!,
-    clientId: process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID!,
-    authorizationParams: {
-      redirect_uri: `${process.env.NEXT_PUBLIC_PORTAL_URL}/auth/callback`,
-      audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-    },
-    cacheLocation: 'memory',
-  })
-
-  return auth0Client
-}
-
 export async function getAccessToken() {
-  // Token is now stored in an httpOnly cookie and sent automatically.
-  // Return null so apiFetch omits the Authorization header —
-  // the browser will attach the cookie on same-origin requests.
+  // Try to get token from localStorage first (for password-based auth)
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('auth_token')
+    if (token) return token
+  }
+  
+  // Otherwise rely on httpOnly cookie sent automatically
   return null
 }
 

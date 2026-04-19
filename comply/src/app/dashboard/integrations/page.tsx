@@ -1,6 +1,9 @@
 'use client'
 import useSWR from 'swr'
-import { api, Integration } from '@/lib/api'
+import { api } from '@/lib/api'
+
+// Type definition
+type Integration = any
 import { useState } from 'react'
 import { Plus, CheckCircle, XCircle, AlertCircle, RefreshCw, Trash2, Cloud, GitBranch } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'

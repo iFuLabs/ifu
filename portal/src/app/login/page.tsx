@@ -26,7 +26,11 @@ function LoginForm() {
     try {
       const response = await api.auth.login({ email, password })
       
-      // Cookie is set by the backend via Set-Cookie header.
+      // Store token in localStorage for authenticated requests
+      if (response.token && typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', response.token)
+      }
+      
       // Redirect to product dashboard.
       const complyUrl = process.env.NEXT_PUBLIC_COMPLY_URL
       const finopsUrl = process.env.NEXT_PUBLIC_FINOPS_URL

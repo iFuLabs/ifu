@@ -57,7 +57,7 @@ await app.register(helmet, {
 })
 await app.register(cors, {
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://app.ifu-labs.io']
+    ? (process.env.ALLOWED_ORIGINS || 'https://app.ifu-labs.io').split(',')
     : true,
   credentials: true
 })

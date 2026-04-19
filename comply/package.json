@@ -3,18 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "next dev -p 3001",
+    "start": "next start -p 3001",
+    "lint": "next lint",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+  },
+  "overrides": {
+    "recharts": {
+      "react": "^18.3.0",
+      "react-dom": "^18.3.0"
+    }
   },
   "dependencies": {
-    "@auth0/auth0-spa-js": "^2.19.0",
-    "@auth0/nextjs-auth0": "^3.5.0",
+    "@opennextjs/cloudflare": "^1.19.1",
     "clsx": "^2.1.0",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.363.0",
-    "next": "14.2.0",
+    "next": "^16.2.4",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "recharts": "^2.12.2",
@@ -25,10 +34,11 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.0",
+    "eslint": "^10.2.0",
+    "eslint-config-next": "^16.2.4",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.83.0"
   }
 }

@@ -1,6 +1,9 @@
 'use client'
 import useSWR from 'swr'
-import { api, Control } from '@/lib/api'
+import { api } from '@/lib/api'
+
+// Type definition
+type Control = any
 import { useState } from 'react'
 import { Shield, CheckCircle, XCircle, Clock, Minus, ChevronRight, Search } from 'lucide-react'
 import Link from 'next/link'
