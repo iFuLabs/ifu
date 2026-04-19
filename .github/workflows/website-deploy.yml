@@ -1,0 +1,78 @@
+name: Deploy Website
+
+on:
+  push:
+    branches:
+      - aws-deployment
+    paths:
+      - 'website/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and Deploy Website
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Build
+        working-directory: website
+        env:
+          NEXT_PUBLIC_API_URL: https://api.ifulabs.com
+          NEXT_PUBLIC_PORTAL_URL: https://portal.ifulabs.com
+          NEXT_PUBLIC_COMPLY_URL: https://comply.ifulabs.com
+          NEXT_PUBLIC_FINOPS_URL: https://finops.ifulabs.com
+          NEXT_PUBLIC_WEBSITE_URL: https://www.ifulabs.com
+        run: npm run build
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync website/out s3://ifulabs-website-production \
+            --delete \
+            --cache-control "public,max-age=31536000,immutable" \
+            --exclude "*.html" \
+            --exclude "*.json"
+          
+          aws s3 sync website/out s3://ifulabs-website-production \
+            --delete \
+            --cache-control "public,max-age=0,must-revalidate" \
+            --exclude "*" \
+            --include "*.html" \
+            --include "*.json"
+
+      - name: Get CloudFront Distribution ID
+        id: cloudfront
+        run: |
+          DIST_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[?contains(@, 'www.ifulabs.com')]].Id | [0]" \
+            --output text)
+          echo "distribution_id=$DIST_ID" >> $GITHUB_OUTPUT
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.cloudfront.outputs.distribution_id }} \
+            --paths "/*"
