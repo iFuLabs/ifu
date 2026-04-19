@@ -393,6 +393,38 @@ npm run migrate
 3. Push branch: `git push origin feature/your-feature`
 4. Create pull request
 
+## Production Deployment
+
+This project includes complete AWS infrastructure as code using Terraform and GitHub Actions CI/CD.
+
+### Quick Deploy
+
+```bash
+# 1. Setup AWS backend
+cd infra
+./setup.sh
+
+# 2. Deploy infrastructure
+terraform apply -var-file="environments/production.tfvars"
+
+# 3. Add DNS records to Hostinger (from terraform output)
+
+# 4. Configure GitHub secrets and push to main
+```
+
+See detailed guides:
+- [infra/README.md](./infra/README.md) - Infrastructure documentation
+- [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) - Step-by-step deployment guide
+- [INFRASTRUCTURE.md](./INFRASTRUCTURE.md) - Architecture overview
+
+### Production Stack
+- **Website**: S3 + CloudFront (static)
+- **API**: AWS App Runner (Docker)
+- **Portal/Comply/Finops**: AWS Amplify (Next.js SSR)
+- **SSL**: ACM certificates (DNS validation)
+- **CI/CD**: GitHub Actions with OIDC
+- **Cost**: ~$21-45/month
+
 ## License
 
 Proprietary - iFu Labs © 2024

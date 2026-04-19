@@ -3,12 +3,32 @@
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
+*.tfplan
 *.tfvars
+*.tfvars.backup
 !production.tfvars
 crash.log
+crash.*.log
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+# Sensitive files
+*.pem
+*.key
+secrets.auto.tfvars
+**/secrets.auto.tfvars
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
