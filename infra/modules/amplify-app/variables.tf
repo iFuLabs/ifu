@@ -38,3 +38,9 @@ variable "environment_variables" {
   type        = map(string)
   default     = {}
 }
+
+variable "github_access_token" {
+  description = "GitHub personal access token for Amplify"
+  type        = string
+  sensitive   = true
+}
