@@ -23,14 +23,21 @@ resource "aws_amplify_app" "app" {
           cache:
             paths:
               - node_modules/**/*
-              - .next/cache/**/*
   EOT
+  
+  platform = "WEB_COMPUTE"
 
   environment_variables = var.environment_variables
 
   custom_rule {
     source = "/<*>"
-    status = "404-200"
+    status = "404"
+    target = "/404"
+  }
+  
+  custom_rule {
+    source = "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>"
+    status = "200"
     target = "/index.html"
   }
 
