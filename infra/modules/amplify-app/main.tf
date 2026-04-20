@@ -50,15 +50,16 @@ resource "aws_amplify_branch" "main" {
   environment_variables = var.environment_variables
 }
 
-# Custom Domain
-resource "aws_amplify_domain_association" "app" {
-  app_id      = aws_amplify_app.app.id
-  domain_name = var.domain_name
-
-  sub_domain {
-    branch_name = aws_amplify_branch.main.branch_name
-    prefix      = ""
-  }
-
-  wait_for_verification = false
-}
+# Custom Domain - Commented out since domain is managed on Hostinger
+# You'll need to manually add CNAME records in Hostinger DNS pointing to the Amplify URL
+# resource "aws_amplify_domain_association" "app" {
+#   app_id      = aws_amplify_app.app.id
+#   domain_name = var.domain_name
+#
+#   sub_domain {
+#     branch_name = aws_amplify_branch.main.branch_name
+#     prefix      = ""
+#   }
+#
+#   wait_for_verification = false
+# }
