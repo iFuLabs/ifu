@@ -54,8 +54,19 @@ resource "aws_iam_role_policy" "github_actions" {
         ]
         Resource = [
           "arn:aws:s3:::ifulabs-website-*",
-          "arn:aws:s3:::ifulabs-website-*/*"
+          "arn:aws:s3:::ifulabs-website-*/*",
+          "arn:aws:s3:::ifulabs-terraform-state",
+          "arn:aws:s3:::ifulabs-terraform-state/*"
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:DeleteItem"
+        ]
+        Resource = "arn:aws:dynamodb:*:*:table/ifulabs-terraform-locks"
       },
       {
         Effect = "Allow"
