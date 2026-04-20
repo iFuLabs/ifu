@@ -36,7 +36,7 @@ resource "aws_iam_role" "github_actions" {
   })
 }
 
-# Policy for GitHub Actions (S3, CloudFront, ECR, App Runner)
+# Policy for GitHub Actions (Full Terraform permissions)
 resource "aws_iam_role_policy" "github_actions" {
   name = "GitHubActionsPolicy"
   role = aws_iam_role.github_actions.id
@@ -47,65 +47,59 @@ resource "aws_iam_role_policy" "github_actions" {
       {
         Effect = "Allow"
         Action = [
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:ListBucket",
-          "s3:DeleteObject"
+          "s3:*"
         ]
         Resource = [
-          "arn:aws:s3:::ifulabs-website-*",
-          "arn:aws:s3:::ifulabs-website-*/*",
-          "arn:aws:s3:::ifulabs-terraform-state",
-          "arn:aws:s3:::ifulabs-terraform-state/*"
+          "arn:aws:s3:::ifulabs-*",
+          "arn:aws:s3:::ifulabs-*/*"
         ]
       },
       {
         Effect = "Allow"
         Action = [
-          "dynamodb:PutItem",
-          "dynamodb:GetItem",
-          "dynamodb:DeleteItem"
+          "dynamodb:*"
         ]
         Resource = "arn:aws:dynamodb:*:*:table/ifulabs-terraform-locks"
       },
       {
         Effect = "Allow"
         Action = [
-          "iam:GetOpenIDConnectProvider",
-          "iam:GetRole",
-          "iam:GetRolePolicy",
-          "iam:ListRolePolicies",
-          "iam:ListAttachedRolePolicies"
+          "iam:*"
         ]
         Resource = "*"
       },
       {
         Effect = "Allow"
         Action = [
-          "cloudfront:CreateInvalidation",
-          "cloudfront:GetInvalidation"
+          "cloudfront:*"
         ]
         Resource = "*"
       },
       {
         Effect = "Allow"
         Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:PutImage",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload"
+          "ecr:*"
         ]
         Resource = "*"
       },
       {
         Effect = "Allow"
         Action = [
-          "apprunner:DescribeService",
-          "apprunner:UpdateService"
+          "apprunner:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "amplify:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "acm:*"
         ]
         Resource = "*"
       }
