@@ -1,0 +1,48 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::ifulabs-*",
+        "arn:aws:s3:::ifulabs-*/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "dynamodb:*",
+      "Resource": "arn:aws:dynamodb:*:*:table/ifulabs-terraform-locks"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "cloudfront:*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecr:*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "apprunner:*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "amplify:*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "acm:*",
+      "Resource": "*"
+    }
+  ]
+}

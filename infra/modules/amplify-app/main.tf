@@ -1,4 +1,4 @@
-# Amplify App
+# Amplify App - Next.js SSR with WEB_COMPUTE platform
 resource "aws_amplify_app" "app" {
   name         = var.app_name
   repository   = "https://github.com/${var.github_repo}"

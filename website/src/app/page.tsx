@@ -39,16 +39,16 @@ export default function HomePage() {
         <div className="hero-left">
           <div className="hero-eyebrow">
             <div className="hero-eyebrow-dot" />
-            AWS Partner Network · iFu Labs Cloud Consultancy
+            AWS Partner · Built for startups
           </div>
           <h1>
-            Expert AWS cloud<br/>
-            services for teams<br/>
-            that <em>mean business.</em>
+            Expert AWS engineering<br/>
+            for startups that <em>ship fast.</em>
           </h1>
           <p className="hero-sub">
-            iFu Labs delivers consultant-led cloud services — cost optimisation, compliance, migration,
-            containers, and DevOps — backed by deep AWS expertise and real engineering.
+            Skip the six-month platform hire. iFu Labs gives your startup an on-demand AWS team —
+            cost control, SOC 2 readiness, migrations, and CI/CD — delivered by senior engineers,
+            priced for seed to Series B.
           </p>
           <div className="hero-actions">
             <a href="/schedule-consultation" className="btn-cta primary">
