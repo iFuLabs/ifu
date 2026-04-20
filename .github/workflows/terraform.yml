@@ -24,6 +24,17 @@ jobs:
       run:
         working-directory: infra
 
+    env:
+      TF_VAR_github_repo: ${{ github.repository }}
+      TF_VAR_github_access_token: ${{ secrets.AMPLIFY_GITHUB_TOKEN }}
+      TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
+      TF_VAR_redis_url: ${{ secrets.REDIS_URL }}
+      TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+      TF_VAR_encryption_key: ${{ secrets.ENCRYPTION_KEY }}
+      TF_VAR_resend_api_key: ${{ secrets.RESEND_API_KEY }}
+      TF_VAR_paystack_secret_key: ${{ secrets.PAYSTACK_SECRET_KEY }}
+      TF_VAR_paystack_public_key: ${{ secrets.PAYSTACK_PUBLIC_KEY }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,23 +54,12 @@ jobs:
         run: terraform init
 
       - name: Terraform Format
-        run: terraform fmt -check
+        run: terraform fmt -check -recursive
         continue-on-error: true
 
       - name: Terraform Plan
         id: plan
-        run: |
-          terraform plan \
-            -var="github_repo=${{ github.repository }}" \
-            -var="database_url=${{ secrets.DATABASE_URL }}" \
-            -var="jwt_secret=${{ secrets.JWT_SECRET }}" \
-            -var="resend_api_key=${{ secrets.RESEND_API_KEY }}" \
-            -var="paystack_secret_key=${{ secrets.PAYSTACK_SECRET_KEY }}" \
-            -var="paystack_public_key=${{ secrets.PAYSTACK_PUBLIC_KEY }}" \
-            -var="aws_access_key_id=${{ secrets.API_AWS_ACCESS_KEY_ID }}" \
-            -var="aws_secret_access_key=${{ secrets.API_AWS_SECRET_ACCESS_KEY }}" \
-            -no-color -out=tfplan
-        continue-on-error: true
+        run: terraform plan -var-file=environments/production.tfvars -no-color -out=tfplan
 
       - name: Comment PR
         if: github.event_name == 'pull_request'

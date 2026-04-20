@@ -175,7 +175,7 @@ export default function IntegrationsPage() {
                   <ol className="list-decimal list-inside space-y-1 text-brand/80">
                     <li>Open AWS IAM → Roles → Create role</li>
                     <li>Select <strong>Another AWS account</strong></li>
-                    <li>Enter Account ID: <code className="font-mono bg-brand/10 px-1 rounded">123456789012</code></li>
+                    <li>Enter Account ID: <code className="font-mono bg-brand/10 px-1 rounded">{process.env.NEXT_PUBLIC_AWS_ACCOUNT_ID || '123456789012'}</code></li>
                     <li>Enable <strong>Require external ID</strong>: <code className="font-mono bg-brand/10 px-1 rounded">{externalId}</code></li>
                     <li>Attach managed policy: <code className="font-mono bg-brand/10 px-1 rounded">ViewOnlyAccess</code></li>
                     <li>Add inline policy for Cost Explorer (see below)</li>

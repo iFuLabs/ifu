@@ -27,6 +27,12 @@ variable "github_branch" {
   default     = "main"
 }
 
+variable "github_access_token" {
+  description = "GitHub personal access token (repo scope) so Amplify can install its webhook"
+  type        = string
+  sensitive   = true
+}
+
 # Database
 variable "database_url" {
   description = "PostgreSQL connection string"
@@ -58,17 +64,18 @@ variable "paystack_public_key" {
   type        = string
 }
 
-# AWS credentials for API (S3, SES)
-variable "aws_access_key_id" {
-  description = "AWS access key for API service"
-  type        = string
-  sensitive   = true
-}
-
-variable "aws_secret_access_key" {
-  description = "AWS secret key for API service"
-  type        = string
-  sensitive   = true
+variable "api_instance_role_policy_arns" {
+  description = "Managed policy ARNs attached to the App Runner instance role so the API can call AWS (Bedrock, Cost Explorer, SES, etc.) without static keys."
+  type        = list(string)
+  default = [
+    "arn:aws:iam::aws:policy/AmazonBedrockReadOnly",
+    "arn:aws:iam::aws:policy/AWSBillingReadOnlyAccess",
+    "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",
+    "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess",
+    "arn:aws:iam::aws:policy/AmazonSESFullAccess",
+    "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess",
+    "arn:aws:iam::aws:policy/IAMReadOnlyAccess"
+  ]
 }
 
 # Redis
@@ -84,3 +91,4 @@ variable "encryption_key" {
   type        = string
   sensitive   = true
 }
+

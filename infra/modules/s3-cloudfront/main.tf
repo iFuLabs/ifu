@@ -28,12 +28,33 @@ resource "aws_cloudfront_origin_access_control" "website" {
   signing_protocol                  = "sigv4"
 }
 
+# CloudFront Function: rewrite extensionless paths (e.g. /about, /services/foo)
+# to their matching .html object in S3. Needed because `next export` emits
+# <route>.html files, and S3 has no default-document resolution.
+resource "aws_cloudfront_function" "rewrite" {
+  name    = "ifulabs-website-rewrite"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-EOT
+    function handler(event) {
+      var req = event.request;
+      var uri = req.uri;
+      if (uri.endsWith('/')) {
+        req.uri = uri + 'index.html';
+      } else if (!uri.includes('.')) {
+        req.uri = uri + '.html';
+      }
+      return req;
+    }
+  EOT
+}
+
 # CloudFront Distribution
 resource "aws_cloudfront_distribution" "website" {
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
-  aliases             = [var.domain_name]
+  aliases             = var.aliases
   price_class         = "PriceClass_100"
 
   origin {
@@ -56,21 +77,27 @@ resource "aws_cloudfront_distribution" "website" {
       }
     }
 
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.rewrite.arn
+    }
+
     min_ttl     = 0
     default_ttl = 3600
     max_ttl     = 86400
   }
 
+  # Serve the exported 404 page on genuine misses instead of hijacking to /index.html.
   custom_error_response {
     error_code         = 404
-    response_code      = 200
-    response_page_path = "/index.html"
+    response_code      = 404
+    response_page_path = "/404.html"
   }
 
   custom_error_response {
     error_code         = 403
-    response_code      = 200
-    response_page_path = "/index.html"
+    response_code      = 404
+    response_page_path = "/404.html"
   }
 
   restrictions {

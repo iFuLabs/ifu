@@ -1,6 +1,11 @@
 variable "domain_name" {
-  description = "Domain name for the website"
+  description = "Primary domain name for the website (used for S3 bucket naming)"
   type        = string
+}
+
+variable "aliases" {
+  description = "All domain aliases the CloudFront distribution should serve (must all be covered by the ACM cert)"
+  type        = list(string)
 }
 
 variable "certificate_arn" {

@@ -8,11 +8,6 @@ variable "domain_name" {
   type        = string
 }
 
-variable "certificate_arn" {
-  description = "ARN of the ACM certificate"
-  type        = string
-}
-
 variable "github_repo" {
   description = "GitHub repository (owner/repo)"
   type        = string
@@ -37,4 +32,10 @@ variable "environment_variables" {
   description = "Environment variables for the app"
   type        = map(string)
   default     = {}
+}
+
+variable "github_access_token" {
+  description = "GitHub personal access token with repo scope (needed for Amplify webhook)"
+  type        = string
+  sensitive   = true
 }

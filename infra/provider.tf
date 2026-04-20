@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.5"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -20,3 +20,7 @@ provider "aws" {
     }
   }
 }
+
+# Resolved from the caller's OIDC identity — used so we never hardcode the
+# account ID that customers trust for cross-account role assumption.
+data "aws_caller_identity" "current" {}

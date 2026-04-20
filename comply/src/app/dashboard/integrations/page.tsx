@@ -11,12 +11,10 @@ import clsx from 'clsx'
 
 export default function IntegrationsPage() {
   const { data: integrations, mutate } = useSWR('integrations', api.integrations.list)
-  const [showAwsForm,    setShowAwsForm]    = useState(false)
-  const [showGithubForm, setShowGithubForm] = useState(false)
+  const [showAwsForm, setShowAwsForm] = useState(false)
   const [syncing, setSyncing] = useState<string | null>(null)
 
-  const awsIntegration    = integrations?.find(i => i.type === 'aws')
-  const githubIntegration = integrations?.find(i => i.type === 'github')
+  const awsIntegration = integrations?.find(i => i.type === 'aws')
 
   const handleSync = async (id: string) => {
     setSyncing(id)
@@ -63,32 +61,17 @@ export default function IntegrationsPage() {
         )}
       </IntegrationCard>
 
-      {/* GitHub */}
-      <IntegrationCard
-        logo={<GitBranch size={18} className="text-ink" />}
-        logoBg="bg-border/60"
-        name="GitHub"
-        desc="Branch protection, 2FA enforcement, secret scanning, Dependabot, PR reviews — 6 controls"
-        integration={githubIntegration}
-        onConnect={() => setShowGithubForm(true)}
-        onReconnect={githubIntegration?.status === 'error' ? () => setShowGithubForm(true) : undefined}
-        onSync={() => githubIntegration && handleSync(githubIntegration.id)}
-        onDisconnect={() => githubIntegration && handleDisconnect(githubIntegration.id)}
-        syncing={syncing === githubIntegration?.id}
-        connectLabel="Connect GitHub"
-        connectColor="bg-ink hover:bg-ink/80 text-white"
-        metaFields={[
-          { label: 'Organisation', value: githubIntegration?.metadata?.orgLogin },
-          { label: 'Repo access',  value: githubIntegration?.metadata?.repoSelection },
-        ]}
-      >
-        {showGithubForm && (
-          <GitHubConnectForm
-            onSuccess={() => { setShowGithubForm(false); mutate() }}
-            onCancel={() => setShowGithubForm(false)}
-          />
-        )}
-      </IntegrationCard>
+      {/* GitHub - Coming Soon */}
+      <div className="bg-card border border-border rounded-xl flex items-center gap-4 px-6 py-5 opacity-60">
+        <div className="w-10 h-10 bg-border/40 rounded-lg flex items-center justify-center flex-shrink-0">
+          <GitBranch size={18} className="text-muted" />
+        </div>
+        <div className="flex-1">
+          <h2 className="text-sm font-medium text-ink">GitHub</h2>
+          <p className="text-xs text-muted mt-0.5">Branch protection, 2FA enforcement, secret scanning, Dependabot, PR reviews — 6 controls</p>
+        </div>
+        <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-accent/10 text-accent">Coming Soon</span>
+      </div>
 
       {/* Coming soon */}
       {[
@@ -281,73 +264,6 @@ function AwsConnectForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
         onSubmit={handleSubmit} onCancel={onCancel}
         disabled={!roleArn || loading}
         submitLabel={loading ? 'Validating...' : 'Connect'}
-      />
-    </div>
-  )
-}
-
-// ── GitHub connect form ────────────────────────────────────────────────────
-
-function GitHubConnectForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
-  const [installationId, setInstallationId] = useState('')
-  const [loading, setLoading]               = useState(false)
-  const [error, setError]                   = useState('')
-
-  const handleSubmit = async () => {
-    const id = parseInt(installationId, 10)
-    if (isNaN(id)) { setError('Installation ID must be a number'); return }
-    setLoading(true); setError('')
-    try {
-      await api.integrations.connectGithub({ installationId: id })
-      onSuccess()
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-medium text-ink">Connect GitHub Organisation</h3>
-
-      <div className="bg-border/40 border border-border rounded p-4 text-xs space-y-1.5">
-        <p className="font-medium text-ink">Install the iFu Labs Comply GitHub App:</p>
-        <ol className="list-decimal list-inside space-y-1 text-muted">
-          <li>
-            <a href="https://github.com/apps/ifu-labs-comply" target="_blank" rel="noopener noreferrer"
-              className="text-accent underline">
-              Click here to install the GitHub App
-            </a>
-            {' '}and select your organisation
-          </li>
-          <li>Grant access to all repositories (or selected ones)</li>
-          <li>After install, find the Installation ID in the URL:</li>
-        </ol>
-        <code className="block font-mono bg-surface px-3 py-2 rounded text-muted mt-2">
-          github.com/settings/installations/<strong className="text-ink">12345678</strong>
-        </code>
-      </div>
-
-      <div>
-        <label className="text-xs text-muted font-mono uppercase tracking-wider block mb-1.5">
-          Installation ID
-        </label>
-        <input
-          value={installationId}
-          onChange={e => setInstallationId(e.target.value)}
-          placeholder="12345678"
-          className="w-full px-3 py-2 text-sm border border-border rounded bg-card text-ink placeholder:text-muted focus:outline-none focus:border-accent/50 font-mono"
-        />
-      </div>
-
-      {error && <ErrorBox message={error} />}
-
-      <FormActions
-        onSubmit={handleSubmit} onCancel={onCancel}
-        disabled={!installationId || loading}
-        submitLabel={loading ? 'Validating...' : 'Connect'}
-        submitColor="bg-ink hover:bg-ink/80 text-white"
       />
     </div>
   )

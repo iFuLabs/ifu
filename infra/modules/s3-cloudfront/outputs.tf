@@ -12,3 +12,8 @@ output "cloudfront_domain_name" {
   description = "Domain name of the CloudFront distribution"
   value       = aws_cloudfront_distribution.website.domain_name
 }
+
+output "cloudfront_hosted_zone_id" {
+  description = "CloudFront distribution hosted zone ID (for Route 53 alias records)"
+  value       = aws_cloudfront_distribution.website.hosted_zone_id
+}

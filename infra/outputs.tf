@@ -1,3 +1,8 @@
+output "route53_nameservers" {
+  description = "Update the domain registrar (Hostinger) to delegate the apex domain to these nameservers"
+  value       = aws_route53_zone.main.name_servers
+}
+
 output "website_cloudfront_url" {
   description = "CloudFront distribution URL for website"
   value       = module.website.cloudfront_domain_name
@@ -26,17 +31,6 @@ output "comply_url" {
 output "finops_url" {
   description = "Amplify app URL for finops"
   value       = module.finops.default_domain
-}
-
-output "acm_validation_records" {
-  description = "DNS validation records for ACM certificates (add these to Hostinger)"
-  value = {
-    website = module.acm_website.validation_records
-    api     = module.acm_api.validation_records
-    portal  = module.acm_portal.validation_records
-    comply  = module.acm_comply.validation_records
-    finops  = module.acm_finops.validation_records
-  }
 }
 
 output "github_oidc_role_arn" {
