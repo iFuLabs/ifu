@@ -152,3 +152,4 @@ module "finops" {
     NEXT_PUBLIC_WEBSITE_URL = "https://www.${var.domain_name}"
   }
 }
+ 
