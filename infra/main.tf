@@ -1,4 +1,5 @@
 # ── IAM & OIDC ────────────────────────────────────────────────────────────
+# GitHub OIDC for secure deployments
 module "iam" {
   source = "./modules/iam"
 
