@@ -23,7 +23,38 @@ Gather these values (you'll need them for Terraform and GitHub):
 
 ## Deployment Steps
 
-### 1. Create Terraform Backend
+### 1. Create GitHub OIDC Role First (Required for CI/CD)
+
+Before deploying infrastructure, you need to create the IAM role for GitHub Actions OIDC:
+
+```bash
+cd infra
+
+# Initialize Terraform
+terraform init
+
+# Create only the IAM resources first
+terraform apply -target=module.iam \
+  -var-file="environments/production.tfvars" \
+  -var="github_repo=tquayson/ifu-labs"
+
+# Get the role ARN
+terraform output github_oidc_role_arn
+```
+
+Copy the output (should be: `arn:aws:iam::385936845264:role/GitHubActionsRole`)
+
+**Add to GitHub Secrets NOW:**
+1. Go to: https://github.com/tquayson/ifu-labs/settings/secrets/actions
+2. Click "New repository secret"
+3. Name: `AWS_ROLE_ARN`
+4. Value: `arn:aws:iam::385936845264:role/GitHubActionsRole` (the full ARN from above)
+5. Click "Add secret"
+
+- [ ] IAM role created
+- [ ] `AWS_ROLE_ARN` added to GitHub Secrets
+
+### 2. Create Terraform Backend
 ```bash
 cd infra
 ./setup.sh
@@ -48,7 +79,7 @@ aws dynamodb create-table \
 - [ ] DynamoDB table created
 - [ ] Terraform initialized (`terraform init`)
 
-### 2. Deploy Infrastructure
+### 2. Create Terraform Backend
 ```bash
 cd infra
 
@@ -76,7 +107,7 @@ terraform apply \
 - [ ] Terraform apply completed successfully
 - [ ] Note the outputs (CloudFront URL, App Runner URL, etc.)
 
-### 3. Configure DNS (Hostinger)
+### 3. Deploy Infrastructure
 
 Get DNS records:
 ```bash
@@ -105,24 +136,33 @@ terraform output finops_url
 - [ ] `comply.ifulabs.com` → CNAME → Amplify URL
 - [ ] `finops.ifulabs.com` → CNAME → Amplify URL
 
-### 4. Configure GitHub Secrets
+### 4. Configure DNS (Hostinger)
 
 Get IAM role ARN:
 ```bash
 terraform output github_oidc_role_arn
 ```
 
-Add secrets to GitHub (Settings → Secrets and variables → Actions):
-- [ ] `AWS_ROLE_ARN` - From Terraform output
+The output should look like: `arn:aws:iam::385936845264:role/GitHubActionsRole`
+
+Add secrets to GitHub (Settings → Secrets and variables → Actions → New repository secret):
+- [ ] `AWS_ROLE_ARN` - **FULL ARN** from Terraform output (must start with `arn:aws:iam::`)
+- [ ] `AMPLIFY_GITHUB_TOKEN` - GitHub personal access token with repo access
 - [ ] `DATABASE_URL` - PostgreSQL connection string
+- [ ] `REDIS_URL` - Redis connection string
 - [ ] `JWT_SECRET` - JWT signing secret
+- [ ] `ENCRYPTION_KEY` - Encryption key
 - [ ] `RESEND_API_KEY` - Resend API key
 - [ ] `PAYSTACK_SECRET_KEY` - Paystack secret key
 - [ ] `PAYSTACK_PUBLIC_KEY` - Paystack public key
-- [ ] `API_AWS_ACCESS_KEY_ID` - AWS access key
-- [ ] `API_AWS_SECRET_ACCESS_KEY` - AWS secret key
 
-### 5. Initial Deployment
+**IMPORTANT**: `AWS_ROLE_ARN` must be the FULL ARN format:
+```
+arn:aws:iam::385936845264:role/GitHubActionsRole
+```
+NOT just the role name like `GitHubActionsRole`
+
+### 5. Configure Remaining GitHub Secrets
 
 Push infrastructure to GitHub:
 ```bash
@@ -136,7 +176,7 @@ git push origin main
 - [ ] API deployed to App Runner
 - [ ] Portal/Comply/Finops deployed to Amplify
 
-### 6. Verify Deployments
+### 6. Initial Deployment
 
 Check each endpoint:
 - [ ] https://www.ifulabs.com - Website loads
@@ -149,7 +189,7 @@ Check SSL certificates:
 - [ ] All endpoints use HTTPS
 - [ ] No certificate warnings
 
-### 7. Test Functionality
+### 7. Verify Deployments
 
 - [ ] User registration works
 - [ ] User login works
@@ -158,7 +198,7 @@ Check SSL certificates:
 - [ ] Email sending works (Resend)
 - [ ] Payment processing works (Paystack)
 
-## Post-Deployment
+### 8. Test Functionality
 
 ### Monitoring Setup
 - [ ] Set up CloudWatch alarms for App Runner
