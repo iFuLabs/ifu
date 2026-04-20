@@ -92,14 +92,14 @@ module "api" {
 module "portal" {
   source = "./modules/amplify-app"
 
-  app_name             = "ifulabs-portal"
-  domain_name          = "portal.${var.domain_name}"
-  certificate_arn      = module.acm_portal.certificate_arn
-  github_repo          = var.github_repo
-  github_branch        = var.github_branch
-  github_access_token  = var.github_access_token
-  root_directory       = "portal"
-  environment          = var.environment
+  app_name            = "ifulabs-portal"
+  domain_name         = "portal.${var.domain_name}"
+  certificate_arn     = module.acm_portal.certificate_arn
+  github_repo         = var.github_repo
+  github_branch       = var.github_branch
+  github_access_token = var.github_access_token
+  root_directory      = "portal"
+  environment         = var.environment
 
   environment_variables = {
     NEXT_PUBLIC_API_URL     = "https://api.${var.domain_name}"
@@ -113,14 +113,14 @@ module "portal" {
 module "comply" {
   source = "./modules/amplify-app"
 
-  app_name             = "ifulabs-comply"
-  domain_name          = "comply.${var.domain_name}"
-  certificate_arn      = module.acm_comply.certificate_arn
-  github_repo          = var.github_repo
-  github_branch        = var.github_branch
-  github_access_token  = var.github_access_token
-  root_directory       = "comply"
-  environment     = var.environment
+  app_name            = "ifulabs-comply"
+  domain_name         = "comply.${var.domain_name}"
+  certificate_arn     = module.acm_comply.certificate_arn
+  github_repo         = var.github_repo
+  github_branch       = var.github_branch
+  github_access_token = var.github_access_token
+  root_directory      = "comply"
+  environment         = var.environment
 
   environment_variables = {
     NEXT_PUBLIC_API_URL     = "https://api.${var.domain_name}"
@@ -134,14 +134,14 @@ module "comply" {
 module "finops" {
   source = "./modules/amplify-app"
 
-  app_name             = "ifulabs-finops"
-  domain_name          = "finops.${var.domain_name}"
-  certificate_arn      = module.acm_finops.certificate_arn
-  github_repo          = var.github_repo
-  github_branch        = var.github_branch
-  github_access_token  = var.github_access_token
-  root_directory       = "finops"
-  environment          = var.environment
+  app_name            = "ifulabs-finops"
+  domain_name         = "finops.${var.domain_name}"
+  certificate_arn     = module.acm_finops.certificate_arn
+  github_repo         = var.github_repo
+  github_branch       = var.github_branch
+  github_access_token = var.github_access_token
+  root_directory      = "finops"
+  environment         = var.environment
 
   environment_variables = {
     NEXT_PUBLIC_API_URL     = "https://api.${var.domain_name}"
