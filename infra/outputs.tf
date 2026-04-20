@@ -13,29 +13,28 @@ output "api_url" {
   value       = module.api.service_url
 }
 
-output "portal_url" {
-  description = "Amplify app URL for portal"
-  value       = module.portal.default_domain
-}
-
-output "comply_url" {
-  description = "Amplify app URL for comply"
-  value       = module.comply.default_domain
-}
-
-output "finops_url" {
-  description = "Amplify app URL for finops"
-  value       = module.finops.default_domain
-}
+# Portal, Comply, and FinOps moved to Vercel
+# output "portal_url" {
+#   description = "Amplify app URL for portal"
+#   value       = module.portal.default_domain
+# }
+#
+# output "comply_url" {
+#   description = "Amplify app URL for comply"
+#   value       = module.comply.default_domain
+# }
+#
+# output "finops_url" {
+#   description = "Amplify app URL for finops"
+#   value       = module.finops.default_domain
+# }
 
 output "acm_validation_records" {
   description = "DNS validation records for ACM certificates (add these to Hostinger)"
   value = {
     website = module.acm_website.validation_records
     api     = module.acm_api.validation_records
-    portal  = module.acm_portal.validation_records
-    comply  = module.acm_comply.validation_records
-    finops  = module.acm_finops.validation_records
+    # portal, comply, finops moved to Vercel (handles SSL automatically)
   }
 }
 
