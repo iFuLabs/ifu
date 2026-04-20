@@ -28,6 +28,33 @@ resource "aws_cloudfront_origin_access_control" "website" {
   signing_protocol                  = "sigv4"
 }
 
+# CloudFront Function for URL rewriting
+resource "aws_cloudfront_function" "url_rewrite" {
+  name    = "ifulabs-url-rewrite"
+  runtime = "cloudfront-js-1.0"
+  comment = "Rewrite URLs to add .html extension for Next.js static export"
+  publish = true
+  code    = <<-EOT
+    function handler(event) {
+      var request = event.request;
+      var uri = request.uri;
+      
+      // Check if URI is missing a file extension
+      if (!uri.includes('.')) {
+        // Add .html extension
+        request.uri = uri + '.html';
+      }
+      
+      // Handle trailing slashes
+      if (uri.endsWith('/')) {
+        request.uri = uri + 'index.html';
+      }
+      
+      return request;
+    }
+  EOT
+}
+
 # CloudFront Distribution
 resource "aws_cloudfront_distribution" "website" {
   enabled             = true
@@ -59,6 +86,11 @@ resource "aws_cloudfront_distribution" "website" {
     min_ttl     = 0
     default_ttl = 3600
     max_ttl     = 86400
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.url_rewrite.arn
+    }
   }
 
   custom_error_response {
