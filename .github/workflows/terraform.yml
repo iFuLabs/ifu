@@ -62,7 +62,6 @@ jobs:
             -var="aws_secret_access_key=${{ secrets.API_AWS_SECRET_ACCESS_KEY }}" \
             -var="github_access_token=${{ secrets.AMPLIFY_GITHUB_TOKEN }}" \
             -no-color -out=tfplan
-        continue-on-error: true
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
