@@ -41,7 +41,7 @@ resource "aws_amplify_app" "app" {
 }
 
 # Branch
-resource "aws_amplify_branch" "main" {
+resource "aws_amplify_branch" "branch" {
   app_id      = aws_amplify_app.app.id
   branch_name = var.github_branch
 
