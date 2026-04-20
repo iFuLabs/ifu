@@ -15,7 +15,7 @@
     "@auth0/auth0-spa-js": "^2.19.0",
     "@opennextjs/cloudflare": "^1.19.1",
     "lucide-react": "^1.8.0",
-    "next": "^15.5.15",
+    "next": "16.1.4",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },

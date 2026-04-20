@@ -21,26 +21,28 @@ module "acm_api" {
   environment = var.environment
 }
 
-module "acm_portal" {
-  source = "./modules/acm"
-
-  domain_name = "portal.${var.domain_name}"
-  environment = var.environment
-}
-
-module "acm_comply" {
-  source = "./modules/acm"
-
-  domain_name = "comply.${var.domain_name}"
-  environment = var.environment
-}
-
-module "acm_finops" {
-  source = "./modules/acm"
-
-  domain_name = "finops.${var.domain_name}"
-  environment = var.environment
-}
+# ── ACM Certificates (Portal, Comply, FinOps moved to Vercel) ─────────────
+# Vercel handles SSL certificates automatically
+# module "acm_portal" {
+#   source = "./modules/acm"
+#
+#   domain_name = "portal.${var.domain_name}"
+#   environment = var.environment
+# }
+#
+# module "acm_comply" {
+#   source = "./modules/acm"
+#
+#   domain_name = "comply.${var.domain_name}"
+#   environment = var.environment
+# }
+#
+# module "acm_finops" {
+#   source = "./modules/acm"
+#
+#   domain_name = "finops.${var.domain_name}"
+#   environment = var.environment
+# }
 
 # ── S3 + CloudFront (Website) ──────────────────────────────────────────────
 module "website" {
@@ -89,67 +91,70 @@ module "api" {
   }
 }
 
-# ── Amplify Apps ───────────────────────────────────────────────────────────
-module "portal" {
-  source = "./modules/amplify-app"
-
-  app_name            = "ifulabs-portal"
-  domain_name         = "portal.${var.domain_name}"
-  certificate_arn     = module.acm_portal.certificate_arn
-  github_repo         = var.github_repo
-  github_branch       = var.github_branch
-  github_access_token = var.github_access_token
-  root_directory      = "portal"
-  environment         = var.environment
-
-  environment_variables = {
-    NEXT_PUBLIC_API_URL     = "https://api.${var.domain_name}"
-    NEXT_PUBLIC_PORTAL_URL  = "https://portal.${var.domain_name}"
-    NEXT_PUBLIC_COMPLY_URL  = "https://comply.${var.domain_name}"
-    NEXT_PUBLIC_FINOPS_URL  = "https://finops.${var.domain_name}"
-    NEXT_PUBLIC_WEBSITE_URL = "https://www.${var.domain_name}"
-  }
-}
-
-module "comply" {
-  source = "./modules/amplify-app"
-
-  app_name            = "ifulabs-comply"
-  domain_name         = "comply.${var.domain_name}"
-  certificate_arn     = module.acm_comply.certificate_arn
-  github_repo         = var.github_repo
-  github_branch       = var.github_branch
-  github_access_token = var.github_access_token
-  root_directory      = "comply"
-  environment         = var.environment
-
-  environment_variables = {
-    NEXT_PUBLIC_API_URL     = "https://api.${var.domain_name}"
-    NEXT_PUBLIC_PORTAL_URL  = "https://portal.${var.domain_name}"
-    NEXT_PUBLIC_COMPLY_URL  = "https://comply.${var.domain_name}"
-    NEXT_PUBLIC_FINOPS_URL  = "https://finops.${var.domain_name}"
-    NEXT_PUBLIC_WEBSITE_URL = "https://www.${var.domain_name}"
-  }
-}
-
-module "finops" {
-  source = "./modules/amplify-app"
-
-  app_name            = "ifulabs-finops"
-  domain_name         = "finops.${var.domain_name}"
-  certificate_arn     = module.acm_finops.certificate_arn
-  github_repo         = var.github_repo
-  github_branch       = var.github_branch
-  github_access_token = var.github_access_token
-  root_directory      = "finops"
-  environment         = var.environment
-
-  environment_variables = {
-    NEXT_PUBLIC_API_URL     = "https://api.${var.domain_name}"
-    NEXT_PUBLIC_PORTAL_URL  = "https://portal.${var.domain_name}"
-    NEXT_PUBLIC_COMPLY_URL  = "https://comply.${var.domain_name}"
-    NEXT_PUBLIC_FINOPS_URL  = "https://finops.${var.domain_name}"
-    NEXT_PUBLIC_WEBSITE_URL = "https://www.${var.domain_name}"
-  }
-}
+# ── Amplify Apps (Moved to Vercel) ────────────────────────────────────────
+# Portal, Comply, and FinOps are now deployed on Vercel
+# Configure projects in Vercel dashboard and point DNS CNAMEs to cname.vercel-dns.com
+#
+# module "portal" {
+#   source = "./modules/amplify-app"
+#
+#   app_name            = "ifulabs-portal"
+#   domain_name         = "portal.${var.domain_name}"
+#   certificate_arn     = module.acm_portal.certificate_arn
+#   github_repo         = var.github_repo
+#   github_branch       = var.github_branch
+#   github_access_token = var.github_access_token
+#   root_directory      = "portal"
+#   environment         = var.environment
+#
+#   environment_variables = {
+#     NEXT_PUBLIC_API_URL     = "https://api.${var.domain_name}"
+#     NEXT_PUBLIC_PORTAL_URL  = "https://portal.${var.domain_name}"
+#     NEXT_PUBLIC_COMPLY_URL  = "https://comply.${var.domain_name}"
+#     NEXT_PUBLIC_FINOPS_URL  = "https://finops.${var.domain_name}"
+#     NEXT_PUBLIC_WEBSITE_URL = "https://www.${var.domain_name}"
+#   }
+# }
+#
+# module "comply" {
+#   source = "./modules/amplify-app"
+#
+#   app_name            = "ifulabs-comply"
+#   domain_name         = "comply.${var.domain_name}"
+#   certificate_arn     = module.acm_comply.certificate_arn
+#   github_repo         = var.github_repo
+#   github_branch       = var.github_branch
+#   github_access_token = var.github_access_token
+#   root_directory      = "comply"
+#   environment         = var.environment
+#
+#   environment_variables = {
+#     NEXT_PUBLIC_API_URL     = "https://api.${var.domain_name}"
+#     NEXT_PUBLIC_PORTAL_URL  = "https://portal.${var.domain_name}"
+#     NEXT_PUBLIC_COMPLY_URL  = "https://comply.${var.domain_name}"
+#     NEXT_PUBLIC_FINOPS_URL  = "https://finops.${var.domain_name}"
+#     NEXT_PUBLIC_WEBSITE_URL = "https://www.${var.domain_name}"
+#   }
+# }
+#
+# module "finops" {
+#   source = "./modules/amplify-app"
+#
+#   app_name            = "ifulabs-finops"
+#   domain_name         = "finops.${var.domain_name}"
+#   certificate_arn     = module.acm_finops.certificate_arn
+#   github_repo         = var.github_repo
+#   github_branch       = var.github_branch
+#   github_access_token = var.github_access_token
+#   root_directory      = "finops"
+#   environment         = var.environment
+#
+#   environment_variables = {
+#     NEXT_PUBLIC_API_URL     = "https://api.${var.domain_name}"
+#     NEXT_PUBLIC_PORTAL_URL  = "https://portal.${var.domain_name}"
+#     NEXT_PUBLIC_COMPLY_URL  = "https://comply.${var.domain_name}"
+#     NEXT_PUBLIC_FINOPS_URL  = "https://finops.${var.domain_name}"
+#     NEXT_PUBLIC_WEBSITE_URL = "https://www.${var.domain_name}"
+#   }
+# }
  
