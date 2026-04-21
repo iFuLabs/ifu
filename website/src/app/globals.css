@@ -3280,10 +3280,14 @@ img, video, svg { max-width: 100%; height: auto; }
   background: rgba(0, 0, 0, 0.55);
   z-index: 999;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.2s ease;
 }
 
-.nav-mobile-backdrop.is-open { opacity: 1; }
+.nav-mobile-backdrop.is-open { 
+  opacity: 1;
+  pointer-events: auto;
+}
 
 .nav-mobile-close {
   position: absolute;

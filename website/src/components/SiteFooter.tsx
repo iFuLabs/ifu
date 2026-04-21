@@ -29,7 +29,7 @@ export function SiteFooter() {
             <a href="/" className="footer-logo">
               <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '30px', width: 'auto' }} />
             </a>
-            <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
+            <p className="footer-tagline">Expert AWS engineering for startups that ship fast.</p>
             <div className="footer-contact-links">
               <a href="mailto:info@ifulabs.com" className="footer-contact-link">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

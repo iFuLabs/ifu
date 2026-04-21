@@ -1,7 +1,7 @@
-# CLAUDE.md — iFu Labs Logo Implementation
+# CLAUDE.md — iFu Labs Logo & Mobile Fixes
 
 ## Current task
-Implement professional brand logo files across the entire iFU Labs project, replacing all hardcoded logo elements with actual SVG/PNG logo files.
+Logo consistency audit, mobile click fix, and hero copy update across all apps (website, portal, comply, finops)
 
 ## Logo folder path
 `/Users/titusquayson/Downloads/iFU Labs/`
@@ -15,22 +15,74 @@ Implement professional brand logo files across the entire iFU Labs project, repl
 - `finops/public/logos/` - all 4 SVG files
 - `website/public/logomark.png` - 1024x1024 PNG for favicon/metadata
 
+## Mobile click root cause
+**FOUND**: `.nav-mobile-backdrop` in `website/src/app/globals.css` has `z-index: 999` and `display: block` on mobile but lacks `pointer-events: none` when closed. Even with `opacity: 0`, it blocks all clicks underneath.
+
+**FIX**: Add `pointer-events: none;` to `.nav-mobile-backdrop` base style, and `pointer-events: auto;` to `.nav-mobile-backdrop.is-open`
+
 ## Status
 
-| File | Logo Variant | Status |
+### Website
+| File | Logo Status | Mobile Clicks |
 |---|---|---|
-| website/src/components/SiteNav.tsx | white.svg | ✅ DONE |
-| website/src/components/SiteFooter.tsx | white.svg | ✅ DONE |
-| portal/src/app/login/page.tsx | white.svg | ✅ DONE |
-| portal/src/app/invite/[token]/page.tsx | white.svg | ✅ DONE |
-| portal/src/app/reset-password/[token]/page.tsx | white.svg | ✅ DONE |
-| portal/src/app/forgot-password/page.tsx | white.svg | ✅ DONE |
-| portal/src/app/page.tsx (Choose Product) | lavender.svg | ✅ DONE |
-| comply/src/app/dashboard/layout.tsx | white.svg | ✅ DONE |
-| finops/src/app/dashboard/layout.tsx | white.svg | ✅ DONE |
-| website/src/app/layout.tsx (favicon/metadata) | logomark.png | ✅ DONE |
-| portal/src/app/layout.tsx (favicon/metadata) | logomark.png | ✅ DONE |
-| src/services/email.js (3 templates) | white.svg (hosted) | ✅ DONE |
+| website/src/components/SiteNav.tsx | ✅ white.svg (correct) | N/A |
+| website/src/components/SiteFooter.tsx | ✅ white.svg (correct) | N/A |
+| website/src/app/globals.css | N/A | ✅ FIXED - added pointer-events |
+| website/src/app/HomePageClient.tsx | ✅ DONE - replaced SVG with white.svg | N/A |
+| website/src/app/HomePageClient.tsx hero copy | ✅ DONE - updated to new copy | N/A |
+| website/src/app/for-startups/page-minimal.tsx | ✅ DONE - white.svg nav, black.svg footer | N/A |
+| website/src/app/demo/comply/ComplyDemoPageClient.tsx | ✅ DONE - white.svg nav & footer | N/A |
+| website/src/app/demo/costless/CostlessDemoPageClient.tsx | ✅ DONE - white.svg nav & footer | N/A |
+
+### Portal
+| File | Logo Status | Mobile Clicks |
+|---|---|---|
+| portal/src/app/login/page.tsx | ✅ white.svg (correct) | N/A |
+| portal/src/app/invite/[token]/page.tsx | ✅ white.svg (correct) | N/A |
+| portal/src/app/reset-password/[token]/page.tsx | ✅ white.svg (correct) | N/A |
+| portal/src/app/forgot-password/page.tsx | ✅ white.svg (correct) | N/A |
+| portal/src/app/page.tsx | ✅ lavender.svg (correct) | N/A |
+| portal/src/app/onboarding/page.tsx | ✅ DONE - replaced SVG with white.svg | N/A |
+| portal/src/app/subscribe/page.tsx | ✅ DONE - replaced SVG with white.svg | N/A |
+
+### Comply
+| File | Logo Status | Mobile Clicks |
+|---|---|---|
+| comply/src/app/dashboard/layout.tsx | ✅ white.svg (correct) | N/A |
+| comply/src/app/page.tsx | ⏸ SKIPPED - redirects to dashboard | N/A |
+
+### FinOps
+| File | Logo Status | Mobile Clicks |
+|---|---|---|
+| finops/src/app/dashboard/layout.tsx | ✅ white.svg (correct) | N/A |
+| finops/src/app/page.tsx | ⏸ SKIPPED - redirects to dashboard | N/A |
+
+## Last completed
+✅ ALL FIXES COMPLETE!
+- Fixed mobile click blocking in website/src/app/globals.css
+- Updated hero copy in website/src/app/HomePageClient.tsx
+- Replaced all hardcoded SVG hexagons with proper logo files across 8 files
+- Updated footer tagline across all 5 locations to: "Expert AWS engineering for startups that ship fast."
+
+## Footer tagline locations updated:
+1. ✅ website/src/components/SiteFooter.tsx
+2. ✅ website/src/app/HomePageClient.tsx
+3. ✅ website/src/app/for-startups/page-minimal.tsx
+4. ✅ website/src/app/demo/comply/ComplyDemoPageClient.tsx
+5. ✅ website/src/app/demo/costless/CostlessDemoPageClient.tsx
+
+## Next up
+None - all tasks complete!
+
+## Notes
+- Mobile click issue was caused by `.nav-mobile-backdrop` having `z-index: 999` without `pointer-events: none` when closed
+- All hardcoded SVG hexagons have been replaced with actual logo files
+- Logo sizes: nav 34px, footer 30px, auth cards 36px (all height, width auto to preserve aspect ratio)
+- Used white.svg for dark backgrounds, black.svg for light backgrounds (for-startups footer)
+- Hero copy updated from startup-focused to consultant-led services focus
+
+## TODO
+None - implementation complete!
 
 ## Implementation Plan (awaiting confirmation)
 

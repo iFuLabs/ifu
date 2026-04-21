@@ -46,9 +46,7 @@ export default function HomePageClient() {
             for startups that <em>ship fast.</em>
           </h1>
           <p className="hero-sub">
-            Skip the six-month platform hire. iFu Labs gives your startup an on-demand AWS team —
-            cost control, SOC 2 readiness, migrations, and CI/CD — delivered by senior engineers,
-            priced for seed to Series B.
+            iFu Labs delivers consultant-led cloud services — cost optimisation, compliance, migration, containers, and DevOps — backed by deep AWS expertise and real engineering.
           </p>
           <div className="hero-actions">
             <a href="/schedule-consultation" className="btn-cta primary">
@@ -339,15 +337,9 @@ export default function HomePageClient() {
         <div className="footer-main-inner">
           <div className="footer-brand">
             <a href="/" className="footer-logo">
-              <div className="footer-logo-mark">
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                  <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
-                  <circle cx="9" cy="9" r="2.5" fill="white"/>
-                </svg>
-              </div>
-              iFu Labs
+              <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '30px', width: 'auto' }} />
             </a>
-            <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
+            <p className="footer-tagline">Expert AWS engineering for startups that ship fast.</p>
             <div className="footer-contact-links">
               <a href="mailto:info@ifulabs.com" className="footer-contact-link">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

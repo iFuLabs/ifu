@@ -77,13 +77,7 @@ export default function ComplyDemoPageClient() {
 
       <nav>
         <a href="/" className="logo">
-          <div className="logo-mark">
-            <svg viewBox="0 0 18 18" fill="none">
-              <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
-              <circle cx="9" cy="9" r="2.5" fill="white"/>
-            </svg>
-          </div>
-          <span className="logo-name">iFu Labs</span>
+          <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '34px', width: 'auto' }} />
         </a>
         <ul className="nav-links">
           <li><a href="/services">Services</a></li>
@@ -177,15 +171,9 @@ export default function ComplyDemoPageClient() {
         <div className="footer-main-inner">
           <div className="footer-brand">
             <a href="/" className="footer-logo">
-              <div className="footer-logo-mark">
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                  <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
-                  <circle cx="9" cy="9" r="2.5" fill="white"/>
-                </svg>
-              </div>
-              iFu Labs
+              <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '30px', width: 'auto' }} />
             </a>
-            <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
+            <p className="footer-tagline">Expert AWS engineering for startups that ship fast.</p>
           </div>
           <div className="footer-columns">
             <div className="footer-col">

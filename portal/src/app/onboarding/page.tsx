@@ -423,10 +423,7 @@ function OnboardingForm() {
             justifyContent: 'center',
             margin: '0 auto 20px'
           }}>
-            <svg width="32" height="32" viewBox="0 0 18 18" fill="none">
-              <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-              <circle cx="9" cy="9" r="2.5" fill="white"/>
-            </svg>
+            <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '36px', width: 'auto' }} />
           </div>
           <h1 style={{ 
             fontSize: '32px', 

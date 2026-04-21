@@ -30,15 +30,7 @@ export default function ForStartupsPage() {
       {/* Nav */}
       <nav>
         <a href="/" className="logo">
-          <div className="logo-mark">
-            <svg viewBox="0 0 18 18" fill="none">
-              <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
-              <circle cx="9" cy="9" r="2.5" fill="white"/>
-            </svg>
-          </div>
-          <div className="logo-text">
-            <span className="logo-name">iFu Labs</span>
-          </div>
+          <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '34px', width: 'auto' }} />
         </a>
         <ul className="nav-links">
           <li><a href="/#services">Services</a></li>
@@ -244,13 +236,9 @@ export default function ForStartupsPage() {
         <div className="footer-main">
           <div className="footer-brand">
             <a href="/" className="footer-logo">
-              <svg width="24" height="24" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#1B3A5C" strokeWidth="1.4" strokeLinejoin="round"/>
-                <circle cx="9" cy="9" r="2.5" fill="#1B3A5C"/>
-              </svg>
-              iFu Labs
+              <img src="/logos/black.svg" alt="iFu Labs" style={{ height: '30px', width: 'auto' }} />
             </a>
-            <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
+            <p className="footer-tagline">Expert AWS engineering for startups that ship fast.</p>
           </div>
           
           <div className="footer-columns">
