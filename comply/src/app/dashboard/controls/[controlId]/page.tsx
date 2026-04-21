@@ -8,10 +8,11 @@ import { formatDistanceToNow, format } from 'date-fns'
 import clsx from 'clsx'
 import { AiGapExplainer } from '@/components/AiGapExplainer'
 
-export default function ControlDetailPage({ params }: { params: { controlId: string } }) {
+export default async function ControlDetailPage({ params }: { params: Promise<{ controlId: string }> }) {
+  const { controlId } = await params
   const { data: control, mutate } = useSWR(
-    ['control', params.controlId],
-    () => api.controls.get(params.controlId)
+    ['control', controlId],
+    () => api.controls.get(controlId)
   )
   const [notes, setNotes] = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
@@ -20,7 +21,7 @@ export default function ControlDetailPage({ params }: { params: { controlId: str
   const handleSaveNotes = async () => {
     setSavingNotes(true)
     try {
-      await api.controls.updateNotes(params.controlId, notes)
+      await api.controls.updateNotes(controlId, notes)
       mutate()
     } finally {
       setSavingNotes(false)
@@ -112,7 +113,7 @@ export default function ControlDetailPage({ params }: { params: { controlId: str
 
       {/* AI Gap Explainer — only shown for failing controls */}
       {control.status === 'fail' && (
-        <AiGapExplainer controlId={params.controlId} />
+        <AiGapExplainer controlId={controlId} />
       )}
 
       {/* Evidence */}

@@ -27,13 +27,7 @@ export function SiteFooter() {
         <div className="footer-main-inner">
           <div className="footer-brand">
             <a href="/" className="footer-logo">
-              <div className="footer-logo-mark">
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                  <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
-                  <circle cx="9" cy="9" r="2.5" fill="white"/>
-                </svg>
-              </div>
-              iFu Labs
+              <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '30px', width: 'auto' }} />
             </a>
             <p className="footer-tagline">AWS cloud consultancy and SaaS products for engineering teams that mean business.</p>
             <div className="footer-contact-links">

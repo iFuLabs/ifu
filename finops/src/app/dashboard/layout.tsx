@@ -72,13 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}>
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-5 border-b border-border">
-          <div className="w-7 h-7 bg-brand rounded-md flex items-center justify-center flex-shrink-0">
-            <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4">
-              <path d="M8 2L14 5.5V10.5L8 14L2 10.5V5.5L8 2Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-              <path d="M8 6L10.5 7.5V10.5L8 12L5.5 10.5V7.5L8 6Z" fill="white"/>
-            </svg>
-          </div>
-          <span className="font-mono text-sm font-medium tracking-tight">iFu Costless</span>
+          <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '28px', width: 'auto' }} />
         </div>
 
         {/* Main nav */}

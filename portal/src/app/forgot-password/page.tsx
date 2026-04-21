@@ -57,17 +57,11 @@ export default function ForgotPasswordPage() {
         <div style={{ maxWidth: '440px', width: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: '36px' }}>
             <div style={{
-              width: '56px',
-              height: '56px',
-              background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
-              borderRadius: '14px',
-              boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
+              margin: '0 auto 20px',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 20px'
+              justifyContent: 'center'
             }}>
-              <CheckCircle size={30} color="white" strokeWidth={1.8} />
+              <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
             </div>
             <h1 style={{
               fontSize: '34px',
@@ -130,17 +124,11 @@ export default function ForgotPasswordPage() {
       <div style={{ maxWidth: '440px', width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
           <div style={{
-            width: '56px',
-            height: '56px',
-            background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
-            borderRadius: '14px',
-            boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
+            margin: '0 auto 20px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 20px'
+            justifyContent: 'center'
           }}>
-            <Mail size={28} color="white" strokeWidth={1.8} />
+            <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
           </div>
           <h1 style={{
             fontSize: '34px',

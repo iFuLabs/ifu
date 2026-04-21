@@ -34,20 +34,11 @@ const PAGE_BG: React.CSSProperties = {
 
 const LOGO_MARK = (
   <div style={{
-    width: '56px',
-    height: '56px',
-    background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
-    borderRadius: '14px',
-    boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
+    margin: '0 auto 20px',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: '0 auto 20px'
+    justifyContent: 'center'
   }}>
-    <svg width="32" height="32" viewBox="0 0 18 18" fill="none">
-      <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-      <circle cx="9" cy="9" r="2.5" fill="white"/>
-    </svg>
+    <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
   </div>
 )
 

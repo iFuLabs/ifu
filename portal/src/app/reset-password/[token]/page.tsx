@@ -47,19 +47,13 @@ function onBlur(e: React.FocusEvent<HTMLInputElement>) {
   e.target.style.boxShadow = 'none'
 }
 
-const LOGO_MARK = (icon: React.ReactNode) => (
+const LOGO_MARK = () => (
   <div style={{
-    width: '56px',
-    height: '56px',
-    background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
-    borderRadius: '14px',
-    boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
+    margin: '0 auto 20px',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: '0 auto 20px'
+    justifyContent: 'center'
   }}>
-    {icon}
+    <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
   </div>
 )
 
@@ -126,7 +120,7 @@ export default function ResetPasswordPage() {
     return (
       <div style={PAGE_BG}>
         <div style={{ maxWidth: '440px', width: '100%', textAlign: 'center' }}>
-          {LOGO_MARK(<CheckCircle size={30} color="white" strokeWidth={1.8} />)}
+          {LOGO_MARK()}
           <h1 style={{
             fontSize: '34px',
             fontWeight: 500,
@@ -154,7 +148,7 @@ export default function ResetPasswordPage() {
     <div style={PAGE_BG}>
       <div style={{ maxWidth: '440px', width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          {LOGO_MARK(<Lock size={26} color="white" strokeWidth={1.8} />)}
+          {LOGO_MARK()}
           <h1 style={{
             fontSize: '34px',
             fontWeight: 500,

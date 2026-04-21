@@ -34,7 +34,8 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
               body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
               .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .logo { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 10px; color: white; }
+              .logo { margin-bottom: 10px; }
+              .logo img { height: 40px; width: auto; display: inline-block; }
               .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
               .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
@@ -47,7 +48,7 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo">iFu Labs</div>
+                <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
                 <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
               </div>
               <div class="content">
@@ -119,7 +120,8 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
               body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
               .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .logo { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 10px; color: white; }
+              .logo { margin-bottom: 10px; }
+              .logo img { height: 40px; width: auto; display: inline-block; }
               .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
               .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
@@ -132,7 +134,7 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo">iFu Labs</div>
+                <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
                 <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
               </div>
               <div class="content">
@@ -200,7 +202,8 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
               body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
               .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .logo { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 10px; color: white; }
+              .logo { margin-bottom: 10px; }
+              .logo img { height: 40px; width: auto; display: inline-block; }
               .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
               .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
@@ -212,7 +215,7 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo">iFu Labs</div>
+                <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
                 <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
               </div>
               <div class="content">

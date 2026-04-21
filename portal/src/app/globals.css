@@ -1,0 +1,51 @@
+/* Portal — minimal global CSS for mobile responsiveness.
+   Portal pages use inline styles throughout; these rules apply only
+   below 600px and use !important to override inline values where needed. */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+img, svg { max-width: 100%; height: auto; }
+
+/* Prevent iOS zoom on input focus — needs 16px minimum */
+@media (max-width: 600px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Cards (backdrop-filtered container pattern): tighten padding */
+  [style*="backdrop-filter"] {
+    padding: 28px 20px !important;
+  }
+
+  /* Auth H1 headings: cap at 28px on small phones */
+  h1 {
+    font-size: clamp(24px, 7vw, 32px) !important;
+    line-height: 1.15 !important;
+  }
+
+  /* Outer wrapper padding: tighten */
+  [style*="padding: 40px 20px"] {
+    padding: 24px 16px !important;
+  }
+
+  /* Onboarding / subscribe wider cards scale down too */
+  [style*="maxWidth: '640px'"],
+  [style*="max-width: 640px"] {
+    max-width: 100% !important;
+  }
+}
+
+/* Touch target floor for interactive elements */
+button, a, [role="button"] {
+  min-height: 44px;
+}
+
+/* Exclude inline links inside paragraphs from min-height */
+p a, span a, li a { min-height: 0; }

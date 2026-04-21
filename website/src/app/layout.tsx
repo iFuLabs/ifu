@@ -16,14 +16,17 @@ export const metadata: Metadata = {
     default: 'iFu Labs — AWS Cloud Consultancy & SaaS Products',
     template: '%s | iFu Labs',
   },
-  description: 'Expert-led AWS cloud services — compliance, cost optimisation, migration, EKS, and DevOps. Plus standalone SaaS tools for compliance and cost.',
+  description: 'On-demand AWS engineering for startups. Skip the six-month platform hire. Get cost control, SOC 2 readiness, migrations, and CI/CD from senior engineers priced for seed to Series B.',
   alternates: {
     canonical: '/',
   },
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: [
+      { url: '/logomark.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logomark.png', sizes: '16x16', type: 'image/png' },
+    ],
+    shortcut: '/logomark.png',
+    apple: { url: '/logomark.png', sizes: '180x180', type: 'image/png' },
   },
   openGraph: {
     title: 'iFu Labs — AWS Cloud Consultancy',
@@ -32,11 +35,13 @@ export const metadata: Metadata = {
     siteName: 'iFu Labs',
     type: 'website',
     locale: 'en_GB',
+    images: [{ url: '/logomark.png', width: 1024, height: 1024, alt: 'iFu Labs' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'iFu Labs — AWS Cloud Consultancy',
     description: 'Expert-led AWS cloud services and SaaS products for engineering teams.',
+    images: ['/logomark.png'],
   },
   robots: {
     index: true,

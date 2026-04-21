@@ -1,74 +1,137 @@
-# CLAUDE.md — iFu Labs page redesign
+# CLAUDE.md — iFu Labs Logo Implementation
 
 ## Current task
-Audit all pages and redesign those that don't match the iFu Labs site design system. Leave product dashboards untouched. Do not change copy, routes, or auth logic — only visual styling.
+Implement professional brand logo files across the entire iFU Labs project, replacing all hardcoded logo elements with actual SVG/PNG logo files.
+
+## Logo folder path
+`/Users/titusquayson/Downloads/iFU Labs/`
+- SVG: white.svg, black.svg, lavender.svg, plum.svg
+- PNG: logomark (1024x1024)@4x-8.png + variants
+
+**Copied to project:**
+- `website/public/logos/` - all 4 SVG files
+- `portal/public/logos/` - all 4 SVG files  
+- `comply/public/logos/` - all 4 SVG files
+- `finops/public/logos/` - all 4 SVG files
+- `website/public/logomark.png` - 1024x1024 PNG for favicon/metadata
 
 ## Status
-| Page | Status |
-|---|---|
-| website/src/app/page.tsx | ✅ DONE (already matches) |
-| website/src/app/about/page.tsx | ✅ DONE (already matches) |
-| website/src/app/services/page.tsx | ✅ DONE (already matches) |
-| website/src/app/services/[slug]/page.tsx | ✅ DONE (already matches) |
-| website/src/app/for-startups/page.tsx | ✅ DONE (already matches) |
-| website/src/app/schedule-consultation/page.tsx | ✅ DONE (already matches) |
-| website/src/app/demo/comply/page.tsx | ✅ DONE (already matches) |
-| website/src/app/demo/costless/page.tsx | ✅ DONE (already matches) |
-| website/src/app/privacy/page.tsx | ✅ DONE (already matches) |
-| website/src/app/terms/page.tsx | ✅ DONE (already matches) |
-| website/src/app/acceptable-use/page.tsx | ✅ DONE (already matches) |
-| portal/src/app/login/page.tsx | ✅ DONE (already matches) |
-| portal/src/app/onboarding/page.tsx | ✅ DONE (already matches) |
-| portal/src/app/page.tsx | ✅ DONE (Choose Product page) |
-| portal/src/app/subscribe/page.tsx | ✅ DONE |
-| portal/src/app/invite/[token]/page.tsx | ✅ DONE |
-| portal/src/app/billing/callback/page.tsx | ✅ DONE |
-| portal/src/app/forgot-password/page.tsx | ✅ DONE |
-| portal/src/app/reset-password/[token]/page.tsx | ✅ DONE |
-| comply/src/app/** | 🚫 DO NOT TOUCH |
-| finops/src/app/** | 🚫 DO NOT TOUCH |
+
+| File | Logo Variant | Status |
+|---|---|---|
+| website/src/components/SiteNav.tsx | white.svg | ✅ DONE |
+| website/src/components/SiteFooter.tsx | white.svg | ✅ DONE |
+| portal/src/app/login/page.tsx | white.svg | ✅ DONE |
+| portal/src/app/invite/[token]/page.tsx | white.svg | ✅ DONE |
+| portal/src/app/reset-password/[token]/page.tsx | white.svg | ✅ DONE |
+| portal/src/app/forgot-password/page.tsx | white.svg | ✅ DONE |
+| portal/src/app/page.tsx (Choose Product) | lavender.svg | ✅ DONE |
+| comply/src/app/dashboard/layout.tsx | white.svg | ✅ DONE |
+| finops/src/app/dashboard/layout.tsx | white.svg | ✅ DONE |
+| website/src/app/layout.tsx (favicon/metadata) | logomark.png | ✅ DONE |
+| portal/src/app/layout.tsx (favicon/metadata) | logomark.png | ✅ DONE |
+| src/services/email.js (3 templates) | white.svg (hosted) | ✅ DONE |
+
+## Implementation Plan (awaiting confirmation)
+
+### 1. Website Navigation (Dark background #07080D)
+**File:** `website/src/components/SiteNav.tsx`
+**Logo:** `white.svg`
+**Why:** Dark background requires white logo for contrast
+**Changes:** Replace hardcoded SVG hexagon + text with `<img src="/logos/white.svg" alt="iFU Labs" />`
+
+### 2. Website Footer (Dark background)
+**File:** `website/src/components/SiteFooter.tsx`
+**Logo:** `white.svg`
+**Why:** Dark background requires white logo
+**Changes:** Replace hardcoded SVG hexagon + text with `<img src="/logos/white.svg" alt="iFU Labs" />`
+
+### 3. Portal Login Page (Dark gradient background)
+**File:** `portal/src/app/login/page.tsx`
+**Logo:** `white.svg`
+**Why:** Dark radial gradient background
+**Changes:** Replace hardcoded SVG hexagon in orange box with `<img src="/logos/white.svg" alt="iFU Labs" />` (remove orange box, logo has its own colors)
+
+### 4. Portal Invite Page
+**File:** `portal/src/app/invite/[token]/page.tsx`
+**Logo:** `white.svg`
+**Why:** Dark background
+**Changes:** Replace LOGO_MARK constant with actual logo
+
+### 5. Portal Reset Password Page
+**File:** `portal/src/app/reset-password/[token]/page.tsx`
+**Logo:** `white.svg`
+**Why:** Dark background
+**Changes:** Replace LOGO_MARK constant with actual logo
+
+### 6. Portal Forgot Password Page
+**File:** `portal/src/app/forgot-password/page.tsx`
+**Logo:** `white.svg` (if exists, need to check)
+**Why:** Dark background
+**Changes:** Replace any hardcoded logo
+
+### 7. Portal Choose Product Page
+**File:** `portal/src/app/page.tsx`
+**Logo:** `lavender.svg`
+**Why:** Per usage guide - product selector uses lavender variant
+**Changes:** Replace any hardcoded logo
+
+### 8. Comply Dashboard Sidebar
+**File:** `comply/src/app/dashboard/layout.tsx`
+**Logo:** `white.svg`
+**Why:** Dark sidebar background
+**Changes:** Replace hardcoded SVG hexagon + "iFu Comply" text with logo
+
+### 9. FinOps Dashboard Sidebar
+**File:** `finops/src/app/dashboard/layout.tsx`
+**Logo:** `white.svg`
+**Why:** Dark sidebar background
+**Changes:** Replace hardcoded SVG hexagon + "iFu Costless" text with logo
+
+### 10. Website Favicon & Metadata
+**File:** `website/src/app/layout.tsx`
+**Logo:** `logomark.png`
+**Why:** Favicon requires PNG, metadata needs OG image
+**Changes:** Update icons metadata to use `/logomark.png`, add proper sizes
+
+### 11. Portal Favicon & Metadata
+**File:** `portal/src/app/layout.tsx`
+**Logo:** `logomark.png`
+**Why:** Favicon requires PNG
+**Changes:** Update icons metadata to use `/logomark.png`
+
+### 12. Email Templates (3 templates)
+**File:** `src/services/email.js`
+**Logo:** Need to embed as base64 or use hosted URL
+**Why:** Email clients need inline or absolute URLs
+**Changes:** Replace text "iFu Labs" with logo image (will need to decide on approach)
 
 ## Last completed
-All 6 portal redesigns (page, subscribe, invite, billing/callback, forgot-password, reset-password) — verified visually against login reference.
+✅ ALL 12 FILES COMPLETE! Logo implementation finished across entire project.
+
+All hardcoded logos replaced with professional SVG/PNG brand assets. Favicon and metadata updated. Email templates now use hosted logo URL.
 
 ## Next up
-None — all audited pages are now on the portal auth dark theme.
-
-## Design tokens (extracted from portal/login + website/globals.css)
-
-Portal auth / account pages:
-- Background: `radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)`
-- Card surface: `rgba(20, 22, 27, 0.8)` + `backdrop-filter: blur(8px)`
-- Card border: `1px solid #25282F`
-- Card radius: `16px`
-- Card padding: `40px`
-- Card shadow: `0 24px 48px rgba(0, 0, 0, 0.4)`
-- Input bg: `#0F1115`
-- Input border: `#25282F`
-- Input focus border: `#E8820A` + `box-shadow: 0 0 0 3px rgba(232,130,10,0.15)`
-- Input radius: `10px`
-- Input padding: `14px 16px`
-- Primary button: bg `#E8820A`, text `#0B0C0F`, hover `#FF9820`, radius `10px`, shadow `0 6px 16px rgba(232,130,10,0.25)`
-- Secondary/ghost button: border `#25282F`, text `#C4C7CC`
-- Logo mark: `linear-gradient(135deg, #E8820A 0%, #C96F08 100%)`, radius `14px`, shadow `0 8px 24px rgba(232,130,10,0.25)`
-- Title color: `#F5F5F5`
-- Body/label color: `#C4C7CC`, muted: `#9AA0A6`, subtle: `#6B7078`
-- Divider line: `#25282F`, panel fill: `#14161B`
-- Heading font: `'Fraunces', serif` (letter-spacing `-0.02em`)
-- Body font: `'DM Sans', system-ui, sans-serif`
-- Uppercase label: font-size `13px`, weight `500`, letter-spacing `0.02em`, color `#C4C7CC`
-
-Error banner:
-- bg `rgba(239, 68, 68, 0.08)`, border `rgba(239, 68, 68, 0.3)`, text `#FCA5A5`, radius `10px`
-
-Website (for reference):
-- `--bg` #07080D, `--surface` #0D0F18, `--ink` #EFF1F7, `--muted` #8590A6, `--accent` #E8820A, `--border` #1e1e1e
-- Section bgs alternate #111111 / #0d0d0d
-- Hero warm gradient: `linear-gradient(160deg, #0f0f0f 0%, #161410 60%, #1a1208 100%)`
+None - logo implementation complete. Ready to commit and deploy.
 
 ## Notes
-- portal/src/app/login/page.tsx is the reference implementation — mimic its structure (header with logo + title + subtitle, centered card, single column 440px max-width).
-- Do not change copy, form fields, routes, or auth/API logic.
-- For Choose-Product page: use card grid styled like website product cards but on portal-auth dark bg.
-- Subscribe page needs Stripe form preservation — only change wrappers/colors.
-- All portal pages already import fonts via layout, so Fraunces/DM Sans available.
+- All logos successfully implemented with correct variants
+- Website nav/footer: white.svg on dark backgrounds
+- Portal pages: white.svg on dark gradients, lavender.svg on product selector
+- Dashboard sidebars: white.svg (removed product name text for cleaner look)
+- Favicons: logomark.png with proper sizes (16x16, 32x32, 180x180)
+- OG/Twitter images: logomark.png for social sharing
+- Email templates: white.svg hosted at https://www.ifulabs.com/logos/white.svg
+- All aspect ratios preserved - no stretching
+- No CSS filters used - correct color variants selected
+
+## Implementation Summary
+1. ✅ Copied all logo files to public folders
+2. ✅ Replaced 9 in-page hardcoded logos with SVG files
+3. ✅ Updated 2 layout files with proper favicon/metadata
+4. ✅ Updated 3 email templates with hosted logo URL
+5. ✅ Removed all orange gradient boxes and hardcoded SVG hexagons
+6. ✅ Consistent professional branding across all touchpoints
+
+## TODO
+None - implementation complete!

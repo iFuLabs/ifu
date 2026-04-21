@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import './globals.css'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -11,9 +12,12 @@ export const metadata: Metadata = {
   title: 'iFu Labs — Product Portal',
   description: 'Access your iFu Labs products',
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: [
+      { url: '/logomark.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logomark.png', sizes: '16x16', type: 'image/png' },
+    ],
+    shortcut: '/logomark.png',
+    apple: { url: '/logomark.png', sizes: '180x180', type: 'image/png' },
   },
   robots: {
     index: false,
