@@ -14,6 +14,7 @@ const SECONDARY_SERVICES = [
 export function SiteNav() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const wrapRef = useRef<HTMLLIElement | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -39,9 +40,22 @@ export function SiteNav() {
     }
   }, [open])
 
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.classList.add('nav-mobile-locked')
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileOpen(false) }
+      document.addEventListener('keydown', onKey)
+      return () => {
+        document.body.classList.remove('nav-mobile-locked')
+        document.removeEventListener('keydown', onKey)
+      }
+    }
+  }, [mobileOpen])
+
   const cancelClose = () => { if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null } }
   const scheduleClose = () => { cancelClose(); closeTimer.current = setTimeout(() => setOpen(false), 150) }
   const openNow = () => { cancelClose(); setOpen(true) }
+  const closeMobile = () => setMobileOpen(false)
 
   return (
     <>
@@ -49,7 +63,7 @@ export function SiteNav() {
         <div className="info-bar-inner">
           <div className="info-bar-left">
             <a href="mailto:info@ifulabs.com" className="info-bar-item">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                 <rect x="1" y="2.5" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/>
                 <path d="M1 4L6 7L11 4" stroke="currentColor" strokeWidth="1.2"/>
               </svg>
@@ -69,7 +83,7 @@ export function SiteNav() {
       <nav className={scrolled ? 'scrolled' : ''}>
         <a href="/" className="logo">
           <div className="logo-mark">
-            <svg viewBox="0 0 18 18" fill="none">
+            <svg viewBox="0 0 18 18" fill="none" aria-hidden="true">
               <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="white" strokeWidth="1.4" strokeLinejoin="round"/>
               <circle cx="9" cy="9" r="2.5" fill="white"/>
             </svg>
@@ -89,13 +103,11 @@ export function SiteNav() {
               aria-haspopup="true"
               aria-expanded={open}
               onClick={(e) => {
-                // First interaction opens the menu without navigating.
-                // Second click (or a click while open) proceeds to /services.
                 if (!open) { e.preventDefault(); setOpen(true) }
               }}
             >
               Services
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="nav-caret">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="nav-caret" aria-hidden="true">
                 <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </a>
@@ -105,7 +117,7 @@ export function SiteNav() {
                   <div className="mega-feature-label">FinOps</div>
                   <div className="mega-feature-title">Cost Optimisation</div>
                   <div className="mega-feature-desc">We audit your AWS spend, identify waste, and implement Savings Plans. Average client saves 25–40% within 30 days.</div>
-                  <div className="mega-feature-cta">Explore service →</div>
+                  <div className="mega-feature-cta">Explore Cost Optimisation →</div>
                 </a>
                 <div className="mega-grid">
                   {SECONDARY_SERVICES.map(s => (
@@ -134,7 +146,60 @@ export function SiteNav() {
           <a href="/schedule-consultation" className="btn-outline">Talk to us</a>
           <a href={PORTAL_URL} className="btn-solid">Client portal →</a>
         </div>
+        <button
+          type="button"
+          className="nav-mobile-toggle"
+          aria-label="Open menu"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-nav-drawer"
+          onClick={() => setMobileOpen(true)}
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        </button>
       </nav>
+
+      <div
+        className={`nav-mobile-backdrop${mobileOpen ? ' is-open' : ''}`}
+        onClick={closeMobile}
+        aria-hidden={!mobileOpen}
+      />
+      <aside
+        id="mobile-nav-drawer"
+        className={`nav-mobile-drawer${mobileOpen ? ' is-open' : ''}`}
+        aria-hidden={!mobileOpen}
+      >
+        <button
+          type="button"
+          className="nav-mobile-close"
+          aria-label="Close menu"
+          onClick={closeMobile}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        </button>
+        <ul className="nav-mobile-links">
+          <li><a href="/services" onClick={closeMobile}>Services</a></li>
+          {SECONDARY_SERVICES.map(s => (
+            <li key={s.slug}>
+              <a href={`/services/${s.slug}`} onClick={closeMobile} style={{ paddingLeft: 24, fontSize: 14, opacity: 0.85 }}>
+                {s.name}
+              </a>
+            </li>
+          ))}
+          <li><a href="/#methodology" onClick={closeMobile}>Methodology</a></li>
+          <li><a href="/#products" onClick={closeMobile}>Products</a></li>
+          <li><a href="/for-startups" onClick={closeMobile}>For Startups</a></li>
+          <li><a href="/#pricing" onClick={closeMobile}>Pricing</a></li>
+          <li><a href="/about" onClick={closeMobile}>About</a></li>
+        </ul>
+        <div className="nav-mobile-actions">
+          <a href="/schedule-consultation" className="btn-outline" onClick={closeMobile}>Talk to us</a>
+          <a href={PORTAL_URL} className="btn-solid" onClick={closeMobile}>Client portal →</a>
+        </div>
+      </aside>
     </>
   )
 }

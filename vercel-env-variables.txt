@@ -1,0 +1,5 @@
+NEXT_PUBLIC_API_URL=https://api.ifulabs.com
+NEXT_PUBLIC_PORTAL_URL=https://portal.ifulabs.com
+NEXT_PUBLIC_COMPLY_URL=https://comply.ifulabs.com
+NEXT_PUBLIC_FINOPS_URL=https://finops.ifulabs.com
+NEXT_PUBLIC_WEBSITE_URL=https://www.ifulabs.com
