@@ -12,3 +12,8 @@ variable "environment" {
   description = "Environment name"
   type        = string
 }
+variable "root_domain" {
+  description = "Root domain name (optional, for apex domain support)"
+  type        = string
+  default     = ""
+}

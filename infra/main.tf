@@ -11,6 +11,7 @@ module "acm_website" {
   source = "./modules/acm"
 
   domain_name = "www.${var.domain_name}"
+  subject_alternative_names = [var.domain_name]
   environment = var.environment
 }
 
@@ -49,6 +50,7 @@ module "website" {
   source = "./modules/s3-cloudfront"
 
   domain_name     = "www.${var.domain_name}"
+  root_domain     = var.domain_name
   certificate_arn = module.acm_website.certificate_arn
   environment     = var.environment
 }
