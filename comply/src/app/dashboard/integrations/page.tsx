@@ -235,8 +235,19 @@ function StatusBadge({ status }: { status: Integration['status'] }) {
 function AwsConnectForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
   const [roleArn,    setRoleArn] = useState('')
   const [externalId]             = useState(() => `ifu-labs-${Math.random().toString(36).slice(2, 10)}`)
+  const [awsAccountId, setAwsAccountId] = useState('385936845264')
   const [loading, setLoading]    = useState(false)
   const [error, setError]        = useState('')
+
+  // Fetch AWS account ID on mount
+  useState(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/integrations/aws/setup-info`, {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => setAwsAccountId(data.accountId))
+      .catch(err => console.error('Failed to load AWS account ID:', err))
+  })
 
   const handleSubmit = async () => {
     setLoading(true); setError('')
@@ -258,7 +269,7 @@ function AwsConnectForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
         <p className="font-medium">Create a read-only cross-account IAM role:</p>
         <ol className="list-decimal list-inside space-y-1 text-accent/80">
           <li>IAM → Roles → Create role → Another AWS account</li>
-          <li>Account ID: <code className="font-mono bg-accent/10 px-1 rounded">{process.env.NEXT_PUBLIC_AWS_ACCOUNT_ID || '123456789012'}</code></li>
+          <li>Account ID: <code className="font-mono bg-accent/10 px-1 rounded">{awsAccountId}</code></li>
           <li>Require external ID: <code className="font-mono bg-accent/10 px-1 rounded">{externalId}</code></li>
           <li>Attach the <code className="font-mono bg-accent/10 px-1 rounded">SecurityAudit</code> managed policy</li>
           <li>Paste the Role ARN below</li>

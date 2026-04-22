@@ -18,12 +18,26 @@ export default function IntegrationsPage() {
   const [showAwsForm, setShowAwsForm] = useState(false)
   const [roleArn, setRoleArn] = useState('')
   const [externalId] = useState(() => `ifu-${Math.random().toString(36).slice(2, 10)}`)
+  const [awsAccountId, setAwsAccountId] = useState('385936845264')
   const [connecting, setConnecting] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     loadIntegrations()
+    loadAwsSetupInfo()
   }, [])
+
+  const loadAwsSetupInfo = async () => {
+    try {
+      const res = await fetch('/api/v1/integrations/aws/setup-info')
+      if (res.ok) {
+        const data = await res.json()
+        setAwsAccountId(data.accountId)
+      }
+    } catch (err) {
+      console.error('Failed to load AWS setup info:', err)
+    }
+  }
 
   const loadIntegrations = async () => {
     setLoading(true)
@@ -175,7 +189,7 @@ export default function IntegrationsPage() {
                   <ol className="list-decimal list-inside space-y-1 text-brand/80">
                     <li>Open AWS IAM → Roles → Create role</li>
                     <li>Select <strong>Another AWS account</strong></li>
-                    <li>Enter Account ID: <code className="font-mono bg-brand/10 px-1 rounded">123456789012</code></li>
+                    <li>Enter Account ID: <code className="font-mono bg-brand/10 px-1 rounded">{awsAccountId}</code></li>
                     <li>Enable <strong>Require external ID</strong>: <code className="font-mono bg-brand/10 px-1 rounded">{externalId}</code></li>
                     <li>Attach managed policy: <code className="font-mono bg-brand/10 px-1 rounded">ViewOnlyAccess</code></li>
                     <li>Add inline policy for Cost Explorer (see below)</li>
