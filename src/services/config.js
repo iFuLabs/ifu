@@ -14,13 +14,27 @@ export const JWT_EXPIRES_IN = '7d'
 export const ENCRYPTION_KEY = Buffer.from(requireEnv('ENCRYPTION_KEY'), 'hex')
 
 export const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 // 7 days in seconds
+
+// Determine cookie domain based on environment
+// Always use .ifulabs.com for production domains
+const getCookieDomain = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return '.ifulabs.com'
+  }
+  // Check if running on ifulabs.com domain (even if NODE_ENV isn't set correctly)
+  if (process.env.API_URL?.includes('ifulabs.com')) {
+    return '.ifulabs.com'
+  }
+  return undefined // localhost
+}
+
 export const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: process.env.NODE_ENV === 'production' || process.env.API_URL?.includes('https://'),
   sameSite: 'lax',
   path: '/',
   maxAge: COOKIE_MAX_AGE,
-  domain: process.env.NODE_ENV === 'production' ? '.ifulabs.com' : undefined
+  domain: getCookieDomain()
 }
 
 // Free trial length, in days. Used for both the org trialEndsAt timestamp
