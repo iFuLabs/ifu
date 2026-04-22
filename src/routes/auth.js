@@ -90,8 +90,27 @@ export default async function authRoutes(fastify) {
       where: eq(organizations.id, request.user.orgId)
     })
 
-    // Get active subscriptions
+    // Get active subscriptions from new table
     const activeSubscriptions = await getActiveSubscriptions(request.user.orgId)
+
+    // BACKWARD COMPATIBILITY: If no subscriptions in new table, create from org.plan
+    // This handles users who signed up before the multi-product migration
+    let subscriptionsToReturn = activeSubscriptions
+    
+    if (subscriptionsToReturn.length === 0 && org.plan) {
+      // Determine product from plan
+      const product = org.plan === 'finops' ? 'finops' : 'comply'
+      const now = new Date()
+      const isTrialing = org.trialEndsAt && new Date(org.trialEndsAt) > now
+      
+      // Return a virtual subscription based on org data
+      subscriptionsToReturn = [{
+        product,
+        plan: org.plan,
+        status: isTrialing ? 'trialing' : (org.paystackSubscriptionCode ? 'active' : 'expired'),
+        trialEndsAt: org.trialEndsAt
+      }]
+    }
 
     return reply.send({
       authenticated: true,
@@ -110,7 +129,7 @@ export default async function authRoutes(fastify) {
         plan: org.plan,
         trialEndsAt: org.trialEndsAt
       },
-      subscriptions: activeSubscriptions.map(sub => ({
+      subscriptions: subscriptionsToReturn.map(sub => ({
         product: sub.product,
         plan: sub.plan,
         status: sub.status,
