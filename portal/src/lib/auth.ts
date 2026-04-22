@@ -1,27 +1,26 @@
 // JWT-based authentication (no Auth0)
-// Token is stored in localStorage after login/onboarding
+// Token is stored in httpOnly cookie
 
 export async function getAccessToken() {
-  // Get JWT token from localStorage
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('auth_token')
-    if (token) return token
-  }
+  // Auth is handled via httpOnly cookie sent automatically with credentials: 'include'
+  // No need to read from localStorage
   return null
 }
 
 export async function isAuthenticated() {
-  const token = await getAccessToken()
-  return !!token
+  // Check authentication by calling /api/v1/auth/me
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/me`, {
+      credentials: 'include'
+    })
+    return res.ok
+  } catch {
+    return false
+  }
 }
 
 export async function logout() {
-  // Clear token from localStorage
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth_token')
-  }
-  
-  // Call backend logout endpoint
+  // Call backend logout endpoint to clear cookie
   try {
     await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/logout`, {
       method: 'POST',
@@ -37,14 +36,8 @@ export async function logout() {
 
 export async function getUser() {
   try {
-    const token = await getAccessToken()
-    if (!token) return null
-    
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/me`, {
-      credentials: 'include',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     })
     
     if (!res.ok) return null
@@ -54,3 +47,4 @@ export async function getUser() {
     return null
   }
 }
+

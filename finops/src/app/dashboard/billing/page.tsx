@@ -6,10 +6,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 // Helper to get auth headers
 function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
   return {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` })
+    'Content-Type': 'application/json'
   }
 }
 

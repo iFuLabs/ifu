@@ -26,11 +26,7 @@ function LoginForm() {
     try {
       const response = await api.auth.login({ email, password })
       
-      // Store token in localStorage for authenticated requests
-      if (response.token && typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', response.token)
-      }
-      
+      // Cookie is set automatically by the backend
       // Redirect to portal homepage where user can choose their product
       router.push('/')
     } catch (err: any) {

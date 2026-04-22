@@ -14,12 +14,8 @@ export default function PortalPage() {
 
   async function fetchUser() {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
       const res = await fetch(`${API_URL}/api/v1/auth/me`, {
-        credentials: 'include',
-        headers: {
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        }
+        credentials: 'include'
       })
       if (res.ok) {
         const data = await res.json()
@@ -38,18 +34,14 @@ export default function PortalPage() {
     )
 
     if (hasSubscription) {
-      // Get the auth token from localStorage
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-      
-      // Build the dashboard URL with token as query parameter
-      // The dashboard app will read this token and store it in its own localStorage
+      // Redirect to dashboard - auth cookie will be sent automatically
       const complyUrl = process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001'
       const finopsUrl = process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002'
       
       if (product === 'comply') {
-        window.location.href = `${complyUrl}/dashboard${token ? `?token=${encodeURIComponent(token)}` : ''}`
+        window.location.href = `${complyUrl}/dashboard`
       } else {
-        window.location.href = `${finopsUrl}/dashboard${token ? `?token=${encodeURIComponent(token)}` : ''}`
+        window.location.href = `${finopsUrl}/dashboard`
       }
     } else {
       window.location.href = `/subscribe?product=${product}`

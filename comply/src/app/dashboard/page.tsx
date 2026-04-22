@@ -15,12 +15,9 @@ export default function DashboardPage() {
   const { data: planFeatures } = useSWR<any>('plan-features', api.plan.features)
 
   const { data: finopsSummary } = useSWR<any>('finops-summary', async () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    // Auth cookie is sent automatically
     return fetch('/api/v1/finops/summary', {
-      credentials: 'include',
-      headers: {
-        ...(token && { 'Authorization': `Bearer ${token}` })
-      }
+      credentials: 'include'
     }).then(r => r.json()).catch(() => null)
   })
   const failingControls = controls?.filter(c => c.status === 'fail') || []

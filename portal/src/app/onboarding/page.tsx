@@ -285,11 +285,7 @@ function OnboardingForm() {
         orgDomain: orgDomain.trim() || undefined 
       })
       
-      // Store token for subsequent authenticated requests
-      if (response.token && typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', response.token)
-      }
-      
+      // Cookie is set automatically by the backend
       setStep(2)
     } catch (err: any) {
       console.error('Onboard error:', err)
@@ -340,15 +336,12 @@ function OnboardingForm() {
     }
     
     try {
-      // Get auth token from localStorage or cookie
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-      
+      // Auth cookie is sent automatically
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/billing/initialize`, {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ plan: selectedPlan })
       })
@@ -383,9 +376,7 @@ function OnboardingForm() {
       product = selectedProducts[0]
     }
     
-    // Get the auth token to pass to the dashboard
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : ''
+    // Auth cookie will be sent automatically - no need to pass token in URL
     
     // Clear all onboarding data from localStorage
     if (typeof window !== 'undefined') {
@@ -401,12 +392,12 @@ function OnboardingForm() {
     }
     
     if (product === 'comply') {
-      window.location.href = `${complyBaseUrl}/dashboard${tokenParam}`
+      window.location.href = `${complyBaseUrl}/dashboard`
     } else if (product === 'finops') {
-      window.location.href = `${finopsBaseUrl}/dashboard${tokenParam}`
+      window.location.href = `${finopsBaseUrl}/dashboard`
     } else {
       // Default to Comply if no product selected
-      window.location.href = `${complyBaseUrl}/dashboard${tokenParam}`
+      window.location.href = `${complyBaseUrl}/dashboard`
     }
   }
 

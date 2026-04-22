@@ -77,13 +77,12 @@ function SubscribeForm() {
     setError('')
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      // Auth cookie is sent automatically
       const res = await fetch(`${API_URL}/api/v1/billing/initialize`, {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ plan: selectedPlan })
       })

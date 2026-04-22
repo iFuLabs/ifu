@@ -24,25 +24,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userEmail, setUserEmail] = useState('')
 
   useEffect(() => {
-    // Check if token is passed in URL (from portal redirect)
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      const tokenFromUrl = urlParams.get('token')
-      
-      if (tokenFromUrl) {
-        // Store token in localStorage
-        localStorage.setItem('auth_token', tokenFromUrl)
-        // Remove token from URL for security
-        window.history.replaceState({}, document.title, window.location.pathname)
-      }
-    }
-    
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    // Fetch user info - auth cookie is sent automatically via credentials: 'include'
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/me`, {
-      credentials: 'include',
-      headers: {
-        ...(token && { 'Authorization': `Bearer ${token}` })
-      }
+      credentials: 'include'
     })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
@@ -53,20 +37,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/logout`, {
         method: 'POST',
-        credentials: 'include',
-        headers: {
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        }
+        credentials: 'include'
       })
       if (!res.ok) {
         console.error('Logout failed:', res.status)
-      }
-      // Clear token from localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token')
       }
     } catch (err) {
       console.error('Logout error:', err)

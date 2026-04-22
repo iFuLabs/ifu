@@ -19,7 +19,8 @@ export const COOKIE_OPTIONS = {
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
   path: '/',
-  maxAge: COOKIE_MAX_AGE
+  maxAge: COOKIE_MAX_AGE,
+  domain: process.env.NODE_ENV === 'production' ? '.ifulabs.com' : undefined
 }
 
 // Free trial length, in days. Used for both the org trialEndsAt timestamp

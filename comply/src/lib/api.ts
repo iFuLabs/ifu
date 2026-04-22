@@ -3,14 +3,12 @@ import { getAccessToken } from './auth'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = await getAccessToken()
-
+  // Auth is handled via httpOnly cookie sent automatically
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
       ...options?.headers,
     },
   })
@@ -25,10 +23,8 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
 
 // Helper to get auth headers for direct fetch calls
 export function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
   return {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` })
+    'Content-Type': 'application/json'
   }
 }
 
@@ -65,3 +61,4 @@ export const api = {
       apiFetch<any>('/api/v1/integrations/github', { method: 'POST', body: JSON.stringify(body) }),
   },
 }
+
