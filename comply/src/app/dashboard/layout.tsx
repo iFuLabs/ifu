@@ -29,6 +29,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userEmail, setUserEmail] = useState('')
 
   useEffect(() => {
+    // Check if token is passed in URL (from portal redirect)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const tokenFromUrl = urlParams.get('token')
+      
+      if (tokenFromUrl) {
+        // Store token in localStorage
+        localStorage.setItem('auth_token', tokenFromUrl)
+        // Remove token from URL for security
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+    }
+    
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/me`, {
       credentials: 'include',

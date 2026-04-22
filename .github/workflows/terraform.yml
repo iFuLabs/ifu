@@ -83,6 +83,7 @@ jobs:
             -var="paystack_public_key=${{ secrets.PAYSTACK_PUBLIC_KEY }}" \
             -var="aws_access_key_id=${{ secrets.API_AWS_ACCESS_KEY_ID }}" \
             -var="aws_secret_access_key=${{ secrets.API_AWS_SECRET_ACCESS_KEY }}" \
+            -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
             -var="github_access_token=${{ secrets.AMPLIFY_GITHUB_TOKEN }}" \
             -no-color -out=tfplan
 

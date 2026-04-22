@@ -50,20 +50,18 @@ function BillingCallbackContent() {
       const data = await response.json()
 
       setStatus('success')
-      setMessage('Payment successful! Redirecting to dashboard...')
+      setMessage('Payment successful! Redirecting to confirmation...')
 
-      // Redirect directly to the appropriate dashboard based on product
+      // Store the product info in localStorage so onboarding can redirect correctly
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('onboarding_product', data.product || 'comply')
+        localStorage.setItem('onboarding_plan', data.plan || 'starter')
+      }
+
+      // Redirect back to onboarding confirmation step
+      // This ensures the user stays authenticated and can properly access the dashboard
       setTimeout(() => {
-        const product = data.product || 'comply'
-        
-        if (product === 'comply') {
-          window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard' || 'http://localhost:3001/dashboard'
-        } else if (product === 'finops') {
-          window.location.href = process.env.NEXT_PUBLIC_FINOPS_URL + '/dashboard' || 'http://localhost:3002/dashboard'
-        } else {
-          // Fallback to portal homepage
-          window.location.href = '/'
-        }
+        window.location.href = '/onboarding?step=4'
       }, 2000)
 
     } catch (err: any) {

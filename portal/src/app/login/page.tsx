@@ -31,17 +31,8 @@ function LoginForm() {
         localStorage.setItem('auth_token', response.token)
       }
       
-      // Redirect to product dashboard.
-      const complyUrl = process.env.NEXT_PUBLIC_COMPLY_URL
-      const finopsUrl = process.env.NEXT_PUBLIC_FINOPS_URL
-
-      if (response.lastProduct === 'comply') {
-        window.location.href = `${complyUrl}/dashboard`
-      } else if (response.lastProduct === 'finops') {
-        window.location.href = `${finopsUrl}/dashboard`
-      } else {
-        router.push('/')
-      }
+      // Redirect to portal homepage where user can choose their product
+      router.push('/')
     } catch (err: any) {
       setError(err.message || 'Login failed')
     } finally {

@@ -369,6 +369,24 @@ function OnboardingForm() {
   }
 
   const handleFinish = () => {
+    const complyBaseUrl = process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001'
+    const finopsBaseUrl = process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002'
+    
+    // Get product from localStorage (set by payment callback) or from state
+    let product = ''
+    if (typeof window !== 'undefined') {
+      product = localStorage.getItem('onboarding_product') || ''
+    }
+    
+    // Fallback to selectedProducts state if localStorage is empty
+    if (!product && selectedProducts.length > 0) {
+      product = selectedProducts[0]
+    }
+    
+    // Get the auth token to pass to the dashboard
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : ''
+    
     // Clear all onboarding data from localStorage
     if (typeof window !== 'undefined') {
       localStorage.removeItem('onboarding_plan')
@@ -381,17 +399,14 @@ function OnboardingForm() {
       localStorage.removeItem('onboarding_roleArn')
       localStorage.removeItem('onboarding_externalId')
     }
-
-    const complyBaseUrl = process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001'
-    const finopsBaseUrl = process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002'
     
-    if (selectedProducts.includes('comply')) {
-      window.location.href = `${complyBaseUrl}/dashboard`
-    } else if (selectedProducts.includes('finops')) {
-      window.location.href = `${finopsBaseUrl}/dashboard`
+    if (product === 'comply') {
+      window.location.href = `${complyBaseUrl}/dashboard${tokenParam}`
+    } else if (product === 'finops') {
+      window.location.href = `${finopsBaseUrl}/dashboard${tokenParam}`
     } else {
       // Default to Comply if no product selected
-      window.location.href = `${complyBaseUrl}/dashboard`
+      window.location.href = `${complyBaseUrl}/dashboard${tokenParam}`
     }
   }
 
@@ -414,16 +429,11 @@ function OnboardingForm() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{
-            width: '56px',
-            height: '56px',
-            background: '#E8820A',
-            borderRadius: '12px',
+            margin: '0 auto 20px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 20px'
+            justifyContent: 'center'
           }}>
-            <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '36px', width: 'auto' }} />
+            <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
           </div>
           <h1 style={{ 
             fontSize: '32px', 
@@ -547,10 +557,12 @@ function OnboardingForm() {
                   onFocus={(e) => {
                     e.target.style.borderColor = '#E8820A'
                     e.target.style.background = 'white'
+                    e.target.style.color = '#0B0C0F'
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = '#25282F'
                     e.target.style.background = '#0F1115'
+                    e.target.style.color = '#F5F5F5'
                   }}
                 />
               </div>
@@ -586,6 +598,7 @@ function OnboardingForm() {
                     if (!emailError) {
                       e.target.style.borderColor = '#E8820A'
                       e.target.style.background = 'white'
+                      e.target.style.color = '#0B0C0F'
                     }
                   }}
                   onBlur={(e) => {
@@ -593,6 +606,7 @@ function OnboardingForm() {
                     if (!emailError) {
                       e.target.style.borderColor = '#25282F'
                       e.target.style.background = '#0F1115'
+                      e.target.style.color = '#F5F5F5'
                     }
                   }}
                 />
@@ -638,6 +652,7 @@ function OnboardingForm() {
                     if (!passwordError) {
                       e.target.style.borderColor = '#E8820A'
                       e.target.style.background = 'white'
+                      e.target.style.color = '#0B0C0F'
                     }
                   }}
                   onBlur={(e) => {
@@ -645,6 +660,7 @@ function OnboardingForm() {
                     if (!passwordError) {
                       e.target.style.borderColor = '#25282F'
                       e.target.style.background = '#0F1115'
+                      e.target.style.color = '#F5F5F5'
                     }
                   }}
                 />
@@ -838,10 +854,12 @@ function OnboardingForm() {
                   onFocus={(e) => {
                     e.target.style.borderColor = '#E8820A'
                     e.target.style.background = 'white'
+                    e.target.style.color = '#0B0C0F'
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = '#25282F'
                     e.target.style.background = '#0F1115'
+                    e.target.style.color = '#F5F5F5'
                   }}
                 />
               </div>
@@ -876,10 +894,12 @@ function OnboardingForm() {
                   onFocus={(e) => {
                     e.target.style.borderColor = '#E8820A'
                     e.target.style.background = 'white'
+                    e.target.style.color = '#0B0C0F'
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = '#25282F'
                     e.target.style.background = '#0F1115'
+                    e.target.style.color = '#F5F5F5'
                   }}
                 />
                 <p style={{ fontSize: '13px', color: '#6B7078', marginTop: '6px' }}>
@@ -1032,8 +1052,8 @@ function OnboardingForm() {
                     outline: 'none',
                     transition: 'all 0.2s'
                   }}
-                  onFocus={(e) => !skipAws && (e.target.style.borderColor = '#E8820A', e.target.style.background = 'white')}
-                  onBlur={(e) => (e.target.style.borderColor = '#25282F', e.target.style.background = '#0F1115')}
+                  onFocus={(e) => !skipAws && (e.target.style.borderColor = '#E8820A', e.target.style.background = 'white', e.target.style.color = '#0B0C0F')}
+                  onBlur={(e) => (e.target.style.borderColor = '#25282F', e.target.style.background = '#0F1115', e.target.style.color = '#F5F5F5')}
                 />
               </div>
 

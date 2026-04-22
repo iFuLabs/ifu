@@ -90,3 +90,9 @@ variable "encryption_key" {
   type        = string
   sensitive   = true
 }
+
+# AWS Account ID
+variable "aws_account_id" {
+  description = "AWS Account ID for cross-account role setup"
+  type        = string
+}

@@ -1,189 +1,76 @@
-# CLAUDE.md — iFu Labs Logo & Mobile Fixes
+# CLAUDE.md — Critical Bug Fixes
 
 ## Current task
-Logo consistency audit, mobile click fix, and hero copy update across all apps (website, portal, comply, finops)
-
-## Logo folder path
-`/Users/titusquayson/Downloads/iFU Labs/`
-- SVG: white.svg, black.svg, lavender.svg, plum.svg
-- PNG: logomark (1024x1024)@4x-8.png + variants
-
-**Copied to project:**
-- `website/public/logos/` - all 4 SVG files
-- `portal/public/logos/` - all 4 SVG files  
-- `comply/public/logos/` - all 4 SVG files
-- `finops/public/logos/` - all 4 SVG files
-- `website/public/logomark.png` - 1024x1024 PNG for favicon/metadata
-
-## Mobile click root cause
-**FOUND**: `.nav-mobile-backdrop` in `website/src/app/globals.css` has `z-index: 999` and `display: block` on mobile but lacks `pointer-events: none` when closed. Even with `opacity: 0`, it blocks all clicks underneath.
-
-**FIX**: Add `pointer-events: none;` to `.nav-mobile-backdrop` base style, and `pointer-events: auto;` to `.nav-mobile-backdrop.is-open`
+Critical bug fixes — auth, payment redirect, email copy, input visibility
 
 ## Status
+- Bug 1 Input visibility — ✅ FIXED
+- Bug 2 Payment redirect — ✅ FIXED
+- Bug 3 Portal to dashboard — ✅ FIXED
+- Bug 4 Email trial copy — ✅ FIXED
+- Bug 5 Orange gradient boxes — ✅ FIXED
+- Bug 6 AWS Account ID — ✅ FIXED
 
-### Website
-| File | Logo Status | Mobile Clicks |
-|---|---|---|
-| website/src/components/SiteNav.tsx | ✅ white.svg (correct) | N/A |
-| website/src/components/SiteFooter.tsx | ✅ white.svg (correct) | N/A |
-| website/src/app/globals.css | N/A | ✅ FIXED - added pointer-events |
-| website/src/app/HomePageClient.tsx | ✅ DONE - replaced SVG with white.svg | N/A |
-| website/src/app/HomePageClient.tsx hero copy | ✅ DONE - updated to new copy | N/A |
-| website/src/app/for-startups/page-minimal.tsx | ✅ DONE - white.svg nav, black.svg footer | N/A |
-| website/src/app/demo/comply/ComplyDemoPageClient.tsx | ✅ DONE - white.svg nav & footer | N/A |
-| website/src/app/demo/costless/CostlessDemoPageClient.tsx | ✅ DONE - white.svg nav & footer | N/A |
+## Root causes found
 
-### Portal
-| File | Logo Status | Mobile Clicks |
-|---|---|---|
-| portal/src/app/login/page.tsx | ✅ white.svg (correct) | N/A |
-| portal/src/app/invite/[token]/page.tsx | ✅ white.svg (correct) | N/A |
-| portal/src/app/reset-password/[token]/page.tsx | ✅ white.svg (correct) | N/A |
-| portal/src/app/forgot-password/page.tsx | ✅ white.svg (correct) | N/A |
-| portal/src/app/page.tsx | ✅ lavender.svg (correct) | N/A |
-| portal/src/app/onboarding/page.tsx | ✅ DONE - replaced SVG with white.svg | N/A |
-| portal/src/app/subscribe/page.tsx | ✅ DONE - replaced SVG with white.svg | N/A |
+### Bug 1 — Sign up input fields invisible when typing
+**Root cause:** Input fields change background to `white` on focus but text color stays `#F5F5F5` (light gray). White text on white background = invisible.
 
-### Comply
-| File | Logo Status | Mobile Clicks |
-|---|---|---|
-| comply/src/app/dashboard/layout.tsx | ✅ white.svg (correct) | N/A |
-| comply/src/app/page.tsx | ⏸ SKIPPED - redirects to dashboard | N/A |
+**Location:** `portal/src/app/onboarding/page.tsx` - all input fields in sign up form (name, email, password, org name, org domain, role ARN)
 
-### FinOps
-| File | Logo Status | Mobile Clicks |
-|---|---|---|
-| finops/src/app/dashboard/layout.tsx | ✅ white.svg (correct) | N/A |
-| finops/src/app/page.tsx | ⏸ SKIPPED - redirects to dashboard | N/A |
+**Fix:** Added `e.target.style.color = '#0B0C0F'` on focus and `e.target.style.color = '#F5F5F5'` on blur to all input fields. Now text is dark when typing (on white background) and light when not focused (on dark background).
 
-## Last completed
-✅ ALL FIXES COMPLETE!
-- Fixed mobile click blocking in website/src/app/globals.css
-- Updated hero copy in website/src/app/HomePageClient.tsx
-- Replaced all hardcoded SVG hexagons with proper logo files across 8 files
-- Updated footer tagline across all 5 locations to: "Expert AWS engineering for startups that ship fast."
+### Bug 2 — After payment redirects to sign in instead of dashboard
+**Root cause:** Payment callback page redirected directly to dashboard URLs (different domains/ports). The `auth_token` is stored in portal's localStorage, which is NOT accessible to comply/finops apps because localStorage is domain-specific. When the dashboard apps try to authenticate, they can't find the token and redirect to login.
 
-## Footer tagline locations updated:
-1. ✅ website/src/components/SiteFooter.tsx
-2. ✅ website/src/app/HomePageClient.tsx
-3. ✅ website/src/app/for-startups/page-minimal.tsx
-4. ✅ website/src/app/demo/comply/ComplyDemoPageClient.tsx
-5. ✅ website/src/app/demo/costless/CostlessDemoPageClient.tsx
+**Location:** 
+- `portal/src/app/billing/callback/page.tsx` - payment verification and redirect logic
+- `portal/src/app/onboarding/page.tsx` - handleFinish function
 
-## Next up
-None - all tasks complete!
+**Fix:** 
+1. Changed callback page to redirect back to onboarding step 4 (confirmation) instead of directly to dashboard
+2. Updated handleFinish to read product from localStorage (set by callback) as primary source, with selectedProducts state as fallback
+3. This keeps the user in the portal domain where their auth_token is accessible, then redirects to the correct dashboard
 
-## Notes
-- Mobile click issue was caused by `.nav-mobile-backdrop` having `z-index: 999` without `pointer-events: none` when closed
-- All hardcoded SVG hexagons have been replaced with actual logo files
-- Logo sizes: nav 34px, footer 30px, auth cards 36px (all height, width auto to preserve aspect ratio)
-- Used white.svg for dark backgrounds, black.svg for light backgrounds (for-startups footer)
-- Hero copy updated from startup-focused to consultant-led services focus
+### Bug 3 — After login, clicking subscribed service returns to login page
+**Root cause:** Login page was trying to redirect directly to product dashboards based on `response.lastProduct`, but the login API doesn't return that field. This caused it to fall through to `router.push('/')` which should work, but the real issue is the same as Bug 2 - localStorage domain isolation. When redirecting from portal to comply/finops, the auth_token isn't accessible.
 
-## TODO
-None - implementation complete!
+**Location:** 
+- `portal/src/app/login/page.tsx` - login redirect logic
 
-## Implementation Plan (awaiting confirmation)
+**Fix:** 
+1. Simplified login to always redirect to portal homepage (`/`)
+2. Portal homepage fetches user subscriptions via `/api/v1/auth/me` which includes active subscriptions
+3. User clicks on their subscribed product, which redirects to the dashboard
+4. This is the same flow as after onboarding - keeps user in portal domain where auth_token is accessible
 
-### 1. Website Navigation (Dark background #07080D)
-**File:** `website/src/components/SiteNav.tsx`
-**Logo:** `white.svg`
-**Why:** Dark background requires white logo for contrast
-**Changes:** Replace hardcoded SVG hexagon + text with `<img src="/logos/white.svg" alt="iFU Labs" />`
+### Bug 4 — Email says 14 days trial, should be 3 days
+**Root cause:** Welcome email template had hardcoded "14-day free trial" text. Test file also had 14 days constant.
 
-### 2. Website Footer (Dark background)
-**File:** `website/src/components/SiteFooter.tsx`
-**Logo:** `white.svg`
-**Why:** Dark background requires white logo
-**Changes:** Replace hardcoded SVG hexagon + text with `<img src="/logos/white.svg" alt="iFU Labs" />`
+**Location:** 
+- `src/services/email.js` - welcome email template
+- `tests/routes/billing.test.js` - test constant
 
-### 3. Portal Login Page (Dark gradient background)
-**File:** `portal/src/app/login/page.tsx`
-**Logo:** `white.svg`
-**Why:** Dark radial gradient background
-**Changes:** Replace hardcoded SVG hexagon in orange box with `<img src="/logos/white.svg" alt="iFU Labs" />` (remove orange box, logo has its own colors)
+**Fix:** Changed "14-day free trial" to "3-day free trial" in email template. Updated test constant from 14 days to 3 days. Onboarding page already correctly shows 3-day trial.
 
-### 4. Portal Invite Page
-**File:** `portal/src/app/invite/[token]/page.tsx`
-**Logo:** `white.svg`
-**Why:** Dark background
-**Changes:** Replace LOGO_MARK constant with actual logo
+## Files changed
 
-### 5. Portal Reset Password Page
-**File:** `portal/src/app/reset-password/[token]/page.tsx`
-**Logo:** `white.svg`
-**Why:** Dark background
-**Changes:** Replace LOGO_MARK constant with actual logo
+### Bug 1
+- `portal/src/app/onboarding/page.tsx` - Fixed 6 input fields (name, email, password, org name, org domain, role ARN) to change text color on focus/blur
 
-### 6. Portal Forgot Password Page
-**File:** `portal/src/app/forgot-password/page.tsx`
-**Logo:** `white.svg` (if exists, need to check)
-**Why:** Dark background
-**Changes:** Replace any hardcoded logo
+### Bug 2
+- `portal/src/app/billing/callback/page.tsx` - Changed redirect from dashboard URLs to onboarding step 4, store product in localStorage, updated message to say "Redirecting to confirmation..."
+- `portal/src/app/onboarding/page.tsx` - Updated handleFinish to read product from localStorage first, then fallback to state; removed orange box from header logo
 
-### 7. Portal Choose Product Page
-**File:** `portal/src/app/page.tsx`
-**Logo:** `lavender.svg`
-**Why:** Per usage guide - product selector uses lavender variant
-**Changes:** Replace any hardcoded logo
+### Bug 3
+- `portal/src/app/login/page.tsx` - Simplified redirect to always go to portal homepage where user can see and click their subscribed products
 
-### 8. Comply Dashboard Sidebar
-**File:** `comply/src/app/dashboard/layout.tsx`
-**Logo:** `white.svg`
-**Why:** Dark sidebar background
-**Changes:** Replace hardcoded SVG hexagon + "iFu Comply" text with logo
+### Bug 4
+- `src/services/email.js` - Changed "14-day free trial" to "3-day free trial" in welcome email
+- `tests/routes/billing.test.js` - Updated TRIAL_DURATION_MS constant from 14 days to 3 days
 
-### 9. FinOps Dashboard Sidebar
-**File:** `finops/src/app/dashboard/layout.tsx`
-**Logo:** `white.svg`
-**Why:** Dark sidebar background
-**Changes:** Replace hardcoded SVG hexagon + "iFu Costless" text with logo
-
-### 10. Website Favicon & Metadata
-**File:** `website/src/app/layout.tsx`
-**Logo:** `logomark.png`
-**Why:** Favicon requires PNG, metadata needs OG image
-**Changes:** Update icons metadata to use `/logomark.png`, add proper sizes
-
-### 11. Portal Favicon & Metadata
-**File:** `portal/src/app/layout.tsx`
-**Logo:** `logomark.png`
-**Why:** Favicon requires PNG
-**Changes:** Update icons metadata to use `/logomark.png`
-
-### 12. Email Templates (3 templates)
-**File:** `src/services/email.js`
-**Logo:** Need to embed as base64 or use hosted URL
-**Why:** Email clients need inline or absolute URLs
-**Changes:** Replace text "iFu Labs" with logo image (will need to decide on approach)
-
-## Last completed
-✅ ALL 12 FILES COMPLETE! Logo implementation finished across entire project.
-
-All hardcoded logos replaced with professional SVG/PNG brand assets. Favicon and metadata updated. Email templates now use hosted logo URL.
-
-## Next up
-None - logo implementation complete. Ready to commit and deploy.
+## Todo
+None - all bugs fixed!
 
 ## Notes
-- All logos successfully implemented with correct variants
-- Website nav/footer: white.svg on dark backgrounds
-- Portal pages: white.svg on dark gradients, lavender.svg on product selector
-- Dashboard sidebars: white.svg (removed product name text for cleaner look)
-- Favicons: logomark.png with proper sizes (16x16, 32x32, 180x180)
-- OG/Twitter images: logomark.png for social sharing
-- Email templates: white.svg hosted at https://www.ifulabs.com/logos/white.svg
-- All aspect ratios preserved - no stretching
-- No CSS filters used - correct color variants selected
-
-## Implementation Summary
-1. ✅ Copied all logo files to public folders
-2. ✅ Replaced 9 in-page hardcoded logos with SVG files
-3. ✅ Updated 2 layout files with proper favicon/metadata
-4. ✅ Updated 3 email templates with hosted logo URL
-5. ✅ Removed all orange gradient boxes and hardcoded SVG hexagons
-6. ✅ Consistent professional branding across all touchpoints
-
-## TODO
-None - implementation complete!
+**Token passing solution:** To solve the localStorage domain isolation issue (portal, comply, and finops are on different ports/domains), we pass the auth_token via URL query parameter when redirecting from portal to dashboards. The dashboard layouts read the token from URL, store it in their own localStorage, then remove it from the URL for security. This allows seamless authentication across all apps.

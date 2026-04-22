@@ -84,6 +84,7 @@ module "api" {
     AWS_REGION                   = var.aws_region
     AWS_ACCESS_KEY_ID            = var.aws_access_key_id
     AWS_SECRET_ACCESS_KEY        = var.aws_secret_access_key
+    AWS_ACCOUNT_ID               = var.aws_account_id
     BEDROCK_REGION               = var.aws_region
     PORTAL_URL                   = "https://portal.${var.domain_name}"
     COMPLY_URL                   = "https://comply.${var.domain_name}"

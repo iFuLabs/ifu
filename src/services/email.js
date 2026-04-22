@@ -63,7 +63,7 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
                   <li>Explore your compliance dashboard</li>
                 </ul>
                 
-                <p>You're on a 14-day free trial with full access to all features. No credit card required.</p>
+                <p>You're on a 3-day free trial with full access to all features. No credit card required.</p>
                 
                 <a href="${PORTAL_URL}" class="button">Go to Dashboard</a>
                 

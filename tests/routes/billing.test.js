@@ -189,7 +189,7 @@ describe('Billing Routes', () => {
     })
 
     test('should set trial end date in the future', () => {
-      const TRIAL_DURATION_MS = 14 * 24 * 60 * 60 * 1000 // 14 days
+      const TRIAL_DURATION_MS = 3 * 24 * 60 * 60 * 1000 // 3 days
       const startDateMs = Date.now() + TRIAL_DURATION_MS
       const trialEndsAt = new Date(startDateMs)
 

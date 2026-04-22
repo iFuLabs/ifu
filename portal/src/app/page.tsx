@@ -38,10 +38,18 @@ export default function PortalPage() {
     )
 
     if (hasSubscription) {
+      // Get the auth token from localStorage
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      
+      // Build the dashboard URL with token as query parameter
+      // The dashboard app will read this token and store it in its own localStorage
+      const complyUrl = process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001'
+      const finopsUrl = process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002'
+      
       if (product === 'comply') {
-        window.location.href = process.env.NEXT_PUBLIC_COMPLY_URL + '/dashboard' || 'http://localhost:3001/dashboard'
+        window.location.href = `${complyUrl}/dashboard${token ? `?token=${encodeURIComponent(token)}` : ''}`
       } else {
-        window.location.href = process.env.NEXT_PUBLIC_FINOPS_URL + '/dashboard' || 'http://localhost:3002/dashboard'
+        window.location.href = `${finopsUrl}/dashboard${token ? `?token=${encodeURIComponent(token)}` : ''}`
       }
     } else {
       window.location.href = `/subscribe?product=${product}`

@@ -109,17 +109,11 @@ function SubscribeForm() {
 
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{
-            width: '56px',
-            height: '56px',
-            background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
-            borderRadius: '14px',
-            boxShadow: '0 8px 24px rgba(232, 130, 10, 0.25)',
+            margin: '0 auto 20px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 20px'
+            justifyContent: 'center'
           }}>
-            <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '36px', width: 'auto' }} />
+            <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
           </div>
           <h1 style={{
             fontSize: '34px',
