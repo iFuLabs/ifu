@@ -8,6 +8,8 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "migrate": "node src/db/migrate.js",
+    "seed": "node src/db/seed.js",
+    "seed:prod": "node -r dotenv/config src/db/seed.js dotenv_config_path=ifu.env",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
@@ -42,6 +44,7 @@
     "drizzle-kit": "^0.18.1",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.8.4",
+    "ioredis": "^5.10.1",
     "jose": "^5.2.3",
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^3.1.0",
