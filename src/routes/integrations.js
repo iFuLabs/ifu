@@ -104,7 +104,7 @@ export default async function integrationRoutes(fastify) {
         .set({
           status: 'connected',
           credentials: encryptedCredentials,
-          metadata: { accountId: validation.accountId, alias: validation.accountAlias },
+          metadata: { accountId: validation.accountId, alias: validation.accountAlias, externalId },
           updatedAt: new Date()
         })
         .where(eq(integrations.id, existing.id))
@@ -118,7 +118,7 @@ export default async function integrationRoutes(fastify) {
           type: 'aws',
           status: 'connected',
           credentials: encryptedCredentials,
-          metadata: { accountId: validation.accountId, alias: validation.accountAlias }
+          metadata: { accountId: validation.accountId, alias: validation.accountAlias, externalId }
         })
         .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
     }
