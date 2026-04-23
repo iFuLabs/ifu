@@ -26,7 +26,8 @@ export default function EvidencePage() {
     setExporting(framework)
     setExportError('')
     try {
-      const res = await fetch(`/api/v1/evidence/export/pdf?framework=${framework}`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+      const res = await fetch(`${API_URL}/api/v1/evidence/export/pdf?framework=${framework}`, {
         credentials: 'include'
       })
       

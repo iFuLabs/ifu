@@ -13,6 +13,8 @@ import { notificationQueue } from './queues.js'
 
 export const scanWorker = new Worker('scans', async (job) => {
   const { orgId, integrationId, integrationType, triggeredBy } = job.data
+  
+  logger.info({ orgId, integrationId, integrationType }, 'Starting scan job')
 
   // Create a scan record
   const [scan] = await db.insert(scans).values({
@@ -35,8 +37,10 @@ export const scanWorker = new Worker('scans', async (job) => {
       )
     })
 
+    logger.info({ integrationId, found: !!integration, status: integration?.status }, 'Integration lookup')
+
     if (!integration || integration.status !== 'connected') {
-      throw new Error('Integration not found or disconnected')
+      throw new Error(`Integration not found or disconnected (status: ${integration?.status || 'not found'})`)
     }
 
     const creds = JSON.parse(decrypt(integration.credentials))
@@ -135,14 +139,22 @@ export const scanWorker = new Worker('scans', async (job) => {
       completedAt: new Date()
     }).where(eq(scans.id, scan.id))
 
-    // Mark integration as errored
-    await db.update(integrations).set({
-      status: 'error',
-      lastError: err.message,
-      lastErrorAt: new Date(),
-      updatedAt: new Date()
-    }).where(eq(integrations.id, integrationId))
+    // Only mark integration as errored if it's a connection/auth issue, not a scan execution issue
+    const isConnectionError = err.message?.includes('not found') || 
+                             err.message?.includes('disconnected') ||
+                             err.message?.includes('credential') ||
+                             err.message?.includes('AssumeRole')
+    
+    if (isConnectionError) {
+      await db.update(integrations).set({
+        status: 'error',
+        lastError: err.message,
+        lastErrorAt: new Date(),
+        updatedAt: new Date()
+      }).where(eq(integrations.id, integrationId))
+    }
 
+    logger.error({ orgId, integrationId, error: err.message }, 'Scan failed')
     throw err // BullMQ will retry
   }
 }, {
@@ -159,10 +171,16 @@ scanWorker.on('failed', (job, err) => {
 })
 
 async function assumeCustomerRole(roleArn, externalId) {
-  const sts = new STSClient({ region: process.env.AWS_REGION })
+  // Let AWS SDK automatically pick up credentials from environment
+  const sts = new STSClient({ 
+    region: process.env.AWS_REGION
+  })
+  
+  logger.info({ roleArn, externalId: externalId?.substring(0, 8) + '...' }, 'Assuming customer role')
+  
   const { Credentials } = await sts.send(new AssumeRoleCommand({
     RoleArn: roleArn,
-    RoleSessionName: `iFu Labs ComplyScan-${Date.now()}`,
+    RoleSessionName: `iFu-Labs-ComplyScan-${Date.now()}`,
     ExternalId: externalId,
     DurationSeconds: 3600 // 1 hour — enough for a full scan
   }))

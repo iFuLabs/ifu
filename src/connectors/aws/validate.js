@@ -7,12 +7,18 @@ import { IAMClient, ListAccountAliasesCommand } from '@aws-sdk/client-iam'
  */
 export async function validateAwsRole(roleArn, externalId) {
   try {
-    const sts = new STSClient({ region: process.env.AWS_REGION })
+    const sts = new STSClient({ 
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      }
+    })
 
     // Try assuming the role
     const assumed = await sts.send(new AssumeRoleCommand({
       RoleArn: roleArn,
-      RoleSessionName: 'iFu Labs ComplyValidation',
+      RoleSessionName: 'iFu-Labs-ComplyValidation',
       ExternalId: externalId,
       DurationSeconds: 900 // 15 min — minimum
     }))
@@ -54,10 +60,18 @@ export async function validateAwsRole(roleArn, externalId) {
       accountAlias
     }
   } catch (err) {
+    // Log the full error for debugging
+    console.error('AWS AssumeRole error:', {
+      name: err.name,
+      message: err.message,
+      code: err.code,
+      statusCode: err.$metadata?.httpStatusCode
+    })
+    
     return {
       success: false,
-      error: err.name === 'AccessDenied'
-        ? 'iFu Labs Comply cannot assume this role. Check the trust policy allows assumption from account ' + process.env.IFU_LABS_AWS_ACCOUNT_ID
+      error: err.name === 'AccessDenied' || err.name === 'AccessDeniedException'
+        ? 'iFu Labs Comply cannot assume this role. Check the trust policy allows assumption from account ' + process.env.AWS_ACCOUNT_ID
         : err.message
     }
   }

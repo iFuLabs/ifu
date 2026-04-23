@@ -63,6 +63,46 @@ export default function ControlsPage() {
         </p>
       </div>
 
+      {/* Explainer card */}
+      <div className="bg-accent-light border border-accent/20 rounded-xl p-5">
+        <h2 className="text-sm font-medium text-accent mb-2">What are controls?</h2>
+        <p className="text-sm text-accent/80 leading-relaxed">
+          Controls are security and compliance requirements from frameworks like SOC 2, ISO 27001, and GDPR. 
+          Each control checks a specific aspect of your infrastructure (like "MFA is enabled" or "Data is encrypted"). 
+          We automatically scan your AWS account to verify these controls are met.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle size={14} className="text-accent flex-shrink-0" />
+            <div>
+              <div className="text-xs font-medium text-accent">Passing</div>
+              <div className="text-xs text-accent/70">Requirement met</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <XCircle size={14} className="text-danger flex-shrink-0" />
+            <div>
+              <div className="text-xs font-medium text-ink">Failing</div>
+              <div className="text-xs text-muted">Needs fixing</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock size={14} className="text-warn flex-shrink-0" />
+            <div>
+              <div className="text-xs font-medium text-ink">Review</div>
+              <div className="text-xs text-muted">Manual check needed</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Minus size={14} className="text-muted flex-shrink-0" />
+            <div>
+              <div className="text-xs font-medium text-ink">Pending</div>
+              <div className="text-xs text-muted">Not scanned yet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Progress bar */}
       {total > 0 && (
         <div className="bg-card border border-border rounded-xl p-4">

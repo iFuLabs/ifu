@@ -8,9 +8,9 @@ import { formatDistanceToNow, format } from 'date-fns'
 import clsx from 'clsx'
 import { AiGapExplainer } from '@/components/AiGapExplainer'
 
-export default async function ControlDetailPage({ params }: { params: Promise<{ controlId: string }> }) {
-  const { controlId } = await params
-  const { data: control, mutate } = useSWR(
+export default function ControlDetailPage({ params }: { params: { controlId: string } }) {
+  const { controlId } = params
+  const { data: control, error, mutate } = useSWR(
     ['control', controlId],
     () => api.controls.get(controlId)
   )
@@ -28,10 +28,30 @@ export default async function ControlDetailPage({ params }: { params: Promise<{ 
     }
   }
 
+  if (error) return (
+    <div className="p-6 max-w-3xl mx-auto space-y-5">
+      <Link href="/dashboard/controls" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors">
+        <ArrowLeft size={14} />
+        Controls
+      </Link>
+      <div className="bg-card border border-danger/20 rounded-xl p-6">
+        <h2 className="text-sm font-medium text-danger mb-2">Control not found</h2>
+        <p className="text-sm text-muted">The control "{controlId}" could not be loaded. It may not exist or you may not have access to it.</p>
+      </div>
+    </div>
+  )
+
   if (!control) return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="h-8 w-48 bg-border rounded animate-pulse mb-4" />
-      <div className="h-40 bg-card border border-border rounded-xl animate-pulse" />
+    <div className="p-6 max-w-3xl mx-auto space-y-5">
+      <Link href="/dashboard/controls" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors">
+        <ArrowLeft size={14} />
+        Controls
+      </Link>
+      <div className="bg-card border border-border rounded-xl p-6">
+        <div className="h-6 w-32 bg-border rounded animate-pulse mb-3" />
+        <div className="h-8 w-full bg-border rounded animate-pulse mb-2" />
+        <div className="h-20 w-full bg-border rounded animate-pulse" />
+      </div>
     </div>
   )
 
@@ -69,6 +89,18 @@ export default async function ControlDetailPage({ params }: { params: Promise<{ 
             </div>
             <h1 className="font-serif text-xl font-normal text-ink">{control.title}</h1>
             <p className="text-sm text-muted mt-2 leading-relaxed">{control.description}</p>
+            
+            {/* Plain English explanation */}
+            <div className="mt-3 p-3 bg-bg rounded-lg">
+              <p className="text-xs text-muted leading-relaxed">
+                <span className="font-medium text-ink">In plain English: </span>
+                {control.status === 'pass' && "This security requirement is currently met in your infrastructure. "}
+                {control.status === 'fail' && "This security requirement is not met and needs to be fixed before your audit. "}
+                {control.status === 'review' && "This requires manual verification - automated checks can't fully validate this. "}
+                {control.status === 'pending' && "We haven't scanned this yet. Run a scan or connect the required integration. "}
+                {control.automatable ? "We check this automatically during scans." : "This requires manual evidence collection."}
+              </p>
+            </div>
           </div>
         </div>
 

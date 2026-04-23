@@ -98,13 +98,15 @@ export default async function integrationRoutes(fastify) {
 
     let integration
     if (existing) {
-      // Update existing
+      // Update existing - clear error state on successful reconnection
       ;[integration] = await db
         .update(integrations)
         .set({
           status: 'connected',
           credentials: encryptedCredentials,
-          metadata: { accountId: validation.accountId, alias: validation.accountAlias },
+          metadata: { accountId: validation.accountId, alias: validation.accountAlias, externalId },
+          lastError: null,
+          lastErrorAt: null,
           updatedAt: new Date()
         })
         .where(eq(integrations.id, existing.id))
@@ -118,7 +120,7 @@ export default async function integrationRoutes(fastify) {
           type: 'aws',
           status: 'connected',
           credentials: encryptedCredentials,
-          metadata: { accountId: validation.accountId, alias: validation.accountAlias }
+          metadata: { accountId: validation.accountId, alias: validation.accountAlias, externalId }
         })
         .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
     }
@@ -187,7 +189,8 @@ export default async function integrationRoutes(fastify) {
     schema: {
       tags: ['Integrations'],
       security: [{ bearerAuth: [] }],
-      params: { type: 'object', properties: { id: { type: 'string' } } }
+      params: { type: 'object', properties: { id: { type: 'string' } } },
+      body: { type: 'object', additionalProperties: true } // Allow empty body
     }
   }, async (request, reply) => {
     const integration = await db.query.integrations.findFirst({

@@ -1,4 +1,9 @@
 import PDFDocument from 'pdfkit'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const COLORS = {
   ink:    '#33063D',
@@ -68,9 +73,10 @@ export async function generateEvidencePdf({ org, framework, controls, scans, sco
     }
 
     // ── Footer on every page ───────────────────────────────────────────────
-    const pageCount = doc.bufferedPageRange().count
+    const range = doc.bufferedPageRange()
+    const pageCount = range.count
     for (let i = 0; i < pageCount; i++) {
-      doc.switchToPage(i)
+      doc.switchToPage(range.start + i)
       pageFooter(doc, i + 1, pageCount, org.name)
     }
 
@@ -86,20 +92,22 @@ function coverPage(doc, { org, framework, score, generatedAt, generatedBy }) {
   // Dark header band
   doc.rect(0, 0, width, 220).fill(COLORS.accent)
 
-  // Logo mark
-  doc.save()
-  doc.translate(60, 60)
-  doc.polygon([16, 0], [32, 9], [32, 27], [16, 36], [0, 27], [0, 9])
-    .stroke(COLORS.white).lineWidth(1.5)
-  doc.polygon([16, 12], [24, 17], [24, 27], [16, 32], [8, 27], [8, 17])
-    .fill(COLORS.white)
-  doc.restore()
-
-  // iFu Labs Comply wordmark
-  doc.fillColor(COLORS.white)
-    .font('Helvetica')
-    .fontSize(14)
-    .text('iFu Labs Comply', 100, 72)
+  // Logo image
+  try {
+    const logoPath = join(__dirname, '../../assets/logo-white.png')
+    doc.image(logoPath, 60, 60, { width: 120 })
+  } catch (err) {
+    // Fallback to text if logo not found
+    doc.fillColor(COLORS.white)
+      .font('Helvetica-Bold')
+      .fontSize(24)
+      .text('iFu Labs', 60, 65)
+    
+    doc.fillColor('rgba(255,255,255,0.7)')
+      .font('Helvetica')
+      .fontSize(12)
+      .text('Comply', 60, 95)
+  }
 
   // Report title
   doc.fillColor(COLORS.white)

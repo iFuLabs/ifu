@@ -183,10 +183,16 @@ export default async function finopsRoutes(fastify) {
 
 // ── Helper ─────────────────────────────────────────────────────────────────
 async function assumeRole(roleArn, externalId) {
-  const sts = new STSClient({ region: process.env.AWS_REGION || 'us-east-1' })
+  const sts = new STSClient({ 
+    region: process.env.AWS_REGION || 'us-east-1',
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+  })
   const { Credentials } = await sts.send(new AssumeRoleCommand({
     RoleArn:         roleArn,
-    RoleSessionName: `iFuLabsFinOps-${Date.now()}`,
+    RoleSessionName: `iFu-Labs-FinOps-${Date.now()}`,
     ExternalId:      externalId,
     DurationSeconds: 3600
   }))

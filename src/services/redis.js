@@ -1,6 +1,11 @@
 // services/redis.js
-import { createClient } from 'redis'
+import IORedis from 'ioredis'
 
-export const redis = createClient({ url: process.env.REDIS_URL })
+// BullMQ requires ioredis, not the redis package
+export const redis = new IORedis(process.env.REDIS_URL, {
+  maxRetriesPerRequest: null, // Required for BullMQ
+  enableReadyCheck: false
+})
+
 redis.on('error', (err) => console.error('Redis error:', err))
-await redis.connect()
+redis.on('connect', () => console.log('Redis connected'))

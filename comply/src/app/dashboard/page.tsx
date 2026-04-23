@@ -7,12 +7,16 @@ import { Shield, AlertTriangle, CheckCircle, Clock, RefreshCw, ChevronRight, Zap
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
+import React from 'react'
 
 export default function DashboardPage() {
-  const { data: score, isLoading: scoreLoading } = useSWR<any>('score', api.controls.score, { refreshInterval: 30000 })
-  const { data: controls } = useSWR<any[]>('controls', api.controls.list)
-  const { data: scans } = useSWR<any[]>('scans', api.scans.list)
+  const { data: score, isLoading: scoreLoading, mutate: mutateScore } = useSWR<any>('score', api.controls.score, { refreshInterval: 30000 })
+  const { data: controls, mutate: mutateControls } = useSWR<any[]>('controls', api.controls.list, { refreshInterval: 10000 })
+  const { data: scans, mutate: mutateScans } = useSWR<any[]>('scans', api.scans.list, { refreshInterval: 3000 })
   const { data: planFeatures } = useSWR<any>('plan-features', api.plan.features)
+  const { data: integrations } = useSWR<any[]>('integrations', api.integrations.list)
+  const [isScanning, setIsScanning] = React.useState(false)
+  const [lastScanTime, setLastScanTime] = React.useState<number>(0)
 
   const { data: finopsSummary } = useSWR<any>('finops-summary', async () => {
     // Auth cookie is sent automatically
@@ -22,6 +26,18 @@ export default function DashboardPage() {
   })
   const failingControls = controls?.filter(c => c.status === 'fail') || []
   const latestScan = scans?.[0]
+  const hasRunningScan = scans?.some(s => s.status === 'running' || s.status === 'pending')
+  
+  // Show scanning indicator if scan was triggered recently (within 30 seconds) or if there's an active scan
+  const showScanningIndicator = hasRunningScan || (Date.now() - lastScanTime < 30000)
+  
+  // Refresh score and controls when scan completes
+  React.useEffect(() => {
+    if (latestScan?.status === 'complete') {
+      mutateScore()
+      mutateControls()
+    }
+  }, [latestScan?.status, mutateScore, mutateControls])
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -33,15 +49,51 @@ export default function DashboardPage() {
           <p className="text-sm text-muted mt-0.5">
             {score ? `Last updated ${formatDistanceToNow(new Date(score.lastUpdated), { addSuffix: true })}` : 'Loading...'}
           </p>
+          {showScanningIndicator && (
+            <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-accent/10 border border-accent/20 rounded-lg text-xs text-accent">
+              <RefreshCw size={12} className="animate-spin" />
+              <span className="font-medium">Scan in progress...</span>
+              <span className="text-accent/70">This may take a few minutes</span>
+            </div>
+          )}
         </div>
         <button
-          onClick={() => api.integrations.list().then(integrations => {
-            integrations.filter(i => i.status === 'connected').forEach(i => api.integrations.sync(i.id))
-          })}
-          className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded bg-card hover:bg-bg transition-all text-muted hover:text-ink"
+          onClick={async () => {
+            setIsScanning(true)
+            setLastScanTime(Date.now())
+            try {
+              const connectedIntegrations = await api.integrations.list()
+              const connected = connectedIntegrations.filter(i => i.status === 'connected')
+              
+              if (connected.length === 0) {
+                alert('No integrations connected. Please connect AWS or GitHub first.')
+                return
+              }
+              
+              // Trigger scan for all connected integrations
+              await Promise.all(connected.map(i => api.integrations.sync(i.id)))
+              
+              // Refresh scans list immediately
+              mutateScans()
+              
+              // Show success message
+              setTimeout(() => {
+                mutateScans()
+              }, 2000)
+            } catch (error: any) {
+              console.error('Scan error:', error)
+              alert(error.message || 'Failed to start scan')
+            } finally {
+              setIsScanning(false)
+            }
+          }}
+          disabled={isScanning || showScanningIndicator}
+          className="flex items-center gap-2 px-4 py-2 text-sm border border-border rounded-lg bg-card hover:bg-bg transition-all text-muted hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] justify-center"
         >
-          <RefreshCw size={14} />
-          Run scan
+          <RefreshCw size={14} className={isScanning || showScanningIndicator ? 'animate-spin' : ''} />
+          <span className="whitespace-nowrap font-medium">
+            {isScanning ? 'Starting...' : showScanningIndicator ? 'Scanning...' : 'Run scan'}
+          </span>
         </button>
       </div>
 
@@ -114,8 +166,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* AI Insight */}
-      <AiInsightCard framework="soc2" />
+      {/* AI Insight - only show if user has Growth plan */}
+      {planFeatures?.features?.aiInsights && <AiInsightCard framework="soc2" />}
 
       {/* FinOps summary card — only shown if data exists */}
       {finopsSummary?.available && (
@@ -194,10 +246,24 @@ export default function DashboardPage() {
 
           {!scans || scans.length === 0 ? (
             <div className="px-5 py-10 text-center">
-              <p className="text-sm text-muted">No scans yet. Connect an integration to start.</p>
-              <Link href="/dashboard/integrations" className="text-xs text-accent hover:underline mt-2 inline-block">
-                Connect AWS →
-              </Link>
+              {hasRunningScan ? (
+                <>
+                  <RefreshCw size={28} className="text-accent mx-auto mb-2 animate-spin" />
+                  <p className="text-sm font-medium text-ink">Scan in progress...</p>
+                  <p className="text-xs text-muted mt-1">This may take a few minutes</p>
+                </>
+              ) : integrations && integrations.some(i => i.status === 'connected') ? (
+                <>
+                  <p className="text-sm text-muted">No scans yet. Click "Run scan" to start your first scan.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted">No scans yet. Connect an integration to start.</p>
+                  <Link href="/dashboard/integrations" className="text-xs text-accent hover:underline mt-2 inline-block">
+                    Connect AWS →
+                  </Link>
+                </>
+              )}
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -305,38 +371,64 @@ function ControlRow({ control }: { control: any }) {
 
 function ScanRow({ scan }: { scan: any }) {
   const statusConfig = {
-    complete: { label: 'Complete', color: 'text-accent bg-accent-light' },
-    running:  { label: 'Running',  color: 'text-warn bg-warn/10' },
-    pending:  { label: 'Pending',  color: 'text-muted bg-border/50' },
-    failed:   { label: 'Failed',   color: 'text-danger bg-danger/10' },
+    complete: { 
+      label: 'Complete', 
+      color: 'text-accent bg-accent-light border-accent/20',
+      icon: <CheckCircle size={12} className="text-accent" />
+    },
+    running: { 
+      label: 'Running', 
+      color: 'text-warn bg-warn/10 border-warn/20',
+      icon: <RefreshCw size={12} className="text-warn animate-spin" />
+    },
+    pending: { 
+      label: 'Pending', 
+      color: 'text-muted bg-border/50 border-border',
+      icon: <Clock size={12} className="text-muted" />
+    },
+    failed: { 
+      label: 'Failed', 
+      color: 'text-danger bg-danger/10 border-danger/20',
+      icon: <AlertTriangle size={12} className="text-danger" />
+    },
   }
   const config = statusConfig[scan.status as keyof typeof statusConfig] || statusConfig.pending
 
   return (
-    <div className="flex items-center gap-3 px-5 py-3">
+    <div className="flex items-center gap-3 px-5 py-3.5">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="font-mono text-xs text-muted capitalize">{scan.integrationType}</span>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="font-mono text-xs text-ink capitalize font-medium">{scan.integrationType}</span>
           <span className="text-muted text-xs">·</span>
           <span className="text-xs text-muted">{scan.triggeredBy}</span>
         </div>
         {scan.status === 'complete' && (
-          <p className="text-sm text-ink">
-            {scan.passCount} passed · <span className="text-danger">{scan.failCount} failed</span>
+          <p className="text-sm text-muted">
+            <span className="text-accent font-medium">{scan.passCount} passed</span>
+            {scan.failCount > 0 && (
+              <> · <span className="text-danger font-medium">{scan.failCount} failed</span></>
+            )}
           </p>
+        )}
+        {scan.status === 'running' && (
+          <p className="text-sm text-warn">Scanning your infrastructure...</p>
+        )}
+        {scan.status === 'pending' && (
+          <p className="text-sm text-muted">Waiting to start...</p>
         )}
         {scan.status === 'failed' && (
           <p className="text-sm text-danger truncate">{scan.error || 'Scan failed'}</p>
         )}
-        <p className="text-xs text-muted mt-0.5">
+        <p className="text-xs text-muted mt-1">
           {scan.completedAt
             ? formatDistanceToNow(new Date(scan.completedAt), { addSuffix: true })
             : formatDistanceToNow(new Date(scan.createdAt), { addSuffix: true })}
         </p>
       </div>
-      <span className={clsx('font-mono text-[10px] px-2 py-0.5 rounded', config.color)}>
-        {config.label}
-      </span>
+      <div className={clsx('flex items-center gap-1.5 font-mono text-[10px] px-2.5 py-1 rounded-full border', config.color)}>
+        {config.icon}
+        <span className="font-medium">{config.label}</span>
+      </div>
     </div>
   )
 }

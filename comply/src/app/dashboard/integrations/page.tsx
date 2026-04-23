@@ -45,6 +45,7 @@ export default function IntegrationsPage() {
         desc="IAM, S3, CloudTrail, RDS, GuardDuty, EC2 — 20 automated controls"
         integration={awsIntegration}
         onConnect={() => setShowAwsForm(true)}
+        onReconnect={awsIntegration?.status === 'error' ? () => setShowAwsForm(true) : undefined}
         onSync={() => awsIntegration && handleSync(awsIntegration.id)}
         onDisconnect={() => awsIntegration && handleDisconnect(awsIntegration.id)}
         syncing={syncing === awsIntegration?.id}
@@ -55,8 +56,9 @@ export default function IntegrationsPage() {
           { label: 'Alias',      value: awsIntegration?.metadata?.alias },
         ]}
       >
-        {showAwsForm && !awsIntegration && (
+        {showAwsForm && (
           <AwsConnectForm
+            existingIntegration={awsIntegration}
             onSuccess={() => { setShowAwsForm(false); mutate() }}
             onCancel={() => setShowAwsForm(false)}
           />
@@ -232,12 +234,21 @@ function StatusBadge({ status }: { status: Integration['status'] }) {
 
 // ── AWS connect form ───────────────────────────────────────────────────────
 
-function AwsConnectForm({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) {
+function AwsConnectForm({ existingIntegration, onSuccess, onCancel }: { 
+  existingIntegration?: Integration
+  onSuccess: () => void
+  onCancel: () => void 
+}) {
   const [roleArn,    setRoleArn] = useState('')
-  const [externalId]             = useState(() => `ifu-labs-${Math.random().toString(36).slice(2, 10)}`)
+  // Use existing external ID if reconnecting, otherwise generate new one
+  const [externalId] = useState(() => 
+    existingIntegration?.metadata?.externalId || `ifu-labs-${Math.random().toString(36).slice(2, 10)}`
+  )
   const [awsAccountId, setAwsAccountId] = useState('385936845264')
   const [loading, setLoading]    = useState(false)
   const [error, setError]        = useState('')
+
+  const isReconnecting = !!existingIntegration
 
   // Fetch AWS account ID on mount
   useState(() => {
@@ -263,18 +274,31 @@ function AwsConnectForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium text-ink">Connect AWS Account</h3>
+      <h3 className="text-sm font-medium text-ink">
+        {isReconnecting ? 'Reconnect AWS Account' : 'Connect AWS Account'}
+      </h3>
 
-      <div className="bg-accent-light border border-accent/20 rounded p-4 text-xs text-accent space-y-1.5">
-        <p className="font-medium">Create a read-only cross-account IAM role:</p>
-        <ol className="list-decimal list-inside space-y-1 text-accent/80">
-          <li>IAM → Roles → Create role → Another AWS account</li>
-          <li>Account ID: <code className="font-mono bg-accent/10 px-1 rounded">{awsAccountId}</code></li>
-          <li>Require external ID: <code className="font-mono bg-accent/10 px-1 rounded">{externalId}</code></li>
-          <li>Attach the <code className="font-mono bg-accent/10 px-1 rounded">SecurityAudit</code> managed policy</li>
-          <li>Paste the Role ARN below</li>
-        </ol>
-      </div>
+      {isReconnecting ? (
+        <div className="bg-accent-light border border-accent/20 rounded p-4 text-xs text-accent space-y-1.5">
+          <p className="font-medium">Update your IAM role credentials:</p>
+          <ol className="list-decimal list-inside space-y-1 text-accent/80">
+            <li>Your existing External ID is preserved: <code className="font-mono bg-accent/10 px-1 rounded">{externalId}</code></li>
+            <li>No need to update your IAM role trust policy</li>
+            <li>Just paste the Role ARN below to reconnect</li>
+          </ol>
+        </div>
+      ) : (
+        <div className="bg-accent-light border border-accent/20 rounded p-4 text-xs text-accent space-y-1.5">
+          <p className="font-medium">Create a read-only cross-account IAM role:</p>
+          <ol className="list-decimal list-inside space-y-1 text-accent/80">
+            <li>IAM → Roles → Create role → Another AWS account</li>
+            <li>Account ID: <code className="font-mono bg-accent/10 px-1 rounded">{awsAccountId}</code></li>
+            <li>Require external ID: <code className="font-mono bg-accent/10 px-1 rounded">{externalId}</code></li>
+            <li>Attach the <code className="font-mono bg-accent/10 px-1 rounded">SecurityAudit</code> managed policy</li>
+            <li>Paste the Role ARN below</li>
+          </ol>
+        </div>
+      )}
 
       <div>
         <label className="text-xs text-muted font-mono uppercase tracking-wider block mb-1.5">Role ARN</label>
@@ -291,7 +315,7 @@ function AwsConnectForm({ onSuccess, onCancel }: { onSuccess: () => void; onCanc
       <FormActions
         onSubmit={handleSubmit} onCancel={onCancel}
         disabled={!roleArn || loading}
-        submitLabel={loading ? 'Validating...' : 'Connect'}
+        submitLabel={loading ? 'Validating...' : isReconnecting ? 'Reconnect' : 'Connect'}
       />
     </div>
   )
