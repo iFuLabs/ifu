@@ -46,9 +46,10 @@ export default function DashboardPage() {
             {score ? `Last updated ${formatDistanceToNow(new Date(score.lastUpdated), { addSuffix: true })}` : 'Loading...'}
           </p>
           {hasRunningScan && (
-            <div className="flex items-center gap-2 mt-2 text-xs text-accent">
+            <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-accent/10 border border-accent/20 rounded-lg text-xs text-accent">
               <RefreshCw size={12} className="animate-spin" />
-              <span>Scan in progress...</span>
+              <span className="font-medium">Scan in progress...</span>
+              <span className="text-accent/70">This may take a few minutes</span>
             </div>
           )}
         </div>
@@ -81,11 +82,13 @@ export default function DashboardPage() {
               setIsScanning(false)
             }
           }}
-          disabled={isScanning}
-          className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded bg-card hover:bg-bg transition-all text-muted hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
+          disabled={isScanning || hasRunningScan}
+          className="flex items-center gap-2 px-4 py-2 text-sm border border-border rounded-lg bg-card hover:bg-bg transition-all text-muted hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] justify-center"
         >
-          <RefreshCw size={14} className={isScanning ? 'animate-spin' : ''} />
-          <span className="whitespace-nowrap">{isScanning ? 'Starting scan...' : 'Run scan'}</span>
+          <RefreshCw size={14} className={isScanning || hasRunningScan ? 'animate-spin' : ''} />
+          <span className="whitespace-nowrap font-medium">
+            {isScanning ? 'Starting...' : hasRunningScan ? 'Scanning...' : 'Run scan'}
+          </span>
         </button>
       </div>
 
@@ -363,38 +366,64 @@ function ControlRow({ control }: { control: any }) {
 
 function ScanRow({ scan }: { scan: any }) {
   const statusConfig = {
-    complete: { label: 'Complete', color: 'text-accent bg-accent-light' },
-    running:  { label: 'Running',  color: 'text-warn bg-warn/10' },
-    pending:  { label: 'Pending',  color: 'text-muted bg-border/50' },
-    failed:   { label: 'Failed',   color: 'text-danger bg-danger/10' },
+    complete: { 
+      label: 'Complete', 
+      color: 'text-accent bg-accent-light border-accent/20',
+      icon: <CheckCircle size={12} className="text-accent" />
+    },
+    running: { 
+      label: 'Running', 
+      color: 'text-warn bg-warn/10 border-warn/20',
+      icon: <RefreshCw size={12} className="text-warn animate-spin" />
+    },
+    pending: { 
+      label: 'Pending', 
+      color: 'text-muted bg-border/50 border-border',
+      icon: <Clock size={12} className="text-muted" />
+    },
+    failed: { 
+      label: 'Failed', 
+      color: 'text-danger bg-danger/10 border-danger/20',
+      icon: <AlertTriangle size={12} className="text-danger" />
+    },
   }
   const config = statusConfig[scan.status as keyof typeof statusConfig] || statusConfig.pending
 
   return (
-    <div className="flex items-center gap-3 px-5 py-3">
+    <div className="flex items-center gap-3 px-5 py-3.5">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="font-mono text-xs text-muted capitalize">{scan.integrationType}</span>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="font-mono text-xs text-ink capitalize font-medium">{scan.integrationType}</span>
           <span className="text-muted text-xs">·</span>
           <span className="text-xs text-muted">{scan.triggeredBy}</span>
         </div>
         {scan.status === 'complete' && (
-          <p className="text-sm text-ink">
-            {scan.passCount} passed · <span className="text-danger">{scan.failCount} failed</span>
+          <p className="text-sm text-muted">
+            <span className="text-accent font-medium">{scan.passCount} passed</span>
+            {scan.failCount > 0 && (
+              <> · <span className="text-danger font-medium">{scan.failCount} failed</span></>
+            )}
           </p>
+        )}
+        {scan.status === 'running' && (
+          <p className="text-sm text-warn">Scanning your infrastructure...</p>
+        )}
+        {scan.status === 'pending' && (
+          <p className="text-sm text-muted">Waiting to start...</p>
         )}
         {scan.status === 'failed' && (
           <p className="text-sm text-danger truncate">{scan.error || 'Scan failed'}</p>
         )}
-        <p className="text-xs text-muted mt-0.5">
+        <p className="text-xs text-muted mt-1">
           {scan.completedAt
             ? formatDistanceToNow(new Date(scan.completedAt), { addSuffix: true })
             : formatDistanceToNow(new Date(scan.createdAt), { addSuffix: true })}
         </p>
       </div>
-      <span className={clsx('font-mono text-[10px] px-2 py-0.5 rounded', config.color)}>
-        {config.label}
-      </span>
+      <div className={clsx('flex items-center gap-1.5 font-mono text-[10px] px-2.5 py-1 rounded-full border', config.color)}>
+        {config.icon}
+        <span className="font-medium">{config.label}</span>
+      </div>
     </div>
   )
 }

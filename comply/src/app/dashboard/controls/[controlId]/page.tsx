@@ -8,8 +8,8 @@ import { formatDistanceToNow, format } from 'date-fns'
 import clsx from 'clsx'
 import { AiGapExplainer } from '@/components/AiGapExplainer'
 
-export default async function ControlDetailPage({ params }: { params: Promise<{ controlId: string }> }) {
-  const { controlId } = await params
+export default function ControlDetailPage({ params }: { params: { controlId: string } }) {
+  const { controlId } = params
   const { data: control, mutate } = useSWR(
     ['control', controlId],
     () => api.controls.get(controlId)
