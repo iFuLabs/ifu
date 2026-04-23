@@ -4,7 +4,7 @@ import { api } from '@/lib/api'
 import { useState } from 'react'
 import { ArrowLeft, CheckCircle, XCircle, Clock, Minus, ChevronDown, ChevronUp, Save } from 'lucide-react'
 import Link from 'next/link'
-import { formatDistanceToNow, format } from 'date-fns'
+import { format } from 'date-fns'
 import clsx from 'clsx'
 import { AiGapExplainer } from '@/components/AiGapExplainer'
 
@@ -37,6 +37,14 @@ export default function ControlDetailPage({ params }: { params: { controlId: str
       <div className="bg-card border border-danger/20 rounded-xl p-6">
         <h2 className="text-sm font-medium text-danger mb-2">Control not found</h2>
         <p className="text-sm text-muted">The control "{controlId}" could not be loaded. It may not exist or you may not have access to it.</p>
+        {process.env.NODE_ENV === 'development' && (
+          <details className="mt-3">
+            <summary className="text-xs text-muted cursor-pointer">Error details</summary>
+            <pre className="mt-2 text-xs font-mono text-danger bg-danger/5 p-2 rounded overflow-auto">
+              {error?.message || String(error)}
+            </pre>
+          </details>
+        )}
       </div>
     </div>
   )

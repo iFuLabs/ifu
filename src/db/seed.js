@@ -221,8 +221,8 @@ const SOC2_CONTROLS = [
   }
 ]
 
-async function seed() {
-  console.log('🌱 Seeding control definitions...')
+async function seedSoc2() {
+  console.log('🌱 Seeding SOC2 control definitions...')
 
   for (const control of SOC2_CONTROLS) {
     await db
@@ -240,14 +240,8 @@ async function seed() {
       })
   }
 
-  console.log(`✅ Seeded ${SOC2_CONTROLS.length} control definitions`)
-  process.exit(0)
+  console.log(`✅ Seeded ${SOC2_CONTROLS.length} SOC2 controls`)
 }
-
-seed().catch(err => {
-  console.error('Seed failed:', err)
-  process.exit(1)
-})
 
 // GitHub controls added separately for clarity
 const GITHUB_CONTROLS = [
@@ -389,12 +383,28 @@ async function seedGdpr() {
 
 // Run all seeds
 async function seedAll() {
-  await seed()
-  await seedGithub()
-  await seedIso27001()
-  await seedGdpr()
-  console.log('\n🎉 All controls seeded successfully')
+  try {
+    await seedSoc2()
+    await seedGithub()
+    await seedIso27001()
+    await seedGdpr()
+    console.log('\n🎉 All controls seeded successfully')
+  } finally {
+    // Close the database connection pool
+    const { pool } = await import('./client.js')
+    await pool.end()
+  }
   process.exit(0)
 }
 
-seedAll().catch(err => { console.error('Seed failed:', err); process.exit(1) })
+seedAll().catch(async (err) => { 
+  console.error('Seed failed:', err)
+  // Close the database connection pool on error too
+  try {
+    const { pool } = await import('./client.js')
+    await pool.end()
+  } catch (e) {
+    // Ignore cleanup errors
+  }
+  process.exit(1) 
+})

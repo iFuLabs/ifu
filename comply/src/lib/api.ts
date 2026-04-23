@@ -41,7 +41,7 @@ export const api = {
     },
     get: (id: string) => apiFetch<any>(`/api/v1/controls/${id}`),
     updateNotes: (id: string, notes: string) => apiFetch<any>(`/api/v1/controls/${id}/notes`, { 
-      method: 'PUT', 
+      method: 'PATCH', 
       body: JSON.stringify({ notes }) 
     }),
   },
