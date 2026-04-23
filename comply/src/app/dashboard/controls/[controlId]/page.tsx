@@ -69,6 +69,18 @@ export default function ControlDetailPage({ params }: { params: { controlId: str
             </div>
             <h1 className="font-serif text-xl font-normal text-ink">{control.title}</h1>
             <p className="text-sm text-muted mt-2 leading-relaxed">{control.description}</p>
+            
+            {/* Plain English explanation */}
+            <div className="mt-3 p-3 bg-bg rounded-lg">
+              <p className="text-xs text-muted leading-relaxed">
+                <span className="font-medium text-ink">In plain English: </span>
+                {control.status === 'pass' && "This security requirement is currently met in your infrastructure. "}
+                {control.status === 'fail' && "This security requirement is not met and needs to be fixed before your audit. "}
+                {control.status === 'review' && "This requires manual verification - automated checks can't fully validate this. "}
+                {control.status === 'pending' && "We haven't scanned this yet. Run a scan or connect the required integration. "}
+                {control.automatable ? "We check this automatically during scans." : "This requires manual evidence collection."}
+              </p>
+            </div>
           </div>
         </div>
 
