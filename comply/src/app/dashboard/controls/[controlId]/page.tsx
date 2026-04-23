@@ -10,7 +10,7 @@ import { AiGapExplainer } from '@/components/AiGapExplainer'
 
 export default function ControlDetailPage({ params }: { params: { controlId: string } }) {
   const { controlId } = params
-  const { data: control, mutate } = useSWR(
+  const { data: control, error, mutate } = useSWR(
     ['control', controlId],
     () => api.controls.get(controlId)
   )
@@ -28,10 +28,30 @@ export default function ControlDetailPage({ params }: { params: { controlId: str
     }
   }
 
+  if (error) return (
+    <div className="p-6 max-w-3xl mx-auto space-y-5">
+      <Link href="/dashboard/controls" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors">
+        <ArrowLeft size={14} />
+        Controls
+      </Link>
+      <div className="bg-card border border-danger/20 rounded-xl p-6">
+        <h2 className="text-sm font-medium text-danger mb-2">Control not found</h2>
+        <p className="text-sm text-muted">The control "{controlId}" could not be loaded. It may not exist or you may not have access to it.</p>
+      </div>
+    </div>
+  )
+
   if (!control) return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="h-8 w-48 bg-border rounded animate-pulse mb-4" />
-      <div className="h-40 bg-card border border-border rounded-xl animate-pulse" />
+    <div className="p-6 max-w-3xl mx-auto space-y-5">
+      <Link href="/dashboard/controls" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink transition-colors">
+        <ArrowLeft size={14} />
+        Controls
+      </Link>
+      <div className="bg-card border border-border rounded-xl p-6">
+        <div className="h-6 w-32 bg-border rounded animate-pulse mb-3" />
+        <div className="h-8 w-full bg-border rounded animate-pulse mb-2" />
+        <div className="h-20 w-full bg-border rounded animate-pulse" />
+      </div>
     </div>
   )
 
