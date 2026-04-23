@@ -12,10 +12,11 @@ import React from 'react'
 export default function DashboardPage() {
   const { data: score, isLoading: scoreLoading, mutate: mutateScore } = useSWR<any>('score', api.controls.score, { refreshInterval: 30000 })
   const { data: controls, mutate: mutateControls } = useSWR<any[]>('controls', api.controls.list, { refreshInterval: 10000 })
-  const { data: scans, mutate: mutateScans } = useSWR<any[]>('scans', api.scans.list, { refreshInterval: 5000 })
+  const { data: scans, mutate: mutateScans } = useSWR<any[]>('scans', api.scans.list, { refreshInterval: 3000 })
   const { data: planFeatures } = useSWR<any>('plan-features', api.plan.features)
   const { data: integrations } = useSWR<any[]>('integrations', api.integrations.list)
   const [isScanning, setIsScanning] = React.useState(false)
+  const [lastScanTime, setLastScanTime] = React.useState<number>(0)
 
   const { data: finopsSummary } = useSWR<any>('finops-summary', async () => {
     // Auth cookie is sent automatically
@@ -26,6 +27,9 @@ export default function DashboardPage() {
   const failingControls = controls?.filter(c => c.status === 'fail') || []
   const latestScan = scans?.[0]
   const hasRunningScan = scans?.some(s => s.status === 'running' || s.status === 'pending')
+  
+  // Show scanning indicator if scan was triggered recently (within 30 seconds) or if there's an active scan
+  const showScanningIndicator = hasRunningScan || (Date.now() - lastScanTime < 30000)
   
   // Refresh score and controls when scan completes
   React.useEffect(() => {
@@ -45,7 +49,7 @@ export default function DashboardPage() {
           <p className="text-sm text-muted mt-0.5">
             {score ? `Last updated ${formatDistanceToNow(new Date(score.lastUpdated), { addSuffix: true })}` : 'Loading...'}
           </p>
-          {hasRunningScan && (
+          {showScanningIndicator && (
             <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-accent/10 border border-accent/20 rounded-lg text-xs text-accent">
               <RefreshCw size={12} className="animate-spin" />
               <span className="font-medium">Scan in progress...</span>
@@ -56,6 +60,7 @@ export default function DashboardPage() {
         <button
           onClick={async () => {
             setIsScanning(true)
+            setLastScanTime(Date.now())
             try {
               const connectedIntegrations = await api.integrations.list()
               const connected = connectedIntegrations.filter(i => i.status === 'connected')
@@ -82,12 +87,12 @@ export default function DashboardPage() {
               setIsScanning(false)
             }
           }}
-          disabled={isScanning || hasRunningScan}
+          disabled={isScanning || showScanningIndicator}
           className="flex items-center gap-2 px-4 py-2 text-sm border border-border rounded-lg bg-card hover:bg-bg transition-all text-muted hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] justify-center"
         >
-          <RefreshCw size={14} className={isScanning || hasRunningScan ? 'animate-spin' : ''} />
+          <RefreshCw size={14} className={isScanning || showScanningIndicator ? 'animate-spin' : ''} />
           <span className="whitespace-nowrap font-medium">
-            {isScanning ? 'Starting...' : hasRunningScan ? 'Scanning...' : 'Run scan'}
+            {isScanning ? 'Starting...' : showScanningIndicator ? 'Scanning...' : 'Run scan'}
           </span>
         </button>
       </div>

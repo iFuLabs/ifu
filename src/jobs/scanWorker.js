@@ -139,14 +139,22 @@ export const scanWorker = new Worker('scans', async (job) => {
       completedAt: new Date()
     }).where(eq(scans.id, scan.id))
 
-    // Mark integration as errored
-    await db.update(integrations).set({
-      status: 'error',
-      lastError: err.message,
-      lastErrorAt: new Date(),
-      updatedAt: new Date()
-    }).where(eq(integrations.id, integrationId))
+    // Only mark integration as errored if it's a connection/auth issue, not a scan execution issue
+    const isConnectionError = err.message?.includes('not found') || 
+                             err.message?.includes('disconnected') ||
+                             err.message?.includes('credential') ||
+                             err.message?.includes('AssumeRole')
+    
+    if (isConnectionError) {
+      await db.update(integrations).set({
+        status: 'error',
+        lastError: err.message,
+        lastErrorAt: new Date(),
+        updatedAt: new Date()
+      }).where(eq(integrations.id, integrationId))
+    }
 
+    logger.error({ orgId, integrationId, error: err.message }, 'Scan failed')
     throw err // BullMQ will retry
   }
 }, {
