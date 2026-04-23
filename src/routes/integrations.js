@@ -187,7 +187,8 @@ export default async function integrationRoutes(fastify) {
     schema: {
       tags: ['Integrations'],
       security: [{ bearerAuth: [] }],
-      params: { type: 'object', properties: { id: { type: 'string' } } }
+      params: { type: 'object', properties: { id: { type: 'string' } } },
+      body: { type: 'object', additionalProperties: true } // Allow empty body
     }
   }, async (request, reply) => {
     const integration = await db.query.integrations.findFirst({

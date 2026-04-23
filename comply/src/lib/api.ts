@@ -53,7 +53,10 @@ export const api = {
   },
   integrations: {
     list: () => apiFetch<any[]>('/api/v1/integrations'),
-    sync: (id: string) => apiFetch<any>(`/api/v1/integrations/${id}/sync`, { method: 'POST' }),
+    sync: (id: string) => apiFetch<any>(`/api/v1/integrations/${id}/sync`, { 
+      method: 'POST',
+      body: JSON.stringify({}) // Send empty JSON object instead of no body
+    }),
     disconnect: (id: string) => apiFetch<any>(`/api/v1/integrations/${id}`, { method: 'DELETE' }),
     connectAws: (body: { roleArn: string; externalId: string }) => 
       apiFetch<any>('/api/v1/integrations/aws', { method: 'POST', body: JSON.stringify(body) }),
