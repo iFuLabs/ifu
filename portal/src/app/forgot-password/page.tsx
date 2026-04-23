@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
               fontWeight: 500,
               color: '#F5F5F5',
               marginBottom: '8px',
-              fontFamily: "'Fraunces', serif",
+              fontFamily: "'PP Fragment', serif",
               letterSpacing: '-0.02em'
             }}>
               Check your email
@@ -135,7 +135,7 @@ export default function ForgotPasswordPage() {
             fontWeight: 500,
             color: '#F5F5F5',
             marginBottom: '8px',
-            fontFamily: "'Fraunces', serif",
+            fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             Reset your password

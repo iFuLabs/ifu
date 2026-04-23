@@ -255,7 +255,7 @@ export default function FinOpsPage() {
                   <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'Cost']} />
                   <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
                     {findings.topServices.slice(0, 8).map((_, i) => (
-                      <Cell key={i} fill={i === 0 ? '#1B3A5C' : i < 3 ? '#2E5F8A' : '#D1D5DB'} />
+                      <Cell key={i} fill={i === 0 ? '#8A63E6' : i < 3 ? '#DAC0FD' : '#D1D5DB'} />
                     ))}
                   </Bar>
                 </BarChart>

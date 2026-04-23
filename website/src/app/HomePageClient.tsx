@@ -2,6 +2,8 @@
 import './globals.css'
 import { useEffect } from 'react'
 import { SiteNav } from '@/components/SiteNav'
+import { IrisButton, MintCard } from '@/components/BrandPatterns'
+import { Footer } from '@/components/Footer'
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
@@ -49,12 +51,9 @@ export default function HomePageClient() {
             iFu Labs delivers consultant-led cloud services — cost optimisation, compliance, migration, containers, and DevOps — backed by deep AWS expertise and real engineering.
           </p>
           <div className="hero-actions">
-            <a href="/schedule-consultation" className="btn-cta primary">
+            <IrisButton href="/schedule-consultation">
               Book a free discovery call
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </a>
+            </IrisButton>
             <a href="#services" className="btn-cta ghost">See our services</a>
           </div>
           <div className="hero-trust">
@@ -144,11 +143,11 @@ export default function HomePageClient() {
       <div className="divider" />
 
       {/* Methodology */}
-      <section className="methodology-section section--soft" id="methodology">
+      <section className="methodology-section section--soft gradient-iris-lavender" id="methodology">
         <div className="methodology-inner reveal">
-          <div className="section-eyebrow">Our Methodology</div>
-          <h2 className="section-title">A repeatable delivery<br/>model built for <em>results.</em></h2>
-          <p className="section-sub">Enterprise buyers want to see how you work, not just what you do. Here is our process, every time.</p>
+          <div className="section-eyebrow" style={{ color: 'rgba(255,255,255,0.9)' }}>Our Methodology</div>
+          <h2 className="section-title" style={{ color: '#fff' }}>A repeatable delivery<br/>model built for <em>results.</em></h2>
+          <p className="section-sub" style={{ color: 'rgba(255,255,255,0.85)' }}>Enterprise buyers want to see how you work, not just what you do. Here is our process, every time.</p>
 
           <div className="methodology-grid reveal-grid">
             {[
@@ -157,10 +156,10 @@ export default function HomePageClient() {
               { num: '03', title: 'Delivery', desc: 'Our engineers embed with your team and execute against a shared plan. Weekly standups, full IaC, and no handover black boxes. You see every change before it ships.' },
               { num: '04', title: 'Handover', desc: 'You own everything. Runbooks, Terraform, access, documentation. We train your team and leave them self-sufficient — no manufactured dependency on iFu Labs.' },
             ].map(step => (
-              <div key={step.num} className="method-step">
-                <span className="method-num">{step.num}</span>
-                <div className="method-title">{step.title}</div>
-                <p className="method-desc">{step.desc}</p>
+              <div key={step.num} className="method-step" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <span className="method-num" style={{ color: '#fff' }}>{step.num}</span>
+                <div className="method-title" style={{ color: '#fff' }}>{step.title}</div>
+                <p className="method-desc" style={{ color: 'rgba(255,255,255,0.85)' }}>{step.desc}</p>
               </div>
             ))}
           </div>
@@ -186,7 +185,7 @@ export default function HomePageClient() {
               </ul>
               <div className="product-price">From <strong>$299</strong> / month · or add to your retainer</div>
               <div className="product-actions">
-                <a href="/demo/comply" className="product-cta primary">Request a demo</a>
+                <IrisButton href="/demo/comply">Request a demo</IrisButton>
                 <a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`} className="product-cta ghost">Start free trial →</a>
               </div>
             </div>
@@ -202,7 +201,7 @@ export default function HomePageClient() {
               </ul>
               <div className="product-price">From <strong>$199</strong> / month · or add to your retainer</div>
               <div className="product-actions">
-                <a href="/demo/costless" className="product-cta primary">Request a demo</a>
+                <IrisButton href="/demo/costless">Request a demo</IrisButton>
                 <a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`} className="product-cta ghost">Start free trial →</a>
               </div>
             </div>
@@ -292,11 +291,11 @@ export default function HomePageClient() {
       <div className="divider" />
 
       {/* Contact */}
-      <div className="cta-band reveal" id="contact">
+      <div className="cta-band reveal gradient-plum-lavender" id="contact">
         <div className="cta-section">
           <div>
-            <h2>Let&apos;s talk about your AWS infrastructure.</h2>
-            <p>Book a free 30-minute discovery call. No commitment, no sales pitch — just honest advice from engineers who&apos;ve seen it all.</p>
+            <h2 style={{ color: '#fff' }}>Let&apos;s talk about your AWS infrastructure.</h2>
+            <p style={{ color: 'rgba(255,255,255,0.85)' }}>Book a free 30-minute discovery call. No commitment, no sales pitch — just honest advice from engineers who&apos;ve seen it all.</p>
           </div>
           <div className="cta-form">
             <input className="cta-field" type="text" placeholder="Your name" id="contact-name" />
@@ -332,101 +331,7 @@ export default function HomePageClient() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="footer-new">
-        <div className="footer-main-inner">
-          <div className="footer-brand">
-            <a href="/" className="footer-logo">
-              <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '30px', width: 'auto' }} />
-            </a>
-            <p className="footer-tagline">Expert AWS engineering for startups that ship fast.</p>
-            <div className="footer-contact-links">
-              <a href="mailto:info@ifulabs.com" className="footer-contact-link">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <rect x="1" y="2.5" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M1 4L6 7L11 4" stroke="currentColor" strokeWidth="1.2"/>
-                </svg>
-                info@ifulabs.com
-              </a>
-              <a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener" className="footer-contact-link">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M6 1.5V6L8.5 8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-                AWS Partner Network Member
-              </a>
-            </div>
-          </div>
-
-          <div className="footer-columns">
-            <div className="footer-col">
-              <h4>Services</h4>
-              <ul>
-                <li><a href="#services">Cost Optimisation</a></li>
-                <li><a href="#services">Compliance</a></li>
-                <li><a href="#services">Cloud Migration</a></li>
-                <li><a href="#services">EKS & Containers</a></li>
-                <li><a href="#services">DevOps & CI/CD</a></li>
-                <li><a href="#services">Managed Services</a></li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h4>Products</h4>
-              <ul>
-                <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>iFu Comply</a></li>
-                <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>iFu Costless</a></li>
-                <li><a href={`${PORTAL_URL}/login`}>Client portal</a></li>
-                <li><a href={`${API_URL}/docs`}>API Documentation</a></li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h4>Company</h4>
-              <ul>
-                <li><a href="/about">About</a></li>
-                <li><a href="/for-startups">For Startups</a></li>
-                <li><a href="https://aws.amazon.com/partners/" target="_blank" rel="noopener">AWS Partnership</a></li>
-                <li><a href="/schedule-consultation">Schedule consultation</a></li>
-                <li><a href="mailto:info@ifulabs.com">info@ifulabs.com</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Legal */}
-        <div className="footer-legal">
-          <h4>Legal</h4>
-          <ul>
-            <li><a href="/privacy">Privacy Policy</a></li>
-            <li><a href="/terms">Terms of Service</a></li>
-            <li><a href="/acceptable-use">Acceptable Use</a></li>
-          </ul>
-        </div>
-
-        {/* Certifications */}
-        <div className="footer-certifications">
-          <div className="footer-cert-text">
-            <p>Our team holds <strong>multiple AWS certifications</strong> across specialized areas. We take pride in our depth of knowledge and continuously invest in staying current with AWS best practices and emerging technologies.</p>
-          </div>
-          <div className="footer-cert-badges">
-            {[
-              { file: 'solutions-architect-associate.png', label: 'AWS Solutions Architect Associate' },
-              { file: 'solutions-architect-professional.png', label: 'AWS Solutions Architect Professional' },
-              { file: 'data-engineer-associate.png', label: 'AWS Data Engineer Associate' },
-              { file: 'ml-engineer-associate.png', label: 'AWS ML Engineer Associate' },
-              { file: 'devops-engineer-professional.png', label: 'AWS DevOps Engineer Professional' },
-            ].map(badge => (
-              <div key={badge.file} className="footer-cert-badge" title={badge.label}>
-                <img src={`/badges/${badge.file}`} alt={badge.label} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </footer>
-
-      <div className="footer-bottom">
-        <p>© 2026 iFu Labs Ltd.</p>
-        <p>AWS Partner Network member · Read-only infrastructure access · No lock-in</p>
-      </div>
+      <Footer />
     </>
   )
 }

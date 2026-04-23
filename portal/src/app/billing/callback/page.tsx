@@ -100,7 +100,7 @@ function BillingCallbackContent() {
               fontWeight: 500,
               color: '#F5F5F5',
               marginBottom: '10px',
-              fontFamily: "'Fraunces', serif",
+              fontFamily: "'PP Fragment', serif",
               letterSpacing: '-0.015em'
             }}>
               Verifying payment...
@@ -131,7 +131,7 @@ function BillingCallbackContent() {
               fontWeight: 500,
               color: '#F5F5F5',
               marginBottom: '10px',
-              fontFamily: "'Fraunces', serif",
+              fontFamily: "'PP Fragment', serif",
               letterSpacing: '-0.015em'
             }}>
               Payment successful
@@ -162,7 +162,7 @@ function BillingCallbackContent() {
               fontWeight: 500,
               color: '#F5F5F5',
               marginBottom: '10px',
-              fontFamily: "'Fraunces', serif",
+              fontFamily: "'PP Fragment', serif",
               letterSpacing: '-0.015em'
             }}>
               Payment failed

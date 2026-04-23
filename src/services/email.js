@@ -33,13 +33,13 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
             <style>
               body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .header { background: #33063D; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
               .logo { margin-bottom: 10px; }
               .logo img { height: 40px; width: auto; display: inline-block; }
-              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
+              .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .button:hover { background: #15402F; }
+              .button { display: inline-block; background: #8A63E6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .button:hover { background: #33063D; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
               ul { padding-left: 20px; }
               li { margin: 8px 0; }
@@ -49,7 +49,7 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
             <div class="container">
               <div class="header">
                 <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
-                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
+                <p class="tagline">Both problems. One platform. A price that makes sense.</p>
               </div>
               <div class="content">
                 <p>Hi ${name || 'there'},</p>
@@ -73,7 +73,7 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
               </div>
               <div class="footer">
                 <p><strong>iFu Labs</strong></p>
-                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
+                <p style="margin: 5px 0;">Both problems. One platform. A price that makes sense.</p>
                 <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
               </div>
             </div>
@@ -119,14 +119,14 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
             <style>
               body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .header { background: #33063D; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
               .logo { margin-bottom: 10px; }
               .logo img { height: 40px; width: auto; display: inline-block; }
-              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
+              .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .button:hover { background: #15402F; }
-              .info-box { background: #E8F2EE; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #1A4D3C; }
+              .button { display: inline-block; background: #8A63E6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .button:hover { background: #33063D; }
+              .info-box { background: #F4F4F4; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #8A63E6; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
               .warning { color: #dc2626; font-size: 14px; margin-top: 20px; padding: 15px; background: #fef2f2; border-radius: 6px; border-left: 4px solid #dc2626; }
             </style>
@@ -135,7 +135,7 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
             <div class="container">
               <div class="header">
                 <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
-                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
+                <p class="tagline">Both problems. One platform. A price that makes sense.</p>
               </div>
               <div class="content">
                 <p>Hi there,</p>
@@ -161,7 +161,7 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
               </div>
               <div class="footer">
                 <p><strong>iFu Labs</strong></p>
-                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
+                <p style="margin: 5px 0;">Both problems. One platform. A price that makes sense.</p>
                 <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This invitation was sent to ${to}</p>
               </div>
             </div>
@@ -184,7 +184,7 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
 }
 
 /**
- * Send password reset email (for future implementation)
+ * Send password reset email
  */
 export async function sendPasswordResetEmail({ to, name, resetUrl }) {
   try {
@@ -201,13 +201,13 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
             <style>
               body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .header { background: #33063D; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
               .logo { margin-bottom: 10px; }
               .logo img { height: 40px; width: auto; display: inline-block; }
-              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
+              .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .button:hover { background: #15402F; }
+              .button { display: inline-block; background: #8A63E6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .button:hover { background: #33063D; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
               .warning { color: #dc2626; font-size: 14px; margin-top: 20px; padding: 15px; background: #fef2f2; border-radius: 6px; border-left: 4px solid #dc2626; }
             </style>
@@ -216,7 +216,7 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
             <div class="container">
               <div class="header">
                 <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
-                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
+                <p class="tagline">Both problems. One platform. A price that makes sense.</p>
               </div>
               <div class="content">
                 <p>Hi ${name || 'there'},</p>
@@ -237,7 +237,7 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
               </div>
               <div class="footer">
                 <p><strong>iFu Labs</strong></p>
-                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
+                <p style="margin: 5px 0;">Both problems. One platform. A price that makes sense.</p>
                 <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
               </div>
             </div>

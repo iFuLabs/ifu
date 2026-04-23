@@ -1,14 +1,14 @@
 import PDFDocument from 'pdfkit'
 
 const COLORS = {
-  ink:    '#0D0D0D',
-  accent: '#1A4D3C',
+  ink:    '#33063D',
+  accent: '#8A63E6',
   muted:  '#6B6B6B',
-  border: '#E2E0D8',
-  pass:   '#1A4D3C',
+  border: '#DAC0FD',
+  pass:   '#C8F6C0',
   fail:   '#C84B31',
   warn:   '#C87A1A',
-  bg:     '#F7F6F2',
+  bg:     '#F4F4F4',
   white:  '#FFFFFF',
 }
 

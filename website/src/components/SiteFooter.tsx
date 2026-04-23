@@ -26,10 +26,32 @@ export function SiteFooter() {
       <footer className="footer-new">
         <div className="footer-main-inner">
           <div className="footer-brand">
-            <a href="/" className="footer-logo">
-              <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '30px', width: 'auto' }} />
-            </a>
             <p className="footer-tagline">Expert AWS engineering for startups that ship fast.</p>
+            
+            {/* AWS Co-branding */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '24px',
+              margin: '24px 0' 
+            }}>
+              <img 
+                src="/logos/white.svg" 
+                alt="iFu Labs" 
+                style={{ height: '32px', width: 'auto' }}
+              />
+              <div style={{ 
+                width: '1px', 
+                height: '32px', 
+                background: '#DAC0FD' 
+              }} />
+              <img 
+                src="https://d0.awsstatic.com/logos/powered-by-aws-white.png"
+                alt="Powered by AWS"
+                style={{ height: 'auto', maxHeight: '32px', opacity: 0.9 }}
+              />
+            </div>
+            
             <div className="footer-contact-links">
               <a href="mailto:info@ifulabs.com" className="footer-contact-link">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

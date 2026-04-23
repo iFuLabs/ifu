@@ -431,7 +431,7 @@ function OnboardingForm() {
             fontWeight: '600', 
             color: '#F5F5F5', 
             marginBottom: '8px',
-            fontFamily: "'Fraunces', serif",
+            fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             Welcome to iFu Labs
@@ -442,11 +442,11 @@ function OnboardingForm() {
               alignItems: 'center',
               gap: '6px',
               padding: '6px 14px',
-              background: 'rgba(232, 130, 10, 0.08)',
+              background: 'rgba(138, 99, 230, 0.08)',
               border: '1px solid #25282F',
               borderRadius: '20px',
               fontSize: '13px',
-              color: '#E8820A',
+              color: '#8A63E6',
               fontWeight: '500',
               marginTop: '8px'
             }}>
@@ -468,7 +468,7 @@ function OnboardingForm() {
             <div key={s.id} style={{
               flex: 1,
               height: '4px',
-              background: i <= step ? '#E8820A' : '#25282F',
+              background: i <= step ? '#8A63E6' : '#25282F',
               borderRadius: '2px',
               transition: 'all 0.3s ease'
             }} />
@@ -491,14 +491,14 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: 'rgba(232, 130, 10, 0.08)',
+                  background: 'rgba(138, 99, 230, 0.08)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8820A" strokeWidth="2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A63E6" strokeWidth="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                   </svg>
@@ -508,7 +508,7 @@ function OnboardingForm() {
                   fontWeight: '600', 
                   color: '#F5F5F5', 
                   marginBottom: '8px',
-                  fontFamily: "'Fraunces', serif"
+                  fontFamily: "'PP Fragment', serif"
                 }}>
                   Create your account
                 </h2>
@@ -735,7 +735,7 @@ function OnboardingForm() {
                     style={{
                       width: '100%',
                       padding: '10px',
-                      background: '#1B3A5C',
+                      background: '#8A63E6',
                       color: 'white',
                       fontSize: '14px',
                       fontWeight: '600',
@@ -744,8 +744,8 @@ function OnboardingForm() {
                       cursor: 'pointer',
                       transition: 'all 0.2s'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.background = '#2E5F8A'}
-                    onMouseOut={(e) => e.currentTarget.style.background = '#1B3A5C'}
+                    onMouseOver={(e) => e.currentTarget.style.background = '#33063D'}
+                    onMouseOut={(e) => e.currentTarget.style.background = '#8A63E6'}
                   >
                     Go to Sign In
                   </button>
@@ -804,7 +804,7 @@ function OnboardingForm() {
                   fontWeight: '600', 
                   color: '#F5F5F5', 
                   marginBottom: '8px',
-                  fontFamily: "'Fraunces', serif"
+                  fontFamily: "'PP Fragment', serif"
                 }}>
                   Create your organization
                 </h2>
@@ -985,7 +985,7 @@ function OnboardingForm() {
                   fontWeight: '600', 
                   color: '#F5F5F5', 
                   marginBottom: '8px',
-                  fontFamily: "'Fraunces', serif"
+                  fontFamily: "'PP Fragment', serif"
                 }}>
                   Connect your AWS account
                 </h2>
@@ -1157,7 +1157,7 @@ function OnboardingForm() {
                   fontWeight: '600', 
                   color: '#F5F5F5', 
                   marginBottom: '8px',
-                  fontFamily: "'Fraunces', serif"
+                  fontFamily: "'PP Fragment', serif"
                 }}>
                   Add payment method
                 </h2>
@@ -1334,7 +1334,7 @@ function OnboardingForm() {
                   fontWeight: '600', 
                   color: '#F5F5F5', 
                   marginBottom: '8px',
-                  fontFamily: "'Fraunces', serif"
+                  fontFamily: "'PP Fragment', serif"
                 }}>
                   You're all set!
                 </h2>
@@ -1359,7 +1359,7 @@ function OnboardingForm() {
                       {productName === 'iFu Comply' ? '🛡️' : '💰'}
                     </div>
                     <div>
-                      <div style={{ fontSize: '18px', fontWeight: '600', color: '#F5F5F5', fontFamily: "'Fraunces', serif" }}>
+                      <div style={{ fontSize: '18px', fontWeight: '600', color: '#F5F5F5', fontFamily: "'PP Fragment', serif" }}>
                         {productName}
                       </div>
                       {planName && (

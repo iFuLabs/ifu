@@ -1,33 +1,44 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+/* Official Brand Typography: Aeonik + PP Fragment */
+/* Note: These fonts need to be purchased and self-hosted or loaded via proper licensing */
+/* Fallback to system fonts until official fonts are installed */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Dark Corporate Palette */
+  /* Official Brand Colors */
+  --plum:     #33063D;
+  --lavender: #DAC0FD;
+  --iris:     #8A63E6;
+  --mint:     #C8F6C0;
+  --grey:     #F4F4F4;
+  --white:    #FFFFFF;
+
+  /* Dark theme surfaces */
   --bg:       #07080D;
   --surface:  #0D0F18;
   --surface2: #131620;
   --surface3: #191C28;
-  --border:   #1C1F2E;
-  --border2:  #252840;
+  --border:   #33063D;
+  --border2:  #8A63E6;
   --ink:      #EFF1F7;
-  --muted:    #8590A6;
-  --muted2:   #4D5570;
+  --muted:    #DAC0FD;
+  --muted2:   #8A63E6;
 
-  --brand:    #1B3A5C;
-  --accent:   #E8820A;
-  --accent-dim: rgba(232, 130, 10, 0.10);
-  --accent-glow: rgba(232, 130, 10, 0.22);
-  --green:    #22C55E;
-  --green-dim: rgba(34, 197, 94, 0.12);
+  --brand:    #33063D;
+  --accent:   #8A63E6;
+  --accent-dim: rgba(138, 99, 230, 0.10);
+  --accent-glow: rgba(138, 99, 230, 0.22);
+  --green:    #C8F6C0;
+  --green-dim: rgba(200, 246, 192, 0.12);
 
   --shadow-sm: 0 1px 4px rgba(0,0,0,0.55);
   --shadow-md: 0 6px 20px rgba(0,0,0,0.65);
   --shadow-lg: 0 12px 48px rgba(0,0,0,0.75);
 
-  --sans:  'DM Sans', sans-serif;
-  --serif: 'Fraunces', serif;
-  --mono:  'DM Mono', monospace;
+  /* Official Brand Fonts */
+  --sans:  'Aeonik', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --serif: 'PP Fragment', Georgia, 'Times New Roman', serif;
+  --mono:  'Aeonik Fono', 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
 }
 
 html { scroll-behavior: smooth; }
@@ -219,9 +230,9 @@ nav.scrolled {
 }
 
 .btn-solid:hover {
-  background: #D4750A;
+  background: var(--plum);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px var(--accent-glow);
+  box-shadow: 0 4px 16px rgba(138,99,230,0.25);
 }
 
 /* ── HERO ───────────────────────────────────────────────────────── */
@@ -334,9 +345,9 @@ nav.scrolled {
 }
 
 .btn-cta.primary:hover {
-  background: #D4750A;
+  background: var(--plum);
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px var(--accent-glow);
+  box-shadow: 0 8px 28px rgba(138,99,230,0.3);
 }
 
 .btn-cta.ghost {
@@ -447,6 +458,7 @@ nav.scrolled {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
+  background: var(--accent-dim);
   border: 1px solid var(--border2);
   padding: 4px 9px;
   flex-shrink: 0;
@@ -817,8 +829,8 @@ nav.scrolled {
 }
 
 .product-cta.primary:hover {
-  background: var(--accent-bright, #FF9B1F);
-  border-color: var(--accent-bright, #FF9B1F);
+  background: var(--plum);
+  border-color: var(--plum);
 }
 
 .product-cta.ghost {
@@ -1071,7 +1083,7 @@ nav.scrolled {
 }
 
 .pricing-card.featured .pricing-cta:hover {
-  background: #D4750A;
+  background: var(--plum);
 }
 
 /* ── CTA BAND ───────────────────────────────────────────────────── */
@@ -1159,9 +1171,9 @@ nav.scrolled {
 }
 
 .cta-submit:hover {
-  background: #D4750A;
+  background: var(--plum);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px var(--accent-glow);
+  box-shadow: 0 4px 16px rgba(138,99,230,0.25);
 }
 
 /* ── FOOTER ─────────────────────────────────────────────────────── */
@@ -1550,7 +1562,7 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 }
 
 .btn-cta-large:hover {
-  background: #D4750A;
+  background: var(--plum);
   transform: translateY(-2px);
 }
 
@@ -1627,7 +1639,7 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 
 .outcome-card {
   background: var(--surface);
-  padding: 32px 28px;
+  padding: 28px 24px;
   transition: background 0.2s;
 }
 
@@ -1835,8 +1847,8 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 .calc-result-amount { font-family: var(--serif); font-size: 36px; font-weight: 600; color: var(--accent); margin-bottom: 16px; line-height: 1.2; }
 .calc-result-note { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 28px; }
 
-.btn-calc-cta { display: block; width: 100%; padding: 14px; background: var(--accent); color: white; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
-.btn-calc-cta:hover { background: #D4750A; transform: translateY(-1px); }
+.btn-calc-cta { display: block; width: 100%; padding: 14px; background: var(--iris); color: white; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s; border-radius: 8px; }
+.btn-calc-cta:hover { background: var(--plum); transform: translateY(-1px); }
 
 .services-clean-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
 .service-clean-card { background: var(--surface); padding: 36px 32px; transition: background 0.2s; position: relative; }
@@ -3441,4 +3453,384 @@ body.nav-mobile-locked { overflow: hidden; }
 
 @media (max-width: 640px) {
   .hero-card-stack { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ADVANCED BRAND UTILITIES
+   Based on official iFu Labs Brand Identity Book
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── PHOTO OVERLAYS ─────────────────────────────────────────────── */
+
+/* Color wash overlay - apply brand colors over photography */
+.photo-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--iris);
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.photo-overlay--plum::after {
+  background: var(--plum);
+  opacity: 0.5;
+}
+
+.photo-overlay--lavender::after {
+  background: var(--lavender);
+  opacity: 0.3;
+}
+
+.photo-overlay--iris::after {
+  background: var(--iris);
+  opacity: 0.4;
+}
+
+/* Stroke frame overlay - geometric frames using brand colors */
+.photo-frame {
+  border: 2px solid var(--lavender);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.photo-frame--plum {
+  border-color: var(--plum);
+}
+
+.photo-frame--iris {
+  border-color: var(--iris);
+}
+
+/* Diagonal stroke overlay */
+.photo-diagonal-frame {
+  position: relative;
+}
+
+.photo-diagonal-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--white);
+  border-radius: 12px;
+  transform: rotate(-5deg);
+  pointer-events: none;
+}
+
+/* Combined: color wash + stroke */
+.photo-branded {
+  position: relative;
+  border: 2px solid var(--lavender);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.photo-branded::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--plum) 0%, var(--iris) 100%);
+  opacity: 0.3;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* ── CO-BRANDING ────────────────────────────────────────────────── */
+
+.co-branding-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.brand-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--plum);
+}
+
+.brand-divider--light {
+  background: var(--lavender);
+}
+
+.partner-logo {
+  height: auto;
+  max-height: 32px;
+  opacity: 0.9;
+}
+
+/* ── BRANDED HERO PATTERNS ──────────────────────────────────────── */
+
+.hero-branded {
+  background: var(--lavender);
+  padding: 80px 20px;
+}
+
+.hero-branded-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.hero-branded h1 {
+  font-family: var(--serif);
+  font-size: clamp(36px, 5vw, 48px);
+  color: var(--plum);
+  margin-bottom: 20px;
+  line-height: 1.1;
+}
+
+.hero-branded p {
+  font-family: var(--sans);
+  font-size: 18px;
+  color: var(--plum);
+  line-height: 1.6;
+}
+
+.hero-branded img {
+  width: 100%;
+  border-radius: 12px;
+  border: 2px solid var(--iris);
+}
+
+/* ── BRANDED CARD PATTERNS ──────────────────────────────────────── */
+/* Mint cards are defined below in the "MINT ACCENT CARDS" section */
+
+/* ── BRANDED CTA BUTTONS ────────────────────────────────────────── */
+
+.btn-iris {
+  background: var(--iris);
+  color: var(--white);
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-iris:hover {
+  background: var(--plum);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(138, 99, 230, 0.3);
+}
+
+/* ── BRAND GRADIENTS ───────────────────────────────────────────── */
+/* Based on official brand identity book page 23 */
+
+.gradient-plum-lavender {
+  background: linear-gradient(135deg, #33063D 0%, #8A63E6 100%);
+}
+
+.gradient-iris-lavender {
+  background: linear-gradient(135deg, #DAC0FD 0%, #8A63E6 100%);
+}
+
+.gradient-grey-white {
+  background: linear-gradient(135deg, #F4F4F4 0%, #FFFFFF 100%);
+}
+
+.gradient-mint-white {
+  background: linear-gradient(135deg, #C8F6C0 0%, #FFFFFF 100%);
+}
+
+/* Radial gradient variants */
+.gradient-plum-lavender-radial {
+  background: radial-gradient(circle at top right, #8A63E6 0%, #33063D 100%);
+}
+
+.gradient-iris-lavender-radial {
+  background: radial-gradient(circle at top left, #DAC0FD 0%, #8A63E6 100%);
+}
+
+/* ── MINT ACCENT CARDS ─────────────────────────────────────────── */
+/* Based on official brand identity book page 22 */
+
+.card-mint {
+  background: var(--mint);
+  border: 1px solid rgba(51, 6, 61, 0.08);
+  border-radius: 16px;
+  padding: 32px;
+  transition: all 0.2s;
+}
+
+.card-mint:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(200, 246, 192, 0.3);
+}
+
+.card-mint-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(51, 6, 61, 0.08);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: var(--plum);
+  font-size: 24px;
+}
+
+.card-mint h3 {
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--plum);
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+}
+
+.card-mint p {
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--plum);
+  margin: 0;
+}
+
+.card-mint .btn-mint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 12px 24px;
+  background: var(--plum);
+  color: var(--white);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.card-mint .btn-mint:hover {
+  background: var(--iris);
+  transform: translateX(2px);
+}
+
+/* ── SOCIAL MEDIA TEMPLATE PATTERN ──────────────────────────────── */
+
+.social-post {
+  width: 100%;
+  max-width: 1080px;
+  aspect-ratio: 1;
+  background: var(--iris);
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 16px;
+}
+
+.social-post-content {
+  background: rgba(218, 192, 253, 0.2);
+  border-radius: 16px;
+  padding: 40px;
+  border: 2px solid var(--lavender);
+}
+
+.social-post h2 {
+  font-family: var(--serif);
+  font-size: clamp(32px, 5vw, 64px);
+  color: var(--white);
+  line-height: 1.1;
+  margin-bottom: 24px;
+}
+
+.social-post-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.social-post-footer span {
+  font-family: var(--sans);
+  font-size: 24px;
+  color: var(--white);
+}
+
+/* ── BILLBOARD/OOH TEMPLATE PATTERN ─────────────────────────────── */
+
+.billboard {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--plum);
+  padding: 80px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 60px;
+  align-items: center;
+  border-radius: 16px;
+}
+
+.billboard h1 {
+  font-family: var(--serif);
+  font-size: clamp(48px, 8vw, 96px);
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 40px;
+}
+
+.billboard-image {
+  background: var(--mint);
+  padding: 40px;
+  border-radius: 24px;
+}
+
+.billboard-image img {
+  width: 100%;
+  border-radius: 16px;
+}
+
+.billboard-footer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.billboard-footer span {
+  font-family: var(--sans);
+  font-size: 32px;
+  color: var(--white);
+}
+
+/* ── RESPONSIVE ADJUSTMENTS ─────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .hero-branded-inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .billboard {
+    grid-template-columns: 1fr;
+    padding: 40px;
+    gap: 32px;
+  }
+
+  .social-post {
+    padding: 32px;
+  }
+
+  .co-branding-container {
+    gap: 16px;
+  }
+
+  .brand-divider {
+    height: 24px;
+  }
 }

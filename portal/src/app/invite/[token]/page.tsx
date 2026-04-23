@@ -184,7 +184,7 @@ export default function AcceptInvitationPage() {
               fontWeight: 500,
               color: '#F5F5F5',
               marginBottom: '8px',
-              fontFamily: "'Fraunces', serif",
+              fontFamily: "'PP Fragment', serif",
               letterSpacing: '-0.02em'
             }}>
               Invalid Invitation
@@ -253,7 +253,7 @@ export default function AcceptInvitationPage() {
             fontWeight: 500,
             color: '#F5F5F5',
             marginBottom: '10px',
-            fontFamily: "'Fraunces', serif",
+            fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             You&apos;re invited

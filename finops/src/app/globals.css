@@ -1,31 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap');
+/* Official iFu Labs Brand Typography
+   Fonts: Aeonik (sans-serif), PP Fragment (serif), Aeonik Fono (monospace)
+   Note: These fonts require purchase and self-hosting */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-geist: 'Geist', sans-serif;
-  --font-instrument: 'Instrument Serif', serif;
-  --font-dm-mono: 'DM Mono', monospace;
+  --font-aeonik: 'Aeonik', system-ui, -apple-system, sans-serif;
+  --font-fragment: 'PP Fragment', Georgia, serif;
+  --font-aeonik-fono: 'Aeonik Fono', 'SF Mono', Consolas, monospace;
 }
 
 * { box-sizing: border-box; }
 
 body {
-  background: #F7F6F2;
-  color: #0D0D0D;
-  font-family: var(--font-geist);
+  background: #FFFFFF;
+  color: #33063D;
+  font-family: var(--font-aeonik);
   -webkit-font-smoothing: antialiased;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #E2E0D8; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #6B6B6B; }
+::-webkit-scrollbar-thumb { background: #DAC0FD; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #8A63E6; }
 
 @layer utilities {
-  .font-serif { font-family: var(--font-instrument); }
-  .font-mono  { font-family: var(--font-dm-mono); }
+  .font-serif { font-family: var(--font-fragment); }
+  .font-mono  { font-family: var(--font-aeonik-fono); }
 }

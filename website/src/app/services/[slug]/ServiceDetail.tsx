@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SERVICES, getService } from '@/lib/services'
+import { IrisButton } from '@/components/BrandPatterns'
 
 export default function ServiceDetail({ slug }: { slug: string }) {
   const service = getService(slug)
@@ -48,12 +49,12 @@ export default function ServiceDetail({ slug }: { slug: string }) {
             <p className="svc-hero-tagline">{service.tagline}</p>
             <p className="svc-hero-desc">{service.desc}</p>
             <div className="svc-hero-actions">
-              <a href="/schedule-consultation" className="btn-cta primary">
+              <IrisButton href="/schedule-consultation">
                 Book a free discovery call
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
-              </a>
+              </IrisButton>
               <a href="#pricing" className="btn-cta ghost">See pricing</a>
             </div>
           </div>
@@ -132,12 +133,12 @@ export default function ServiceDetail({ slug }: { slug: string }) {
           <h2 className="section-title">Fixed scopes, honest timelines.</h2>
           <p className="svc-pricing-blurb">{service.pricingBlurb}</p>
           <div className="svc-pricing-actions">
-            <a href="/schedule-consultation" className="btn-cta primary">
+            <IrisButton href="/schedule-consultation">
               Talk to an engineer
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
-            </a>
+            </IrisButton>
             <a href="/#pricing" className="btn-cta ghost">See all pricing</a>
           </div>
         </div>
@@ -199,12 +200,12 @@ export default function ServiceDetail({ slug }: { slug: string }) {
           <h2>Let&apos;s talk about your<br/>AWS infrastructure.</h2>
           <p>Book a free 30-minute discovery call. No commitment, no sales pitch — just honest advice from engineers who&apos;ve seen it all.</p>
           <div className="svc-cta-band-actions">
-            <a href="/schedule-consultation" className="btn-cta primary">
+            <IrisButton href="/schedule-consultation">
               Book a free discovery call
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
-            </a>
+            </IrisButton>
             <a href="mailto:info@ifulabs.com" className="btn-cta ghost">Email us directly</a>
           </div>
         </div>

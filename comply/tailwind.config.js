@@ -4,27 +4,34 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-geist)', 'sans-serif'],
-        serif: ['var(--font-instrument)', 'serif'],
-        mono: ['var(--font-dm-mono)', 'monospace'],
+        sans: ['Aeonik', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        serif: ['PP Fragment', 'Georgia', 'Times New Roman', 'serif'],
+        mono: ['Aeonik Fono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', 'monospace'],
       },
       colors: {
-        bg:     '#F7F6F2',
-        ink:    '#0D0D0D',
-        muted:  '#6B6B6B',
-        border: '#E2E0D8',
-        card:   '#FFFFFF',
+        // Official Brand Colors
+        plum: '#33063D',
+        lavender: '#DAC0FD',
+        iris: '#8A63E6',
+        mint: '#C8F6C0',
+        grey: '#F4F4F4',
+        white: '#FFFFFF',
+        
+        // Semantic mappings
+        bg: '#FFFFFF',
+        ink: '#33063D',
+        muted: '#8A63E6',
+        border: '#DAC0FD',
+        card: '#FFFFFF',
         accent: {
-          DEFAULT: '#1A4D3C',
-          light:   '#E8F2EE',
-          mid:     '#2A7A5C',
+          DEFAULT: '#8A63E6',
+          light: '#DAC0FD',
+          dark: '#33063D',
         },
-        green: {
-          DEFAULT: '#1D6648',
-          light:   '#EAF3EE',
-        },
+        primary: '#33063D',
+        secondary: '#8A63E6',
         danger: '#C84B31',
-        warn:   '#C87A1A',
+        warn: '#C87A1A',
       },
       borderRadius: {
         DEFAULT: '8px',

@@ -3,6 +3,7 @@ import '../globals.css'
 import { useEffect, useMemo, useState } from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { IrisButton, MintCard } from '@/components/BrandPatterns'
 
 // Scroll-reveal — same pattern as the homepage so animations feel consistent.
 function useScrollReveal() {
@@ -58,12 +59,12 @@ export default function ForStartupsPageClient() {
             AWS accounts.
           </p>
           <div className="hero-actions">
-            <a href="/schedule-consultation" className="btn-cta primary">
+            <IrisButton href="/schedule-consultation">
               Book a free discovery call
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
-            </a>
+            </IrisButton>
             <a href="#how-we-help" className="btn-cta ghost">See how we help</a>
           </div>
           <div className="hero-trust">
@@ -85,10 +86,10 @@ export default function ForStartupsPageClient() {
         <div className="hero-right">
           <div className="hero-card-stack">
             {[
-              { icon: '🚀', title: 'Seed-stage launch', desc: 'Production-ready AWS account in under a week', badge: 'Fast start', badgeStyle: { background: 'var(--brand-light)', color: 'var(--brand)' } },
-              { icon: '💳', title: 'AWS Activate credits', desc: 'We guide you to up to $100K in AWS credits', badge: 'Startup perk', badgeStyle: { background: 'var(--green-light)', color: 'var(--green)' } },
-              { icon: '💰', title: 'Cost audit', desc: 'Typical client saves 25–40% within 30 days', badge: 'Outcome', badgeStyle: { background: 'var(--green-light)', color: 'var(--green)' } },
-              { icon: '🛡️', title: 'SOC 2 readiness', desc: 'Audit-ready in 6 weeks, not 6 months', badge: 'Compliance', badgeStyle: { background: 'var(--brand-light)', color: 'var(--brand)' } },
+              { icon: '🚀', title: 'Seed-stage launch', desc: 'Production-ready AWS account in under a week', badge: 'Fast start', badgeStyle: { background: 'var(--plum)', color: 'var(--white)' } },
+              { icon: '💳', title: 'AWS Activate credits', desc: 'We guide you to up to $100K in AWS credits', badge: 'Startup perk', badgeStyle: { background: 'var(--iris)', color: 'var(--white)' } },
+              { icon: '💰', title: 'Cost audit', desc: 'Typical client saves 25–40% within 30 days', badge: 'Outcome', badgeStyle: { background: 'var(--iris)', color: 'var(--white)' } },
+              { icon: '🛡️', title: 'SOC 2 readiness', desc: 'Audit-ready in 6 weeks, not 6 months', badge: 'Compliance', badgeStyle: { background: 'var(--plum)', color: 'var(--white)' } },
             ].map(card => (
               <div key={card.title} className="hero-card">
                 <div className="hero-card-icon" style={{ background: 'var(--surface)' }}>{card.icon}</div>
@@ -207,27 +208,31 @@ export default function ForStartupsPageClient() {
         <h2 className="section-title" style={{ textAlign: 'center' }}>Get up to <em>$100,000</em> in<br/>AWS Activate credits.</h2>
         <p className="section-sub" style={{ textAlign: 'center' }}>As an AWS Partner, we help eligible startups apply, qualify, and deploy Activate credits the right way — so every dollar compounds your runway.</p>
 
-        <div className="credits-block">
-          <div>
-            <h3>Credits you can actually use.</h3>
-            <p>Most startups who apply solo get a fraction of what&apos;s available — and burn what they do get on the wrong services. We fix that.</p>
-            <ul>
-              <li>Eligibility review and application support</li>
-              <li>Architecture review so credits aren&apos;t wasted on oversized resources</li>
-              <li>Cost monitoring with anomaly alerts before credits run out</li>
-              <li>Structured plan for what to build before credits expire</li>
-            </ul>
-            <a href="/schedule-consultation" className="btn-cta primary" style={{ background: '#fff', color: 'var(--brand)' }}>
-              Talk to an AWS engineer
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </a>
-          </div>
-          <div>
-            <div className="credits-big-number">$100K</div>
-            <div className="credits-big-label">In credits · fully guided</div>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginTop: '48px' }}>
+          <MintCard
+            icon={<span style={{ fontSize: '24px' }}>💳</span>}
+            title="Up to $100K in AWS credits"
+            description="We guide eligible startups through the AWS Activate program to unlock maximum credits and structure usage for optimal runway extension."
+          />
+          <MintCard
+            icon={<span style={{ fontSize: '24px' }}>🎯</span>}
+            title="Smart credit deployment"
+            description="Architecture review ensures credits aren't wasted on oversized resources. We help you build efficiently before credits expire."
+          />
+          <MintCard
+            icon={<span style={{ fontSize: '24px' }}>📊</span>}
+            title="Cost monitoring included"
+            description="Anomaly alerts and monthly reviews keep you informed. Know exactly how credits are being used and when they'll run out."
+          />
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '40px' }}>
+          <IrisButton href="/schedule-consultation">
+            Talk to an AWS engineer
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </IrisButton>
         </div>
       </section>
 
@@ -283,9 +288,9 @@ export default function ForStartupsPageClient() {
                 <span>{fmt(savings.low)} – {fmt(savings.high)}</span>
               </div>
             </div>
-            <a href="/schedule-consultation" className="btn-cta primary" style={{ marginTop: '24px', width: '100%', justifyContent: 'center' }}>
+            <IrisButton href="/schedule-consultation">
               Book a free cost audit
-            </a>
+            </IrisButton>
           </div>
         </div>
       </section>
@@ -465,28 +470,12 @@ export default function ForStartupsPageClient() {
             </p>
           </div>
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '12px', flex: '0 1 auto' }}>
-            <a
-              href="/schedule-consultation"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '16px 28px',
-                background: '#fff',
-                color: 'var(--brand)',
-                borderRadius: '12px',
-                fontSize: '15px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-              }}
-            >
+            <IrisButton href="/schedule-consultation">
               Book a free discovery call
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
-            </a>
+            </IrisButton>
             <a
               href="mailto:info@ifulabs.com?subject=Startup%20enquiry"
               style={{

@@ -126,7 +126,7 @@ export default function ResetPasswordPage() {
             fontWeight: 500,
             color: '#F5F5F5',
             marginBottom: '10px',
-            fontFamily: "'Fraunces', serif",
+            fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             Password reset successful
@@ -154,7 +154,7 @@ export default function ResetPasswordPage() {
             fontWeight: 500,
             color: '#F5F5F5',
             marginBottom: '8px',
-            fontFamily: "'Fraunces', serif",
+            fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             Set new password

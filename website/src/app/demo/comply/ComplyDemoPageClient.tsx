@@ -1,6 +1,8 @@
 'use client'
 import '../../globals.css'
 import { useEffect } from 'react'
+import { Footer } from '@/components/Footer'
+import { IrisButton, MintCard } from '@/components/BrandPatterns'
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
@@ -117,12 +119,12 @@ export default function ComplyDemoPageClient() {
             </ul>
             <div className="demo-price">From <strong>$299</strong> / month · or add to your retainer</div>
             <div className="demo-hero-actions">
-              <a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`} className="btn-cta primary">
+              <IrisButton href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>
                 Start free trial
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
-              </a>
+              </IrisButton>
               <a href="#demo-cal" className="btn-cta ghost">Request a demo</a>
             </div>
           </div>
@@ -167,48 +169,7 @@ export default function ComplyDemoPageClient() {
         </div>
       </section>
 
-      <footer className="footer-new">
-        <div className="footer-main-inner">
-          <div className="footer-brand">
-            <a href="/" className="footer-logo">
-              <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '30px', width: 'auto' }} />
-            </a>
-            <p className="footer-tagline">Expert AWS engineering for startups that ship fast.</p>
-          </div>
-          <div className="footer-columns">
-            <div className="footer-col">
-              <h4>Products</h4>
-              <ul>
-                <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>iFu Comply</a></li>
-                <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>iFu Costless</a></li>
-                <li><a href={`${PORTAL_URL}/login`}>Client portal</a></li>
-                <li><a href={`${API_URL}/docs`}>API Documentation</a></li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h4>Company</h4>
-              <ul>
-                <li><a href="/about">About</a></li>
-                <li><a href="/for-startups">For Startups</a></li>
-                <li><a href="/schedule-consultation">Schedule consultation</a></li>
-                <li><a href="mailto:info@ifulabs.com">info@ifulabs.com</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div className="footer-legal">
-          <h4>Legal</h4>
-          <ul>
-            <li><a href="/privacy">Privacy Policy</a></li>
-            <li><a href="/terms">Terms of Service</a></li>
-            <li><a href="/acceptable-use">Acceptable Use</a></li>
-          </ul>
-        </div>
-      </footer>
-      <div className="footer-bottom">
-        <p>© 2026 iFu Labs Ltd.</p>
-        <p>AWS Partner Network member · Read-only infrastructure access · No lock-in</p>
-      </div>
+      <Footer />
     </>
   )
 }
