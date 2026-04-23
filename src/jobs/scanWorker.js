@@ -162,7 +162,7 @@ async function assumeCustomerRole(roleArn, externalId) {
   const sts = new STSClient({ region: process.env.AWS_REGION })
   const { Credentials } = await sts.send(new AssumeRoleCommand({
     RoleArn: roleArn,
-    RoleSessionName: `iFu Labs ComplyScan-${Date.now()}`,
+    RoleSessionName: `iFu-Labs-ComplyScan-${Date.now()}`,
     ExternalId: externalId,
     DurationSeconds: 3600 // 1 hour — enough for a full scan
   }))

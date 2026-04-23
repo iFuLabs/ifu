@@ -12,7 +12,7 @@ export async function validateAwsRole(roleArn, externalId) {
     // Try assuming the role
     const assumed = await sts.send(new AssumeRoleCommand({
       RoleArn: roleArn,
-      RoleSessionName: 'iFu Labs ComplyValidation',
+      RoleSessionName: 'iFu-Labs-ComplyValidation',
       ExternalId: externalId,
       DurationSeconds: 900 // 15 min — minimum
     }))

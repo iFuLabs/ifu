@@ -186,7 +186,7 @@ async function assumeRole(roleArn, externalId) {
   const sts = new STSClient({ region: process.env.AWS_REGION || 'us-east-1' })
   const { Credentials } = await sts.send(new AssumeRoleCommand({
     RoleArn:         roleArn,
-    RoleSessionName: `iFuLabsFinOps-${Date.now()}`,
+    RoleSessionName: `iFu-Labs-FinOps-${Date.now()}`,
     ExternalId:      externalId,
     DurationSeconds: 3600
   }))
