@@ -98,13 +98,15 @@ export default async function integrationRoutes(fastify) {
 
     let integration
     if (existing) {
-      // Update existing
+      // Update existing - clear error state on successful reconnection
       ;[integration] = await db
         .update(integrations)
         .set({
           status: 'connected',
           credentials: encryptedCredentials,
           metadata: { accountId: validation.accountId, alias: validation.accountAlias, externalId },
+          lastError: null,
+          lastErrorAt: null,
           updatedAt: new Date()
         })
         .where(eq(integrations.id, existing.id))
