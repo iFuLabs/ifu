@@ -13,6 +13,8 @@ import { notificationQueue } from './queues.js'
 
 export const scanWorker = new Worker('scans', async (job) => {
   const { orgId, integrationId, integrationType, triggeredBy } = job.data
+  
+  logger.info({ orgId, integrationId, integrationType }, 'Starting scan job')
 
   // Create a scan record
   const [scan] = await db.insert(scans).values({
@@ -35,8 +37,10 @@ export const scanWorker = new Worker('scans', async (job) => {
       )
     })
 
+    logger.info({ integrationId, found: !!integration, status: integration?.status }, 'Integration lookup')
+
     if (!integration || integration.status !== 'connected') {
-      throw new Error('Integration not found or disconnected')
+      throw new Error(`Integration not found or disconnected (status: ${integration?.status || 'not found'})`)
     }
 
     const creds = JSON.parse(decrypt(integration.credentials))
@@ -159,13 +163,13 @@ scanWorker.on('failed', (job, err) => {
 })
 
 async function assumeCustomerRole(roleArn, externalId) {
+  // Let AWS SDK automatically pick up credentials from environment
   const sts = new STSClient({ 
-    region: process.env.AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    }
+    region: process.env.AWS_REGION
   })
+  
+  logger.info({ roleArn, externalId: externalId?.substring(0, 8) + '...' }, 'Assuming customer role')
+  
   const { Credentials } = await sts.send(new AssumeRoleCommand({
     RoleArn: roleArn,
     RoleSessionName: `iFu-Labs-ComplyScan-${Date.now()}`,
