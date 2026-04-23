@@ -7,12 +7,15 @@ import { Shield, AlertTriangle, CheckCircle, Clock, RefreshCw, ChevronRight, Zap
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
+import React from 'react'
 
 export default function DashboardPage() {
   const { data: score, isLoading: scoreLoading } = useSWR<any>('score', api.controls.score, { refreshInterval: 30000 })
   const { data: controls } = useSWR<any[]>('controls', api.controls.list)
-  const { data: scans } = useSWR<any[]>('scans', api.scans.list)
+  const { data: scans, mutate: mutateScans } = useSWR<any[]>('scans', api.scans.list, { refreshInterval: 5000 })
   const { data: planFeatures } = useSWR<any>('plan-features', api.plan.features)
+  const { data: integrations } = useSWR<any[]>('integrations', api.integrations.list)
+  const [isScanning, setIsScanning] = React.useState(false)
 
   const { data: finopsSummary } = useSWR<any>('finops-summary', async () => {
     // Auth cookie is sent automatically
@@ -22,6 +25,7 @@ export default function DashboardPage() {
   })
   const failingControls = controls?.filter(c => c.status === 'fail') || []
   const latestScan = scans?.[0]
+  const hasRunningScan = scans?.some(s => s.status === 'running' || s.status === 'pending')
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -33,15 +37,47 @@ export default function DashboardPage() {
           <p className="text-sm text-muted mt-0.5">
             {score ? `Last updated ${formatDistanceToNow(new Date(score.lastUpdated), { addSuffix: true })}` : 'Loading...'}
           </p>
+          {hasRunningScan && (
+            <div className="flex items-center gap-2 mt-2 text-xs text-accent">
+              <RefreshCw size={12} className="animate-spin" />
+              <span>Scan in progress...</span>
+            </div>
+          )}
         </div>
         <button
-          onClick={() => api.integrations.list().then(integrations => {
-            integrations.filter(i => i.status === 'connected').forEach(i => api.integrations.sync(i.id))
-          })}
-          className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded bg-card hover:bg-bg transition-all text-muted hover:text-ink"
+          onClick={async () => {
+            setIsScanning(true)
+            try {
+              const connectedIntegrations = await api.integrations.list()
+              const connected = connectedIntegrations.filter(i => i.status === 'connected')
+              
+              if (connected.length === 0) {
+                alert('No integrations connected. Please connect AWS or GitHub first.')
+                return
+              }
+              
+              // Trigger scan for all connected integrations
+              await Promise.all(connected.map(i => api.integrations.sync(i.id)))
+              
+              // Refresh scans list immediately
+              mutateScans()
+              
+              // Show success message
+              setTimeout(() => {
+                mutateScans()
+              }, 2000)
+            } catch (error: any) {
+              console.error('Scan error:', error)
+              alert(error.message || 'Failed to start scan')
+            } finally {
+              setIsScanning(false)
+            }
+          }}
+          disabled={isScanning}
+          className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded bg-card hover:bg-bg transition-all text-muted hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <RefreshCw size={14} />
-          Run scan
+          <RefreshCw size={14} className={isScanning ? 'animate-spin' : ''} />
+          {isScanning ? 'Starting scan...' : 'Run scan'}
         </button>
       </div>
 
@@ -194,10 +230,24 @@ export default function DashboardPage() {
 
           {!scans || scans.length === 0 ? (
             <div className="px-5 py-10 text-center">
-              <p className="text-sm text-muted">No scans yet. Connect an integration to start.</p>
-              <Link href="/dashboard/integrations" className="text-xs text-accent hover:underline mt-2 inline-block">
-                Connect AWS →
-              </Link>
+              {hasRunningScan ? (
+                <>
+                  <RefreshCw size={28} className="text-accent mx-auto mb-2 animate-spin" />
+                  <p className="text-sm font-medium text-ink">Scan in progress...</p>
+                  <p className="text-xs text-muted mt-1">This may take a few minutes</p>
+                </>
+              ) : integrations && integrations.some(i => i.status === 'connected') ? (
+                <>
+                  <p className="text-sm text-muted">No scans yet. Click "Run scan" to start your first scan.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted">No scans yet. Connect an integration to start.</p>
+                  <Link href="/dashboard/integrations" className="text-xs text-accent hover:underline mt-2 inline-block">
+                    Connect AWS →
+                  </Link>
+                </>
+              )}
             </div>
           ) : (
             <div className="divide-y divide-border">
