@@ -45,6 +45,7 @@ export default function IntegrationsPage() {
         desc="IAM, S3, CloudTrail, RDS, GuardDuty, EC2 — 20 automated controls"
         integration={awsIntegration}
         onConnect={() => setShowAwsForm(true)}
+        onReconnect={awsIntegration?.status === 'error' ? () => setShowAwsForm(true) : undefined}
         onSync={() => awsIntegration && handleSync(awsIntegration.id)}
         onDisconnect={() => awsIntegration && handleDisconnect(awsIntegration.id)}
         syncing={syncing === awsIntegration?.id}
@@ -55,7 +56,7 @@ export default function IntegrationsPage() {
           { label: 'Alias',      value: awsIntegration?.metadata?.alias },
         ]}
       >
-        {showAwsForm && !awsIntegration && (
+        {showAwsForm && (
           <AwsConnectForm
             onSuccess={() => { setShowAwsForm(false); mutate() }}
             onCancel={() => setShowAwsForm(false)}
