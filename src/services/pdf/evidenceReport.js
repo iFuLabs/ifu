@@ -68,9 +68,10 @@ export async function generateEvidencePdf({ org, framework, controls, scans, sco
     }
 
     // ── Footer on every page ───────────────────────────────────────────────
-    const pageCount = doc.bufferedPageRange().count
+    const range = doc.bufferedPageRange()
+    const pageCount = range.count
     for (let i = 0; i < pageCount; i++) {
-      doc.switchToPage(i)
+      doc.switchToPage(range.start + i)
       pageFooter(doc, i + 1, pageCount, org.name)
     }
 
