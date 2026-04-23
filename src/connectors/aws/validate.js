@@ -57,7 +57,7 @@ export async function validateAwsRole(roleArn, externalId) {
     return {
       success: false,
       error: err.name === 'AccessDenied'
-        ? 'iFu Labs Comply cannot assume this role. Check the trust policy allows assumption from account ' + process.env.IFU_LABS_AWS_ACCOUNT_ID
+        ? 'iFu Labs Comply cannot assume this role. Check the trust policy allows assumption from account ' + process.env.AWS_ACCOUNT_ID
         : err.message
     }
   }
