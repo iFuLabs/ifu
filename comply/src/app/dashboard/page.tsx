@@ -10,8 +10,8 @@ import clsx from 'clsx'
 import React from 'react'
 
 export default function DashboardPage() {
-  const { data: score, isLoading: scoreLoading } = useSWR<any>('score', api.controls.score, { refreshInterval: 30000 })
-  const { data: controls } = useSWR<any[]>('controls', api.controls.list)
+  const { data: score, isLoading: scoreLoading, mutate: mutateScore } = useSWR<any>('score', api.controls.score, { refreshInterval: 30000 })
+  const { data: controls, mutate: mutateControls } = useSWR<any[]>('controls', api.controls.list, { refreshInterval: 10000 })
   const { data: scans, mutate: mutateScans } = useSWR<any[]>('scans', api.scans.list, { refreshInterval: 5000 })
   const { data: planFeatures } = useSWR<any>('plan-features', api.plan.features)
   const { data: integrations } = useSWR<any[]>('integrations', api.integrations.list)
@@ -26,6 +26,14 @@ export default function DashboardPage() {
   const failingControls = controls?.filter(c => c.status === 'fail') || []
   const latestScan = scans?.[0]
   const hasRunningScan = scans?.some(s => s.status === 'running' || s.status === 'pending')
+  
+  // Refresh score and controls when scan completes
+  React.useEffect(() => {
+    if (latestScan?.status === 'complete') {
+      mutateScore()
+      mutateControls()
+    }
+  }, [latestScan?.status, mutateScore, mutateControls])
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -74,10 +82,10 @@ export default function DashboardPage() {
             }
           }}
           disabled={isScanning}
-          className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded bg-card hover:bg-bg transition-all text-muted hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded bg-card hover:bg-bg transition-all text-muted hover:text-ink disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
         >
           <RefreshCw size={14} className={isScanning ? 'animate-spin' : ''} />
-          {isScanning ? 'Starting scan...' : 'Run scan'}
+          <span className="whitespace-nowrap">{isScanning ? 'Starting scan...' : 'Run scan'}</span>
         </button>
       </div>
 
@@ -150,8 +158,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* AI Insight */}
-      <AiInsightCard framework="soc2" />
+      {/* AI Insight - only show if user has Growth plan */}
+      {planFeatures?.features?.aiInsights && <AiInsightCard framework="soc2" />}
 
       {/* FinOps summary card — only shown if data exists */}
       {finopsSummary?.available && (
