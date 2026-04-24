@@ -19,18 +19,18 @@ export function Footer() {
             gap: '24px',
             margin: '24px 0' 
           }}>
-            <img 
-              src="/logos/white.svg" 
-              alt="iFu Labs" 
+            <img
+              src="/logos/plum.svg"
+              alt="iFu Labs"
               style={{ height: '32px', width: 'auto' }}
             />
-            <div style={{ 
-              width: '1px', 
-              height: '32px', 
-              background: '#DAC0FD' 
+            <div style={{
+              width: '1px',
+              height: '32px',
+              background: '#33063D'
             }} />
-            <img 
-              src="https://d0.awsstatic.com/logos/powered-by-aws-white.png"
+            <img
+              src="https://d0.awsstatic.com/logos/powered-by-aws.png"
               alt="Powered by AWS"
               style={{ height: 'auto', maxHeight: '32px', opacity: 0.9 }}
             />

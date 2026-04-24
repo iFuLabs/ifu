@@ -47,9 +47,9 @@ interface CoBrandingProps {
 export function CoBranding({ partnerLogoSrc, partnerLogoAlt, theme = 'dark' }: CoBrandingProps) {
   return (
     <div className="co-branding-container">
-      <img 
-        src="/logos/white.svg" 
-        alt="iFu Labs" 
+      <img
+        src={theme === 'light' ? '/logos/plum.svg' : '/logos/white.svg'}
+        alt="iFu Labs"
         style={{ height: '32px', width: 'auto' }}
       />
       <div className={`brand-divider${theme === 'light' ? ' brand-divider--light' : ''}`} />

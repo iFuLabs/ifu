@@ -143,11 +143,11 @@ export default function HomePageClient() {
       <div className="divider" />
 
       {/* Methodology */}
-      <section className="methodology-section section--soft gradient-iris-lavender" id="methodology">
+      <section className="methodology-section section--soft" id="methodology">
         <div className="methodology-inner reveal">
-          <div className="section-eyebrow" style={{ color: 'rgba(255,255,255,0.9)' }}>Our Methodology</div>
-          <h2 className="section-title" style={{ color: '#fff' }}>A repeatable delivery<br/>model built for <em>results.</em></h2>
-          <p className="section-sub" style={{ color: 'rgba(255,255,255,0.85)' }}>Enterprise buyers want to see how you work, not just what you do. Here is our process, every time.</p>
+          <div className="section-eyebrow">Our Methodology</div>
+          <h2 className="section-title">A repeatable delivery<br/>model built for <em>results.</em></h2>
+          <p className="section-sub">Enterprise buyers want to see how you work, not just what you do. Here is our process, every time.</p>
 
           <div className="methodology-grid reveal-grid">
             {[
@@ -156,10 +156,10 @@ export default function HomePageClient() {
               { num: '03', title: 'Delivery', desc: 'Our engineers embed with your team and execute against a shared plan. Weekly standups, full IaC, and no handover black boxes. You see every change before it ships.' },
               { num: '04', title: 'Handover', desc: 'You own everything. Runbooks, Terraform, access, documentation. We train your team and leave them self-sufficient — no manufactured dependency on iFu Labs.' },
             ].map(step => (
-              <div key={step.num} className="method-step" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <span className="method-num" style={{ color: '#fff' }}>{step.num}</span>
-                <div className="method-title" style={{ color: '#fff' }}>{step.title}</div>
-                <p className="method-desc" style={{ color: 'rgba(255,255,255,0.85)' }}>{step.desc}</p>
+              <div key={step.num} className="method-step">
+                <span className="method-num">{step.num}</span>
+                <div className="method-title">{step.title}</div>
+                <p className="method-desc">{step.desc}</p>
               </div>
             ))}
           </div>

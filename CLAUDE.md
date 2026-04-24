@@ -1,76 +1,54 @@
-# CLAUDE.md — Critical Bug Fixes
+# CLAUDE.md — Brand Identity & Light-Mode Conversion
 
 ## Current task
-Critical bug fixes — auth, payment redirect, email copy, input visibility
+Convert website + portal (auth/billing only) from dark to light mode using the official iFU Labs Brand Identity. Source: `/Users/titusquayson/Downloads/iFU Labs-compressed.pdf` → extracted to `brand.md`.
+
+## Brand tokens (from PDF)
+- **Palette**: Plum `#33063D` · Lavender `#DAC0FD` · Iris `#8A63E6` · White `#FFFFFF` · Grey `#F4F4F4` · Mint `#C8F6C0`
+- **Typography**: Aeonik (sans) · PP Fragment (display ≥32pt) · Aeonik Fono (mono) · Arial (fallback)
+- **Logos** (`website/public/logos/`): `plum.svg` (on light), `white.svg` (on plum/dark), `black.svg`, `lavender.svg`
+- **Light-mode role map**:
+  - bg `#FFFFFF` · surface `#F4F4F4` · elevated `#FFFFFF` · accent surface `#DAC0FD`
+  - ink/primary text `#33063D` · muted `#33063D` @ 0.7 opacity · link `#8A63E6`
+  - pragmatic border `#E5E5E5` (brand Grey too close to white for borders — documented deviation)
+
+## Scope rules
+- **In scope**: website (all pages), portal auth (login, forgot/reset/invite), portal onboarding, portal billing (subscribe, callback)
+- **Out of scope**: comply dashboard, finops dashboard, portal dashboard interiors
+- No copy / layout / functionality changes. Colors/typography/logos only.
 
 ## Status
-- Bug 1 Input visibility — ✅ FIXED
-- Bug 2 Payment redirect — ✅ FIXED
-- Bug 3 Portal to dashboard — ✅ FIXED
-- Bug 4 Email trial copy — ✅ FIXED
-- Bug 5 Orange gradient boxes — ✅ FIXED
-- Bug 6 AWS Account ID — ✅ FIXED
 
-## Root causes found
+| # | File | Status |
+|---|------|--------|
+| 1 | `brand.md` (root) | ✅ Created from PDF |
+| 2 | `website/src/app/globals.css` | ✅ `:root` tokens flipped; dark hexes patched; svc-hero/cards/about/nav/footer/mobile drawer converted |
+| 3 | `website/src/app/layout.tsx` | ✅ themeColor → `#FFFFFF` |
+| 4 | `website/src/components/SiteNav.tsx` | ✅ Logo → `plum.svg` |
+| 5 | `website/src/components/SiteFooter.tsx` | ✅ Logo → `plum.svg`; divider → `#33063D`; AWS → `powered-by-aws.png` |
+| 6 | `website/src/components/Footer.tsx` | ✅ Same as SiteFooter |
+| 7 | `website/src/components/BrandPatterns.tsx` | ✅ `CoBranding` logo switches by theme prop (billboard/social stay white — render on plum) |
+| 8 | `website/src/components/CookieBanner.tsx` | ✅ No change needed — CSS-class only, covered by globals |
+| 9 | `website/src/app/page.tsx` + `HomePageClient` | ⏳ Pending |
+| 10 | `website/src/app/about/page.tsx` | ⏳ Pending |
+| 11 | `website/src/app/for-startups/page.tsx` | ⏳ Pending |
+| 12 | `website/src/app/services/page.tsx` + `[slug]/page.tsx` | ⏳ Pending |
+| 13 | `website/src/app/demos/comply`, `demos/costless` | ⏳ Pending |
+| 14 | `website/src/app/privacy`, `terms`, `acceptable-use` | ⏳ Pending |
+| 15 | `website/src/app/schedule-consultation/page.tsx` | ⏳ Pending |
+| 16 | `website/src/app/brand-showcase/page.tsx` | ⏳ Pending |
+| 17 | `portal/src/app/globals.css` | ⏳ Pending |
+| 18 | `portal/src/app/layout.tsx` + `page.tsx` | ⏳ Pending |
+| 19 | `portal/src/app/login`, `forgot-password`, `reset-password/[token]`, `invite/[token]` | ⏳ Pending |
+| 20 | `portal/src/app/onboarding/page.tsx` (1,436 lines) | ⏳ Pending |
+| 21 | `portal/src/app/billing/subscribe`, `billing/callback` | ⏳ Pending |
 
-### Bug 1 — Sign up input fields invisible when typing
-**Root cause:** Input fields change background to `white` on focus but text color stays `#F5F5F5` (light gray). White text on white background = invisible.
+## Open flags / deviations
+- Border `#E5E5E5` is off-palette (brand has no neutral mid-grey for hairlines — Grey `#F4F4F4` blends into white).
+- Muted text = Plum @ 0.7 opacity. Brand guidance discourages opacity on brand colors, but hierarchy needs it. Alternative: Iris for secondary text — noted, not yet applied.
 
-**Location:** `portal/src/app/onboarding/page.tsx` - all input fields in sign up form (name, email, password, org name, org domain, role ARN)
+## Last completed
+`website/src/components/BrandPatterns.tsx` + `CookieBanner.tsx` audit — all shared chrome done.
 
-**Fix:** Added `e.target.style.color = '#0B0C0F'` on focus and `e.target.style.color = '#F5F5F5'` on blur to all input fields. Now text is dark when typing (on white background) and light when not focused (on dark background).
-
-### Bug 2 — After payment redirects to sign in instead of dashboard
-**Root cause:** Payment callback page redirected directly to dashboard URLs (different domains/ports). The `auth_token` is stored in portal's localStorage, which is NOT accessible to comply/finops apps because localStorage is domain-specific. When the dashboard apps try to authenticate, they can't find the token and redirect to login.
-
-**Location:** 
-- `portal/src/app/billing/callback/page.tsx` - payment verification and redirect logic
-- `portal/src/app/onboarding/page.tsx` - handleFinish function
-
-**Fix:** 
-1. Changed callback page to redirect back to onboarding step 4 (confirmation) instead of directly to dashboard
-2. Updated handleFinish to read product from localStorage (set by callback) as primary source, with selectedProducts state as fallback
-3. This keeps the user in the portal domain where their auth_token is accessible, then redirects to the correct dashboard
-
-### Bug 3 — After login, clicking subscribed service returns to login page
-**Root cause:** Login page was trying to redirect directly to product dashboards based on `response.lastProduct`, but the login API doesn't return that field. This caused it to fall through to `router.push('/')` which should work, but the real issue is the same as Bug 2 - localStorage domain isolation. When redirecting from portal to comply/finops, the auth_token isn't accessible.
-
-**Location:** 
-- `portal/src/app/login/page.tsx` - login redirect logic
-
-**Fix:** 
-1. Simplified login to always redirect to portal homepage (`/`)
-2. Portal homepage fetches user subscriptions via `/api/v1/auth/me` which includes active subscriptions
-3. User clicks on their subscribed product, which redirects to the dashboard
-4. This is the same flow as after onboarding - keeps user in portal domain where auth_token is accessible
-
-### Bug 4 — Email says 14 days trial, should be 3 days
-**Root cause:** Welcome email template had hardcoded "14-day free trial" text. Test file also had 14 days constant.
-
-**Location:** 
-- `src/services/email.js` - welcome email template
-- `tests/routes/billing.test.js` - test constant
-
-**Fix:** Changed "14-day free trial" to "3-day free trial" in email template. Updated test constant from 14 days to 3 days. Onboarding page already correctly shows 3-day trial.
-
-## Files changed
-
-### Bug 1
-- `portal/src/app/onboarding/page.tsx` - Fixed 6 input fields (name, email, password, org name, org domain, role ARN) to change text color on focus/blur
-
-### Bug 2
-- `portal/src/app/billing/callback/page.tsx` - Changed redirect from dashboard URLs to onboarding step 4, store product in localStorage, updated message to say "Redirecting to confirmation..."
-- `portal/src/app/onboarding/page.tsx` - Updated handleFinish to read product from localStorage first, then fallback to state; removed orange box from header logo
-
-### Bug 3
-- `portal/src/app/login/page.tsx` - Simplified redirect to always go to portal homepage where user can see and click their subscribed products
-
-### Bug 4
-- `src/services/email.js` - Changed "14-day free trial" to "3-day free trial" in welcome email
-- `tests/routes/billing.test.js` - Updated TRIAL_DURATION_MS constant from 14 days to 3 days
-
-## Todo
-None - all bugs fixed!
-
-## Notes
-**Token passing solution:** To solve the localStorage domain isolation issue (portal, comply, and finops are on different ports/domains), we pass the auth_token via URL query parameter when redirecting from portal to dashboards. The dashboard layouts read the token from URL, store it in their own localStorage, then remove it from the URL for security. This allows seamless authentication across all apps.
+## Next up
+Verification pass on the website (spin up preview, check nav/footer/home), then begin page-by-page conversion starting with `HomePageClient`.

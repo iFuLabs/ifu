@@ -13,15 +13,15 @@
   --grey:     #F4F4F4;
   --white:    #FFFFFF;
 
-  /* Dark theme surfaces */
-  --bg:       #07080D;
-  --surface:  #0D0F18;
-  --surface2: #131620;
-  --surface3: #191C28;
-  --border:   #33063D;
-  --border2:  #8A63E6;
-  --ink:      #EFF1F7;
-  --muted:    #DAC0FD;
+  /* Light theme surfaces (brand-aligned) */
+  --bg:       #FFFFFF;
+  --surface:  #F4F4F4;
+  --surface2: #FFFFFF;
+  --surface3: #DAC0FD;
+  --border:   #E5E5E5;
+  --border2:  #DAC0FD;
+  --ink:      #33063D;
+  --muted:    #33063D;
   --muted2:   #8A63E6;
 
   --brand:    #33063D;
@@ -31,9 +31,9 @@
   --green:    #C8F6C0;
   --green-dim: rgba(200, 246, 192, 0.12);
 
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.55);
-  --shadow-md: 0 6px 20px rgba(0,0,0,0.65);
-  --shadow-lg: 0 12px 48px rgba(0,0,0,0.75);
+  --shadow-sm: 0 1px 4px rgba(51, 6, 61, 0.06);
+  --shadow-md: 0 6px 20px rgba(51, 6, 61, 0.08);
+  --shadow-lg: 0 12px 48px rgba(51, 6, 61, 0.12);
 
   /* Official Brand Fonts */
   --sans:  'Aeonik', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -44,7 +44,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: #0d0d0d;
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--sans);
   font-size: 16px;
@@ -58,8 +58,8 @@ body {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 101;
-  background: #0a0a0a;
-  border-bottom: 1px solid #1e1e1e;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   height: 36px;
 }
 
@@ -139,10 +139,10 @@ nav {
   transition: background 0.2s ease, border-color 0.2s ease, backdrop-filter 0.2s ease;
 }
 nav.scrolled {
-  background: rgba(10, 10, 10, 0.92);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom-color: #1e1e1e;
+  border-bottom-color: var(--border);
 }
 
 .logo {
@@ -253,13 +253,13 @@ nav.scrolled {
   left: 50%;
   transform: translateX(-50%);
   width: 100vw;
-  background: linear-gradient(160deg, #0f0f0f 0%, #161410 60%, #1a1208 100%);
+  background: linear-gradient(160deg, #FFFFFF 0%, #F4F4F4 60%, #DAC0FD 100%);
   z-index: -1;
   pointer-events: none;
 }
 .svc-hero {
   position: relative;
-  background: linear-gradient(160deg, #0f0f0f 0%, #161410 60%, #1a1208 100%);
+  background: linear-gradient(160deg, #FFFFFF 0%, #F4F4F4 60%, #DAC0FD 100%);
 }
 
 .hero-left { position: relative; }
@@ -697,7 +697,8 @@ nav.scrolled {
 
 /* ── SAAS PRODUCTS ──────────────────────────────────────────────── */
 .products-section {
-  background: var(--bg);
+  background: linear-gradient(180deg, #FFFFFF 0%, #DAC0FD 60%, #DAC0FD 100%);
+  border-bottom: 1px solid rgba(51, 6, 61, 0.08);
 }
 
 .products-inner {
@@ -823,9 +824,9 @@ nav.scrolled {
 }
 
 .product-cta.primary {
-  background: var(--accent);
-  color: #0B0E14;
-  border-color: var(--accent);
+  background: var(--plum);
+  color: var(--white);
+  border-color: var(--plum);
 }
 
 .product-cta.primary:hover {
@@ -2533,9 +2534,9 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 }
 .cookie-btn--ghost:hover { background: var(--surface2); border-color: var(--border2); }
 .cookie-btn--primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #0b0d11;
+  background: var(--plum);
+  border-color: var(--plum);
+  color: var(--white);
   font-weight: 600;
 }
 .cookie-btn--primary:hover { filter: brightness(1.1); }
@@ -2709,10 +2710,11 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 .svc-hero-image {
   position: relative;
   aspect-ratio: 4/3;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 2px solid var(--iris);
   background: var(--surface2);
+  box-shadow: 0 12px 32px rgba(51, 6, 61, 0.08);
 }
 .svc-hero-image img {
   width: 100%; height: 100%;
@@ -2722,7 +2724,9 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 }
 .svc-hero-image-fade {
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(232,130,10,0.06) 0%, transparent 40%, rgba(7,8,13,0.15) 100%);
+  background: linear-gradient(135deg, rgba(138, 99, 230, 0.18) 0%, transparent 45%, rgba(51, 6, 61, 0.22) 100%);
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 .svc-section { padding: 96px 32px; }
@@ -2907,9 +2911,9 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
    Breaks up the deep-dark monotony with a whisper of warmth.
    ========================================================= */
 :root {
-  --surface-soft: #14171F;
-  --surface-soft2: #1A1E28;
-  --hairline-glow: rgba(232, 130, 10, 0.08);
+  --surface-soft: #F4F4F4;
+  --surface-soft2: #EFEAF7;
+  --hairline-glow: rgba(138, 99, 230, 0.08);
 }
 
 /* Gentle horizontal band — use on alternating sections */
@@ -3083,18 +3087,18 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 }
 
 /* ── BACKGROUND DEPTH SYSTEM ───────────────────────────────────── */
-body > section:nth-of-type(odd):not(.hero):not(.svc-hero),
-main > section:nth-of-type(odd):not(.hero):not(.svc-hero) {
-  background: #111111;
+body > section:nth-of-type(odd):not(.hero):not(.svc-hero):not(.products-section):not(.cta-band),
+main > section:nth-of-type(odd):not(.hero):not(.svc-hero):not(.products-section):not(.cta-band) {
+  background: var(--bg);
 }
-body > section:nth-of-type(even):not(.hero):not(.svc-hero),
-main > section:nth-of-type(even):not(.hero):not(.svc-hero) {
-  background: #0d0d0d;
+body > section:nth-of-type(even):not(.hero):not(.svc-hero):not(.products-section):not(.cta-band),
+main > section:nth-of-type(even):not(.hero):not(.svc-hero):not(.products-section):not(.cta-band) {
+  background: var(--surface);
 }
 body > section.hero,
 main > section.hero { background: transparent; }
 body > section.svc-hero,
-main > section.svc-hero { background: linear-gradient(160deg, #0f0f0f 0%, #161410 60%, #1a1208 100%); }
+main > section.svc-hero { background: linear-gradient(160deg, #FFFFFF 0%, #F4F4F4 60%, #DAC0FD 100%); }
 
 /* Cards / panels */
 .hero-card,
@@ -3103,21 +3107,21 @@ main > section.svc-hero { background: linear-gradient(160deg, #0f0f0f 0%, #16141
 .svc-outcome-card,
 .svc-related-card,
 .about-hero-card {
-  background: #161616;
-  border-color: #1e1e1e;
+  background: var(--surface2);
+  border-color: var(--border);
 }
 
 /* Borders and dividers site-wide */
-.divider { background: #1e1e1e; }
+.divider { background: var(--border); }
 .footer-new,
 .footer-main-inner,
 .footer-legal,
-.footer-bottom { border-color: #1e1e1e !important; }
+.footer-bottom { border-color: var(--border) !important; }
 
 /* ── ABOUT HERO PROCESS CARD ───────────────────────────────────── */
 .about-hero-card {
-  background: #161616;
-  border: 1px solid #2a2a2a;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 32px;
   width: 100%;
@@ -3126,7 +3130,7 @@ main > section.svc-hero { background: linear-gradient(160deg, #0f0f0f 0%, #16141
 
 .about-hero-card-label {
   font-size: 10px;
-  color: #EF9F27;
+  color: var(--accent);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 28px;
@@ -3157,7 +3161,7 @@ main > section.svc-hero { background: linear-gradient(160deg, #0f0f0f 0%, #16141
 .about-hero-step-num {
   font-size: 11px;
   font-weight: 600;
-  color: #EF9F27;
+  color: var(--accent);
   letter-spacing: 0.08em;
   font-family: var(--mono);
 }
@@ -3165,7 +3169,7 @@ main > section.svc-hero { background: linear-gradient(160deg, #0f0f0f 0%, #16141
 .about-hero-step-line {
   width: 1px;
   flex: 1;
-  background: linear-gradient(to bottom, #EF9F27, #2a2a2a);
+  background: linear-gradient(to bottom, var(--accent), var(--border));
   margin-top: 8px;
   min-height: 32px;
 }
@@ -3173,29 +3177,31 @@ main > section.svc-hero { background: linear-gradient(160deg, #0f0f0f 0%, #16141
 .about-hero-step-title {
   font-size: 13px;
   font-weight: 600;
-  color: #f0f0f0;
+  color: var(--ink);
   margin-bottom: 4px;
 }
 
 .about-hero-step-desc {
   font-size: 12px;
-  color: #555;
+  color: var(--ink);
+  opacity: 0.7;
   line-height: 1.65;
   margin: 0;
 }
 
 .about-hero-card-footer {
-  border-top: 1px solid #222;
+  border-top: 1px solid var(--border);
   padding-top: 16px;
   margin-top: 24px;
   font-size: 11px;
-  color: #444;
+  color: var(--ink);
+  opacity: 0.7;
   line-height: 1.6;
 }
 
 .about-hero-card-diamond {
   font-size: 8px;
-  color: #EF9F27;
+  color: var(--accent);
   margin-right: 8px;
 }
 
@@ -3230,7 +3236,8 @@ main > section.svc-hero { background: linear-gradient(160deg, #0f0f0f 0%, #16141
 
 .about-cert-label {
   font-size: 11px;
-  color: #555;
+  color: var(--ink);
+  opacity: 0.7;
   text-align: center;
   max-width: 100px;
   line-height: 1.4;
@@ -3274,7 +3281,7 @@ img, video, svg { max-width: 100%; height: auto; }
   right: 0;
   bottom: 0;
   width: min(320px, 85vw);
-  background: #0B0C0F;
+  background: var(--bg);
   border-left: 1px solid var(--border);
   z-index: 1000;
   transform: translateX(100%);
@@ -3289,7 +3296,7 @@ img, video, svg { max-width: 100%; height: auto; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(51, 6, 61, 0.35);
   z-index: 999;
   opacity: 0;
   pointer-events: none;

@@ -50,18 +50,18 @@ export default function PortalPage() {
 
   const pageBg: React.CSSProperties = {
     minHeight: '100vh',
-    background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
+    background: 'radial-gradient(ellipse at top, #DAC0FD 0%, #FFFFFF 60%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: '40px 20px',
-    fontFamily: "'DM Sans', system-ui, sans-serif"
+    fontFamily: "'Aeonik', 'DM Sans', system-ui, sans-serif"
   }
 
   if (loading) {
     return (
       <div style={pageBg}>
-        <Loader2 size={32} className="animate-spin" style={{ color: '#E8820A' }} />
+        <Loader2 size={32} className="animate-spin" style={{ color: '#8A63E6' }} />
         <style>{`
           .animate-spin { animation: spin 1s linear infinite; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -86,9 +86,8 @@ export default function PortalPage() {
     <button
       onClick={() => handleProductClick(opts.product)}
       style={{
-        background: 'rgba(20, 22, 27, 0.8)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid #25282F',
+        background: '#FFFFFF',
+        border: '1px solid #E5E5E5',
         borderRadius: '16px',
         padding: '32px',
         cursor: 'pointer',
@@ -97,43 +96,43 @@ export default function PortalPage() {
         color: 'inherit',
         fontFamily: 'inherit',
         transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
-        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)'
+        boxShadow: '0 6px 20px rgba(51, 6, 61, 0.08)'
       }}
       onMouseOver={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)'
-        e.currentTarget.style.borderColor = '#E8820A'
-        e.currentTarget.style.boxShadow = '0 18px 40px rgba(0, 0, 0, 0.45), 0 0 0 3px rgba(232, 130, 10, 0.12)'
+        e.currentTarget.style.borderColor = '#8A63E6'
+        e.currentTarget.style.boxShadow = '0 12px 32px rgba(51, 6, 61, 0.12), 0 0 0 3px rgba(138, 99, 230, 0.12)'
       }}
       onMouseOut={(e) => {
         e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.borderColor = '#25282F'
-        e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.35)'
+        e.currentTarget.style.borderColor = '#E5E5E5'
+        e.currentTarget.style.boxShadow = '0 6px 20px rgba(51, 6, 61, 0.08)'
       }}
     >
       <div style={{
         width: '48px',
         height: '48px',
-        background: 'linear-gradient(135deg, #E8820A 0%, #C96F08 100%)',
+        background: 'linear-gradient(135deg, #33063D 0%, #8A63E6 100%)',
         borderRadius: '12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: '20px',
-        boxShadow: '0 6px 16px rgba(232, 130, 10, 0.25)'
+        boxShadow: '0 6px 16px rgba(138, 99, 230, 0.25)'
       }}>
         {opts.icon}
       </div>
       <h2 style={{
         fontSize: '22px',
         fontWeight: 500,
-        color: '#F5F5F5',
+        color: '#33063D',
         marginBottom: '10px',
         fontFamily: "'PP Fragment', serif",
         letterSpacing: '-0.02em'
       }}>
         {opts.title}
       </h2>
-      <p style={{ fontSize: '14px', color: '#9AA0A6', lineHeight: 1.65, marginBottom: '20px' }}>
+      <p style={{ fontSize: '14px', color: 'rgba(51, 6, 61, 0.7)', lineHeight: 1.65, marginBottom: '20px' }}>
         {opts.desc}
       </p>
       <div style={{
@@ -141,7 +140,7 @@ export default function PortalPage() {
         alignItems: 'center',
         gap: '6px',
         fontSize: '14px',
-        color: '#E8820A',
+        color: '#8A63E6',
         fontWeight: 600
       }}>
         {opts.hasSub ? 'Open Dashboard' : opts.subLabel}
@@ -162,19 +161,19 @@ export default function PortalPage() {
             display: 'flex',
             justifyContent: 'center'
           }}>
-            <img src="/logos/lavender.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
+            <img src="/logos/plum.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
           </div>
           <h1 style={{
             fontSize: '34px',
             fontWeight: 500,
-            color: '#F5F5F5',
+            color: '#33063D',
             marginBottom: '8px',
             fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             Choose your product
           </h1>
-          <p style={{ fontSize: '15px', color: '#9AA0A6' }}>
+          <p style={{ fontSize: '15px', color: 'rgba(51, 6, 61, 0.7)' }}>
             Pick a workspace to continue
           </p>
         </div>
@@ -218,7 +217,7 @@ export default function PortalPage() {
             href="/onboarding"
             style={{
               fontSize: '14px',
-              color: '#E8820A',
+              color: '#8A63E6',
               textDecoration: 'none',
               fontWeight: 500
             }}
@@ -229,7 +228,7 @@ export default function PortalPage() {
             href={process.env.NEXT_PUBLIC_WEBSITE_URL || 'http://localhost:3004'}
             style={{
               fontSize: '13px',
-              color: '#6B7078',
+              color: 'rgba(51, 6, 61, 0.6)',
               textDecoration: 'none'
             }}
           >

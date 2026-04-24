@@ -1,23 +1,30 @@
 'use client'
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Lock, CheckCircle, Loader2, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Loader2, Eye, EyeOff, ArrowRight } from 'lucide-react'
+
+const PLUM = '#33063D'
+const IRIS = '#8A63E6'
+const LAVENDER = '#DAC0FD'
+const BORDER = '#E5E5E5'
+const MUTED = 'rgba(51, 6, 61, 0.7)'
+const SUBTLE = 'rgba(51, 6, 61, 0.5)'
 
 const PAGE_BG: React.CSSProperties = {
   minHeight: '100vh',
-  background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
+  background: 'radial-gradient(ellipse at top, ' + LAVENDER + ' 0%, #FFFFFF 60%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   padding: '40px 20px',
-  fontFamily: "'DM Sans', system-ui, sans-serif"
+  fontFamily: "'Aeonik', 'DM Sans', system-ui, sans-serif"
 }
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: '13px',
   fontWeight: 500,
-  color: '#C4C7CC',
+  color: PLUM,
   marginBottom: '8px',
   letterSpacing: '0.02em',
   textTransform: 'uppercase'
@@ -27,23 +34,21 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '14px 44px 14px 16px',
   fontSize: '15px',
-  background: '#0F1115',
-  border: '1px solid #25282F',
+  background: '#FFFFFF',
+  border: '1px solid ' + BORDER,
   borderRadius: '10px',
-  color: '#F5F5F5',
+  color: PLUM,
   outline: 'none',
   transition: 'all 0.2s',
-  fontFamily: "'DM Sans', sans-serif"
+  fontFamily: "'Aeonik', 'DM Sans', sans-serif"
 }
 
 function onFocus(e: React.FocusEvent<HTMLInputElement>) {
-  e.target.style.borderColor = '#E8820A'
-  e.target.style.background = '#14161B'
-  e.target.style.boxShadow = '0 0 0 3px rgba(232, 130, 10, 0.15)'
+  e.target.style.borderColor = IRIS
+  e.target.style.boxShadow = '0 0 0 3px rgba(138, 99, 230, 0.15)'
 }
 function onBlur(e: React.FocusEvent<HTMLInputElement>) {
-  e.target.style.borderColor = '#25282F'
-  e.target.style.background = '#0F1115'
+  e.target.style.borderColor = BORDER
   e.target.style.boxShadow = 'none'
 }
 
@@ -53,7 +58,7 @@ const LOGO_MARK = () => (
     display: 'flex',
     justifyContent: 'center'
   }}>
-    <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
+    <img src="/logos/plum.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
   </div>
 )
 
@@ -124,17 +129,17 @@ export default function ResetPasswordPage() {
           <h1 style={{
             fontSize: '34px',
             fontWeight: 500,
-            color: '#F5F5F5',
+            color: PLUM,
             marginBottom: '10px',
             fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             Password reset successful
           </h1>
-          <p style={{ fontSize: '15px', color: '#9AA0A6', marginBottom: '28px' }}>
+          <p style={{ fontSize: '15px', color: MUTED, marginBottom: '28px' }}>
             Your password has been updated. Redirecting to login...
           </p>
-          <Loader2 size={26} className="animate-spin" style={{ color: '#E8820A' }} />
+          <Loader2 size={26} className="animate-spin" style={{ color: IRIS }} />
         </div>
         <style>{`
           .animate-spin { animation: spin 1s linear infinite; }
@@ -152,25 +157,24 @@ export default function ResetPasswordPage() {
           <h1 style={{
             fontSize: '34px',
             fontWeight: 500,
-            color: '#F5F5F5',
+            color: PLUM,
             marginBottom: '8px',
             fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             Set new password
           </h1>
-          <p style={{ fontSize: '15px', color: '#9AA0A6' }}>
+          <p style={{ fontSize: '15px', color: MUTED }}>
             Choose a strong password for your account
           </p>
         </div>
 
         <div style={{
-          background: 'rgba(20, 22, 27, 0.8)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid #25282F',
+          background: '#FFFFFF',
+          border: '1px solid ' + BORDER,
           borderRadius: '16px',
           padding: '40px',
-          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4)'
+          boxShadow: '0 12px 48px rgba(51, 6, 61, 0.12)'
         }}>
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>New password</label>
@@ -196,7 +200,7 @@ export default function ResetPasswordPage() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#9AA0A6',
+                  color: SUBTLE,
                   padding: '4px',
                   display: 'flex'
                 }}
@@ -230,7 +234,7 @@ export default function ResetPasswordPage() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#9AA0A6',
+                  color: SUBTLE,
                   padding: '4px',
                   display: 'flex'
                 }}
@@ -243,11 +247,11 @@ export default function ResetPasswordPage() {
           {error && (
             <div style={{
               padding: '12px 16px',
-              background: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              background: 'rgba(220, 38, 38, 0.08)',
+              border: '1px solid rgba(220, 38, 38, 0.25)',
               borderRadius: '10px',
               fontSize: '14px',
-              color: '#FCA5A5',
+              color: '#B91C1C',
               marginBottom: '20px'
             }}>
               {error}
@@ -260,8 +264,8 @@ export default function ResetPasswordPage() {
             style={{
               width: '100%',
               padding: '14px',
-              background: loading ? '#2A2D34' : '#E8820A',
-              color: loading ? '#9AA0A6' : '#0B0C0F',
+              background: loading ? '#F4F4F4' : PLUM,
+              color: loading ? MUTED : '#FFFFFF',
               fontSize: '15px',
               fontWeight: 600,
               border: 'none',
@@ -272,10 +276,10 @@ export default function ResetPasswordPage() {
               justifyContent: 'center',
               gap: '8px',
               transition: 'all 0.2s',
-              boxShadow: loading ? 'none' : '0 6px 16px rgba(232, 130, 10, 0.25)'
+              boxShadow: loading ? 'none' : '0 6px 16px rgba(51, 6, 61, 0.22)'
             }}
-            onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
-            onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
+            onMouseOver={(e) => !loading && (e.currentTarget.style.background = IRIS)}
+            onMouseOut={(e) => !loading && (e.currentTarget.style.background = PLUM)}
           >
             {loading ? (
               <><Loader2 size={18} className="animate-spin" /> Resetting...</>
