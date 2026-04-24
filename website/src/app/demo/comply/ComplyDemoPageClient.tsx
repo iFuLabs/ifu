@@ -44,10 +44,10 @@ function useCalEmbed() {
     Cal('init', CAL_NAMESPACE, { origin: 'https://app.cal.com' })
     Cal.ns[CAL_NAMESPACE]('inline', {
       elementOrSelector: '#ifu-comply-demo-cal',
-      config: { layout: 'month_view', useSlotsViewOnSmallScreen: true, theme: 'dark' },
+      config: { layout: 'month_view', useSlotsViewOnSmallScreen: true, theme: 'light' },
       calLink: CAL_LINK,
     })
-    Cal.ns[CAL_NAMESPACE]('ui', { theme: 'dark', hideEventTypeDetails: false, layout: 'month_view' })
+    Cal.ns[CAL_NAMESPACE]('ui', { theme: 'light', hideEventTypeDetails: false, layout: 'month_view' })
     /* eslint-enable */
   }, [])
 }
@@ -79,7 +79,7 @@ export default function ComplyDemoPageClient() {
 
       <nav>
         <a href="/" className="logo">
-          <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '34px', width: 'auto' }} />
+          <img src="/logos/plum.svg" alt="iFu Labs" style={{ height: '34px', width: 'auto' }} />
         </a>
         <ul className="nav-links">
           <li><a href="/services">Services</a></li>

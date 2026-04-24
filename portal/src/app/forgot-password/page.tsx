@@ -6,7 +6,7 @@ import Link from 'next/link'
 const PLUM = '#33063D'
 const IRIS = '#8A63E6'
 const LAVENDER = '#DAC0FD'
-const BORDER = '#E5E5E5'
+const BORDER = 'rgba(51, 6, 61, 0.2)'
 const MUTED = 'rgba(51, 6, 61, 0.7)'
 
 export default function ForgotPasswordPage() {

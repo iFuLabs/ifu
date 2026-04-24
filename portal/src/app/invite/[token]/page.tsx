@@ -9,7 +9,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 const PLUM = '#33063D'
 const IRIS = '#8A63E6'
 const LAVENDER = '#DAC0FD'
-const BORDER = '#E5E5E5'
+const BORDER = 'rgba(51, 6, 61, 0.2)'
 const MUTED = 'rgba(51, 6, 61, 0.7)'
 const SUBTLE = 'rgba(51, 6, 61, 0.5)'
 

@@ -105,7 +105,7 @@ export default function PortalPage() {
       }}
       onMouseOut={(e) => {
         e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.borderColor = '#E5E5E5'
+        e.currentTarget.style.borderColor = 'rgba(51, 6, 61, 0.2)'
         e.currentTarget.style.boxShadow = '0 6px 20px rgba(51, 6, 61, 0.08)'
       }}
     >

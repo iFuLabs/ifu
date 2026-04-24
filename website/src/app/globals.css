@@ -18,7 +18,7 @@
   --surface:  #F4F4F4;
   --surface2: #FFFFFF;
   --surface3: #DAC0FD;
-  --border:   #E5E5E5;
+  --border:   rgba(51, 6, 61, 0.2);
   --border2:  #DAC0FD;
   --ink:      #33063D;
   --muted:    #33063D;
@@ -220,7 +220,7 @@ nav.scrolled {
   font-weight: 500;
   font-family: var(--sans);
   color: #fff;
-  background: var(--accent);
+  background: var(--plum);
   border-radius: 3px;
   text-decoration: none;
   transition: all 0.2s;
@@ -230,7 +230,7 @@ nav.scrolled {
 }
 
 .btn-solid:hover {
-  background: var(--plum);
+  background: var(--iris);
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(138,99,230,0.25);
 }
@@ -339,13 +339,13 @@ nav.scrolled {
 }
 
 .btn-cta.primary {
-  background: var(--accent);
+  background: var(--plum);
   color: #fff;
-  box-shadow: 0 4px 16px var(--accent-glow);
+  box-shadow: 0 4px 16px rgba(51, 6, 61, 0.22);
 }
 
 .btn-cta.primary:hover {
-  background: var(--plum);
+  background: var(--iris);
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(138,99,230,0.3);
 }
@@ -1552,7 +1552,7 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
   align-items: center;
   gap: 12px;
   padding: 16px 32px;
-  background: var(--accent);
+  background: var(--plum);
   color: white;
   border-radius: 3px;
   font-size: 16px;
@@ -1563,7 +1563,7 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 }
 
 .btn-cta-large:hover {
-  background: var(--plum);
+  background: var(--iris);
   transform: translateY(-2px);
 }
 
@@ -1848,8 +1848,8 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 .calc-result-amount { font-family: var(--serif); font-size: 36px; font-weight: 600; color: var(--accent); margin-bottom: 16px; line-height: 1.2; }
 .calc-result-note { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 28px; }
 
-.btn-calc-cta { display: block; width: 100%; padding: 14px; background: var(--iris); color: white; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s; border-radius: 8px; }
-.btn-calc-cta:hover { background: var(--plum); transform: translateY(-1px); }
+.btn-calc-cta { display: block; width: 100%; padding: 14px; background: var(--plum); color: white; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s; border-radius: 8px; }
+.btn-calc-cta:hover { background: var(--iris); transform: translateY(-1px); }
 
 .services-clean-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
 .service-clean-card { background: var(--surface); padding: 36px 32px; transition: background 0.2s; position: relative; }
@@ -3615,7 +3615,7 @@ body.nav-mobile-locked { overflow: hidden; }
 /* ── BRANDED CTA BUTTONS ────────────────────────────────────────── */
 
 .btn-iris {
-  background: var(--iris);
+  background: var(--plum);
   color: var(--white);
   font-family: var(--sans);
   font-size: 16px;
@@ -3630,7 +3630,7 @@ body.nav-mobile-locked { overflow: hidden; }
 }
 
 .btn-iris:hover {
-  background: var(--plum);
+  background: var(--iris);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(138, 99, 230, 0.3);
 }

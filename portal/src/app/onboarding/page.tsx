@@ -407,12 +407,12 @@ function OnboardingForm() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
+      background: 'radial-gradient(ellipse at top, #DAC0FD 0%, #FFFFFF 60%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '40px 20px',
-      fontFamily: "'DM Sans', system-ui, sans-serif"
+      fontFamily: "'Aeonik', 'DM Sans', system-ui, sans-serif"
     }}>
       
       <div style={{ maxWidth: '540px', width: '100%' }}>
@@ -424,12 +424,12 @@ function OnboardingForm() {
             display: 'flex',
             justifyContent: 'center'
           }}>
-            <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
+            <img src="/logos/plum.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
           </div>
           <h1 style={{ 
             fontSize: '32px', 
             fontWeight: '600', 
-            color: '#F5F5F5', 
+            color: '#33063D', 
             marginBottom: '8px',
             fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
@@ -443,7 +443,7 @@ function OnboardingForm() {
               gap: '6px',
               padding: '6px 14px',
               background: 'rgba(138, 99, 230, 0.08)',
-              border: '1px solid #25282F',
+              border: '1px solid #E5E5E5',
               borderRadius: '20px',
               fontSize: '13px',
               color: '#8A63E6',
@@ -468,7 +468,7 @@ function OnboardingForm() {
             <div key={s.id} style={{
               flex: 1,
               height: '4px',
-              background: i <= step ? '#8A63E6' : '#25282F',
+              background: i <= step ? '#8A63E6' : 'rgba(51, 6, 61, 0.2)',
               borderRadius: '2px',
               transition: 'all 0.3s ease'
             }} />
@@ -477,11 +477,11 @@ function OnboardingForm() {
 
         {/* Card */}
         <div style={{
-          background: '#14161B',
-          border: '1px solid #25282F',
+          background: '#F4F4F4',
+          border: '1px solid #E5E5E5',
           borderRadius: '16px',
           padding: '40px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
+          boxShadow: '0 6px 20px rgba(51, 6, 61, 0.08)'
         }}>
 
           {/* Step 0: Sign Up */}
@@ -506,13 +506,13 @@ function OnboardingForm() {
                 <h2 style={{ 
                   fontSize: '24px', 
                   fontWeight: '600', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px',
                   fontFamily: "'PP Fragment', serif"
                 }}>
                   Create your account
                 </h2>
-                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: 'rgba(51, 6, 61, 0.7)', lineHeight: '1.6' }}>
                   Get started with your free trial. No credit card required.
                 </p>
               </div>
@@ -522,7 +522,7 @@ function OnboardingForm() {
                   display: 'block', 
                   fontSize: '14px', 
                   fontWeight: '500', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px' 
                 }}>
                   Full name *
@@ -537,23 +537,23 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#0F1115',
-                    border: '1px solid #25282F',
+                    background: '#FFFFFF',
+                    border: '1px solid #E5E5E5',
                     borderRadius: '8px',
-                    color: '#F5F5F5',
+                    color: '#33063D',
                     outline: 'none',
                     transition: 'all 0.2s',
-                    fontFamily: "'DM Sans', sans-serif"
+                    fontFamily: "'Aeonik', 'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#E8820A'
+                    e.target.style.borderColor = '#8A63E6'
                     e.target.style.background = 'white'
-                    e.target.style.color = '#0B0C0F'
+                    e.target.style.color = '#33063D'
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#25282F'
-                    e.target.style.background = '#0F1115'
-                    e.target.style.color = '#F5F5F5'
+                    e.target.style.borderColor = 'rgba(51, 6, 61, 0.2)'
+                    e.target.style.background = '#FFFFFF'
+                    e.target.style.color = '#33063D'
                   }}
                 />
               </div>
@@ -563,7 +563,7 @@ function OnboardingForm() {
                   display: 'block', 
                   fontSize: '14px', 
                   fontWeight: '500', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px' 
                 }}>
                   Email address *
@@ -577,32 +577,32 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#0F1115',
-                    border: `1px solid ${emailError ? 'rgba(239, 68, 68, 0.3)' : '#25282F'}`,
+                    background: '#FFFFFF',
+                    border: `1px solid ${emailError ? 'rgba(220, 38, 38, 0.25)' : 'rgba(51, 6, 61, 0.2)'}`,
                     borderRadius: '8px',
-                    color: '#F5F5F5',
+                    color: '#33063D',
                     outline: 'none',
                     transition: 'all 0.2s',
-                    fontFamily: "'DM Sans', sans-serif"
+                    fontFamily: "'Aeonik', 'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
                     if (!emailError) {
-                      e.target.style.borderColor = '#E8820A'
+                      e.target.style.borderColor = '#8A63E6'
                       e.target.style.background = 'white'
-                      e.target.style.color = '#0B0C0F'
+                      e.target.style.color = '#33063D'
                     }
                   }}
                   onBlur={(e) => {
                     validateEmail(email)
                     if (!emailError) {
-                      e.target.style.borderColor = '#25282F'
-                      e.target.style.background = '#0F1115'
-                      e.target.style.color = '#F5F5F5'
+                      e.target.style.borderColor = 'rgba(51, 6, 61, 0.2)'
+                      e.target.style.background = '#FFFFFF'
+                      e.target.style.color = '#33063D'
                     }
                   }}
                 />
                 {emailError && (
-                  <p style={{ fontSize: '13px', color: '#FCA5A5', marginTop: '6px' }}>
+                  <p style={{ fontSize: '13px', color: '#B91C1C', marginTop: '6px' }}>
                     {emailError}
                   </p>
                 )}
@@ -613,7 +613,7 @@ function OnboardingForm() {
                   display: 'block', 
                   fontSize: '14px', 
                   fontWeight: '500', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px' 
                 }}>
                   Password *
@@ -631,27 +631,27 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#0F1115',
-                    border: `1px solid ${passwordError ? 'rgba(239, 68, 68, 0.3)' : '#25282F'}`,
+                    background: '#FFFFFF',
+                    border: `1px solid ${passwordError ? 'rgba(220, 38, 38, 0.25)' : 'rgba(51, 6, 61, 0.2)'}`,
                     borderRadius: '8px',
-                    color: '#F5F5F5',
+                    color: '#33063D',
                     outline: 'none',
                     transition: 'all 0.2s',
-                    fontFamily: "'DM Sans', sans-serif"
+                    fontFamily: "'Aeonik', 'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
                     if (!passwordError) {
-                      e.target.style.borderColor = '#E8820A'
+                      e.target.style.borderColor = '#8A63E6'
                       e.target.style.background = 'white'
-                      e.target.style.color = '#0B0C0F'
+                      e.target.style.color = '#33063D'
                     }
                   }}
                   onBlur={(e) => {
                     if (password) validatePassword(password)
                     if (!passwordError) {
-                      e.target.style.borderColor = '#25282F'
-                      e.target.style.background = '#0F1115'
-                      e.target.style.color = '#F5F5F5'
+                      e.target.style.borderColor = 'rgba(51, 6, 61, 0.2)'
+                      e.target.style.background = '#FFFFFF'
+                      e.target.style.color = '#33063D'
                     }
                   }}
                 />
@@ -663,25 +663,25 @@ function OnboardingForm() {
                       <div style={{
                         flex: 1,
                         height: '4px',
-                        background: passwordStrength === 'weak' ? 'rgba(239, 68, 68, 0.3)' : passwordStrength === 'medium' ? '#FCD34D' : '#34D399',
+                        background: passwordStrength === 'weak' ? 'rgba(220, 38, 38, 0.25)' : passwordStrength === 'medium' ? '#8A63E6' : '#33063D',
                         borderRadius: '2px'
                       }} />
                       <div style={{
                         flex: 1,
                         height: '4px',
-                        background: passwordStrength === 'medium' || passwordStrength === 'strong' ? (passwordStrength === 'medium' ? '#FCD34D' : '#34D399') : '#25282F',
+                        background: passwordStrength === 'medium' || passwordStrength === 'strong' ? (passwordStrength === 'medium' ? '#8A63E6' : '#33063D') : 'rgba(51, 6, 61, 0.2)',
                         borderRadius: '2px'
                       }} />
                       <div style={{
                         flex: 1,
                         height: '4px',
-                        background: passwordStrength === 'strong' ? '#34D399' : '#25282F',
+                        background: passwordStrength === 'strong' ? '#33063D' : 'rgba(51, 6, 61, 0.2)',
                         borderRadius: '2px'
                       }} />
                     </div>
                     <p style={{ 
                       fontSize: '13px', 
-                      color: passwordStrength === 'weak' ? '#FCA5A5' : passwordStrength === 'medium' ? '#92400E' : '#065F46',
+                      color: passwordStrength === 'weak' ? '#B91C1C' : passwordStrength === 'medium' ? '#33063D' : '#33063D',
                       marginTop: '4px'
                     }}>
                       Password strength: {passwordStrength}
@@ -690,13 +690,13 @@ function OnboardingForm() {
                 )}
                 
                 {passwordError && (
-                  <p style={{ fontSize: '13px', color: '#FCA5A5', marginTop: '6px' }}>
+                  <p style={{ fontSize: '13px', color: '#B91C1C', marginTop: '6px' }}>
                     {passwordError}
                   </p>
                 )}
                 
                 {!passwordError && !password && (
-                  <p style={{ fontSize: '13px', color: '#6B7078', marginTop: '6px' }}>
+                  <p style={{ fontSize: '13px', color: 'rgba(51, 6, 61, 0.5)', marginTop: '6px' }}>
                     Must include uppercase, lowercase, number, and special character
                   </p>
                 )}
@@ -705,11 +705,11 @@ function OnboardingForm() {
               {error && error !== 'email_exists' && (
                 <div style={{
                   padding: '12px 16px',
-                  background: 'rgba(239, 68, 68, 0.08)',
-                  border: '1px solid #FCA5A5',
+                  background: 'rgba(220, 38, 38, 0.08)',
+                  border: '1px solid #B91C1C',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  color: '#FCA5A5',
+                  color: '#B91C1C',
                   marginBottom: '20px'
                 }}>
                   {error}
@@ -719,12 +719,12 @@ function OnboardingForm() {
               {error === 'email_exists' && (
                 <div style={{
                   padding: '16px',
-                  background: '#FEF3C7',
-                  border: '1px solid #FCD34D',
+                  background: '#DAC0FD',
+                  border: '1px solid #8A63E6',
                   borderRadius: '8px',
                   marginBottom: '20px'
                 }}>
-                  <p style={{ fontSize: '14px', color: '#92400E', marginBottom: '12px' }}>
+                  <p style={{ fontSize: '14px', color: '#33063D', marginBottom: '12px' }}>
                     An account with this email already exists.
                   </p>
                   <button
@@ -758,8 +758,8 @@ function OnboardingForm() {
                 style={{
                   width: '100%',
                   padding: '14px',
-                  background: loading ? '#9AA0A6' : '#E8820A',
-                  color: '#0B0C0F',
+                  background: loading ? '#F4F4F4' : '#33063D',
+                  color: '#FFFFFF',
                   fontSize: '15px',
                   fontWeight: '600',
                   border: 'none',
@@ -771,8 +771,8 @@ function OnboardingForm() {
                   gap: '8px',
                   transition: 'all 0.2s'
                 }}
-                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
-                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
+                onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#8A63E6')}
+                onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#33063D')}
               >
                 {loading ? (
                   <><Loader2 size={18} className="animate-spin" /> Creating account...</>
@@ -790,25 +790,25 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: 'rgba(232, 130, 10, 0.08)',
+                  background: 'rgba(138, 99, 230, 0.10)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <Building2 size={24} style={{ color: '#E8820A' }} />
+                  <Building2 size={24} style={{ color: '#8A63E6' }} />
                 </div>
                 <h2 style={{ 
                   fontSize: '24px', 
                   fontWeight: '600', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px',
                   fontFamily: "'PP Fragment', serif"
                 }}>
                   Create your organization
                 </h2>
-                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: 'rgba(51, 6, 61, 0.7)', lineHeight: '1.6' }}>
                   This creates your team workspace. You can invite team members later.
                 </p>
               </div>
@@ -818,7 +818,7 @@ function OnboardingForm() {
                   display: 'block', 
                   fontSize: '14px', 
                   fontWeight: '500', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px' 
                 }}>
                   Organization name *
@@ -834,23 +834,23 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#0F1115',
-                    border: '1px solid #25282F',
+                    background: '#FFFFFF',
+                    border: '1px solid #E5E5E5',
                     borderRadius: '8px',
-                    color: '#F5F5F5',
+                    color: '#33063D',
                     outline: 'none',
                     transition: 'all 0.2s',
-                    fontFamily: "'DM Sans', sans-serif"
+                    fontFamily: "'Aeonik', 'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#E8820A'
+                    e.target.style.borderColor = '#8A63E6'
                     e.target.style.background = 'white'
-                    e.target.style.color = '#0B0C0F'
+                    e.target.style.color = '#33063D'
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#25282F'
-                    e.target.style.background = '#0F1115'
-                    e.target.style.color = '#F5F5F5'
+                    e.target.style.borderColor = 'rgba(51, 6, 61, 0.2)'
+                    e.target.style.background = '#FFFFFF'
+                    e.target.style.color = '#33063D'
                   }}
                 />
               </div>
@@ -860,7 +860,7 @@ function OnboardingForm() {
                   display: 'block', 
                   fontSize: '14px', 
                   fontWeight: '500', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px' 
                 }}>
                   Company domain (optional)
@@ -874,26 +874,26 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '15px',
-                    background: '#0F1115',
-                    border: '1px solid #25282F',
+                    background: '#FFFFFF',
+                    border: '1px solid #E5E5E5',
                     borderRadius: '8px',
-                    color: '#F5F5F5',
+                    color: '#33063D',
                     outline: 'none',
                     transition: 'all 0.2s',
-                    fontFamily: "'DM Sans', sans-serif"
+                    fontFamily: "'Aeonik', 'DM Sans', sans-serif"
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#E8820A'
+                    e.target.style.borderColor = '#8A63E6'
                     e.target.style.background = 'white'
-                    e.target.style.color = '#0B0C0F'
+                    e.target.style.color = '#33063D'
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#25282F'
-                    e.target.style.background = '#0F1115'
-                    e.target.style.color = '#F5F5F5'
+                    e.target.style.borderColor = 'rgba(51, 6, 61, 0.2)'
+                    e.target.style.background = '#FFFFFF'
+                    e.target.style.color = '#33063D'
                   }}
                 />
-                <p style={{ fontSize: '13px', color: '#6B7078', marginTop: '6px' }}>
+                <p style={{ fontSize: '13px', color: 'rgba(51, 6, 61, 0.5)', marginTop: '6px' }}>
                   Auto-verify teammates with this email domain
                 </p>
               </div>
@@ -901,11 +901,11 @@ function OnboardingForm() {
               {error && (
                 <div style={{
                   padding: '12px 16px',
-                  background: 'rgba(239, 68, 68, 0.08)',
-                  border: '1px solid #FCA5A5',
+                  background: 'rgba(220, 38, 38, 0.08)',
+                  border: '1px solid #B91C1C',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  color: '#FCA5A5',
+                  color: '#B91C1C',
                   marginBottom: '20px'
                 }}>
                   {error}
@@ -919,16 +919,16 @@ function OnboardingForm() {
                   style={{
                     padding: '14px 24px',
                     background: 'transparent',
-                    color: '#9AA0A6',
+                    color: 'rgba(51, 6, 61, 0.7)',
                     fontSize: '15px',
                     fontWeight: '600',
-                    border: '1px solid #25282F',
+                    border: '1px solid #E5E5E5',
                     borderRadius: '8px',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s'
                   }}
-                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#E8820A', e.currentTarget.style.color = '#E8820A')}
-                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = '#25282F', e.currentTarget.style.color = '#9AA0A6')}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#8A63E6', e.currentTarget.style.color = '#8A63E6')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = 'rgba(51, 6, 61, 0.2)', e.currentTarget.style.color = 'rgba(51, 6, 61, 0.7)')}
                 >
                   Back
                 </button>
@@ -938,8 +938,8 @@ function OnboardingForm() {
                   style={{
                     flex: 1,
                     padding: '14px',
-                    background: loading ? '#9AA0A6' : '#E8820A',
-                    color: '#0B0C0F',
+                    background: loading ? '#F4F4F4' : '#33063D',
+                    color: '#FFFFFF',
                     fontSize: '15px',
                     fontWeight: '600',
                     border: 'none',
@@ -951,8 +951,8 @@ function OnboardingForm() {
                     gap: '8px',
                     transition: 'all 0.2s'
                   }}
-                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
-                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#8A63E6')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#33063D')}
                 >
                   {loading ? (
                     <><Loader2 size={18} className="animate-spin" /> Creating...</>
@@ -971,45 +971,45 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: 'rgba(232, 130, 10, 0.1)',
+                  background: 'rgba(138, 99, 230, 0.12)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <Cloud size={24} style={{ color: '#E8820A' }} />
+                  <Cloud size={24} style={{ color: '#8A63E6' }} />
                 </div>
                 <h2 style={{ 
                   fontSize: '24px', 
                   fontWeight: '600', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px',
                   fontFamily: "'PP Fragment', serif"
                 }}>
                   Connect your AWS account
                 </h2>
-                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: 'rgba(51, 6, 61, 0.7)', lineHeight: '1.6' }}>
                   We need read-only access to scan your AWS environment. Takes about 5 minutes.
                 </p>
               </div>
 
               <div style={{
-                background: 'rgba(232, 130, 10, 0.08)',
-                border: '1px solid #25282F',
+                background: 'rgba(138, 99, 230, 0.10)',
+                border: '1px solid #E5E5E5',
                 borderRadius: '12px',
                 padding: '16px',
                 marginBottom: '24px',
                 fontSize: '13px',
-                color: '#E8820A',
+                color: '#8A63E6',
                 lineHeight: '1.7'
               }}>
                 <p style={{ fontWeight: '600', marginBottom: '10px' }}>Quick setup:</p>
                 <ol style={{ marginLeft: '18px', lineHeight: '1.8' }}>
                   <li>Open AWS IAM → Roles → Create role</li>
                   <li>Select "Another AWS account"</li>
-                  <li>Account ID: <code style={{ background: '#14161B', padding: '2px 6px', borderRadius: '4px', fontFamily: "'DM Mono', monospace" }}>{awsAccountId}</code></li>
-                  <li>External ID: <code style={{ background: '#14161B', padding: '2px 6px', borderRadius: '4px', fontFamily: "'DM Mono', monospace" }}>{externalId}</code></li>
+                  <li>Account ID: <code style={{ background: '#F4F4F4', padding: '2px 6px', borderRadius: '4px', fontFamily: "'Aeonik Fono', 'DM Mono', monospace" }}>{awsAccountId}</code></li>
+                  <li>External ID: <code style={{ background: '#F4F4F4', padding: '2px 6px', borderRadius: '4px', fontFamily: "'Aeonik Fono', 'DM Mono', monospace" }}>{externalId}</code></li>
                   <li>Attach policy: SecurityAudit</li>
                   <li>Copy the Role ARN</li>
                 </ol>
@@ -1020,7 +1020,7 @@ function OnboardingForm() {
                   display: 'block', 
                   fontSize: '14px', 
                   fontWeight: '500', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px' 
                 }}>
                   Role ARN
@@ -1035,27 +1035,27 @@ function OnboardingForm() {
                     width: '100%',
                     padding: '12px 16px',
                     fontSize: '14px',
-                    fontFamily: "'DM Mono', monospace",
-                    background: skipAws ? '#14161B' : '#0F1115',
-                    border: '1px solid #25282F',
+                    fontFamily: "'Aeonik Fono', 'DM Mono', monospace",
+                    background: skipAws ? '#F4F4F4' : '#FFFFFF',
+                    border: '1px solid #E5E5E5',
                     borderRadius: '8px',
-                    color: skipAws ? '#6B7078' : '#F5F5F5',
+                    color: skipAws ? 'rgba(51, 6, 61, 0.5)' : '#33063D',
                     outline: 'none',
                     transition: 'all 0.2s'
                   }}
-                  onFocus={(e) => !skipAws && (e.target.style.borderColor = '#E8820A', e.target.style.background = 'white', e.target.style.color = '#0B0C0F')}
-                  onBlur={(e) => (e.target.style.borderColor = '#25282F', e.target.style.background = '#0F1115', e.target.style.color = '#F5F5F5')}
+                  onFocus={(e) => !skipAws && (e.target.style.borderColor = '#8A63E6', e.target.style.background = 'white', e.target.style.color = '#33063D')}
+                  onBlur={(e) => (e.target.style.borderColor = 'rgba(51, 6, 61, 0.2)', e.target.style.background = '#FFFFFF', e.target.style.color = '#33063D')}
                 />
               </div>
 
               {error && (
                 <div style={{
                   padding: '12px 16px',
-                  background: 'rgba(239, 68, 68, 0.08)',
-                  border: '1px solid #FCA5A5',
+                  background: 'rgba(220, 38, 38, 0.08)',
+                  border: '1px solid #B91C1C',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  color: '#FCA5A5',
+                  color: '#B91C1C',
                   marginBottom: '20px'
                 }}>
                   {error}
@@ -1069,16 +1069,16 @@ function OnboardingForm() {
                   style={{
                     padding: '14px 24px',
                     background: 'transparent',
-                    color: '#9AA0A6',
+                    color: 'rgba(51, 6, 61, 0.7)',
                     fontSize: '15px',
                     fontWeight: '600',
-                    border: '1px solid #25282F',
+                    border: '1px solid #E5E5E5',
                     borderRadius: '8px',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s'
                   }}
-                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#E8820A', e.currentTarget.style.color = '#E8820A')}
-                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = '#25282F', e.currentTarget.style.color = '#9AA0A6')}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.borderColor = '#8A63E6', e.currentTarget.style.color = '#8A63E6')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.borderColor = 'rgba(51, 6, 61, 0.2)', e.currentTarget.style.color = 'rgba(51, 6, 61, 0.7)')}
                 >
                   Back
                 </button>
@@ -1088,8 +1088,8 @@ function OnboardingForm() {
                   style={{
                     flex: 1,
                     padding: '14px',
-                    background: loading ? '#9AA0A6' : '#E8820A',
-                    color: '#0B0C0F',
+                    background: loading ? '#F4F4F4' : '#33063D',
+                    color: '#FFFFFF',
                     fontSize: '15px',
                     fontWeight: '600',
                     border: 'none',
@@ -1101,8 +1101,8 @@ function OnboardingForm() {
                     gap: '8px',
                     transition: 'all 0.2s'
                   }}
-                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
-                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
+                  onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#8A63E6')}
+                  onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#33063D')}
                 >
                   {loading ? (
                     <><Loader2 size={18} className="animate-spin" /> Connecting...</>
@@ -1118,15 +1118,15 @@ function OnboardingForm() {
                   width: '100%',
                   padding: '14px',
                   background: 'transparent',
-                  color: '#9AA0A6',
+                  color: 'rgba(51, 6, 61, 0.7)',
                   fontSize: '14px',
                   border: 'none',
                   cursor: 'pointer',
                   transition: 'color 0.2s',
                   marginTop: '12px'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.color = '#F5F5F5'}
-                onMouseOut={(e) => e.currentTarget.style.color = '#9AA0A6'}
+                onMouseOver={(e) => e.currentTarget.style.color = '#33063D'}
+                onMouseOut={(e) => e.currentTarget.style.color = 'rgba(51, 6, 61, 0.7)'}
               >
                 Skip for now — I'll connect later
               </button>
@@ -1140,14 +1140,14 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: 'rgba(167, 139, 250, 0.1)',
+                  background: '#DAC0FD',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A63E6" strokeWidth="2">
                     <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
                     <line x1="1" y1="10" x2="23" y2="10"/>
                   </svg>
@@ -1155,13 +1155,13 @@ function OnboardingForm() {
                 <h2 style={{ 
                   fontSize: '24px', 
                   fontWeight: '600', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px',
                   fontFamily: "'PP Fragment', serif"
                 }}>
                   Add payment method
                 </h2>
-                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: 'rgba(51, 6, 61, 0.7)', lineHeight: '1.6' }}>
                   Start your 3-day free trial. Your card will be charged after the trial ends.
                 </p>
               </div>
@@ -1171,22 +1171,22 @@ function OnboardingForm() {
                 <div style={{ marginBottom: '24px' }}>
                   <div style={{
                     padding: '20px',
-                    background: 'rgba(232, 130, 10, 0.08)',
-                    border: '2px solid #E8820A',
+                    background: 'rgba(138, 99, 230, 0.10)',
+                    border: '2px solid #8A63E6',
                     borderRadius: '12px'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '18px', fontWeight: '600', color: '#F5F5F5' }}>
+                      <span style={{ fontSize: '18px', fontWeight: '600', color: '#33063D' }}>
                         {selectedPlan === 'comply-starter' ? 'iFu Comply Starter' : 
                          selectedPlan === 'comply-growth' ? 'iFu Comply Growth' : 'iFu Costless'}
                       </span>
-                      <span style={{ fontSize: '20px', fontWeight: '700', color: '#E8820A' }}>
+                      <span style={{ fontSize: '20px', fontWeight: '700', color: '#8A63E6' }}>
                         {selectedPlan === 'comply-starter' ? '$299' : 
                          selectedPlan === 'comply-growth' ? '$799' : '$199'}
-                        <span style={{ fontSize: '14px', fontWeight: '400', color: '#9AA0A6' }}>/mo</span>
+                        <span style={{ fontSize: '14px', fontWeight: '400', color: 'rgba(51, 6, 61, 0.7)' }}>/mo</span>
                       </span>
                     </div>
-                    <p style={{ fontSize: '14px', color: '#9AA0A6', margin: 0 }}>
+                    <p style={{ fontSize: '14px', color: 'rgba(51, 6, 61, 0.7)', margin: 0 }}>
                       {selectedPlan === 'comply-starter' ? 'Essential compliance monitoring' : 
                        selectedPlan === 'comply-growth' ? 'Advanced compliance features' : 'AWS cost optimization'}
                     </p>
@@ -1199,7 +1199,7 @@ function OnboardingForm() {
                     display: 'block', 
                     fontSize: '14px', 
                     fontWeight: '500', 
-                    color: '#F5F5F5', 
+                    color: '#33063D', 
                     marginBottom: '12px' 
                   }}>
                     Select your plan
@@ -1216,18 +1216,18 @@ function OnboardingForm() {
                         onClick={() => setSelectedPlan(plan.id)}
                         style={{
                           padding: '16px',
-                          background: selectedPlan === plan.id ? 'rgba(232, 130, 10, 0.08)' : '#0F1115',
-                          border: selectedPlan === plan.id ? '2px solid #E8820A' : '1px solid #25282F',
+                          background: selectedPlan === plan.id ? 'rgba(138, 99, 230, 0.10)' : '#FFFFFF',
+                          border: selectedPlan === plan.id ? '2px solid #8A63E6' : '1px solid #E5E5E5',
                           borderRadius: '8px',
                           cursor: 'pointer',
                           transition: 'all 0.2s'
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '16px', fontWeight: '600', color: '#F5F5F5' }}>{plan.name}</span>
-                          <span style={{ fontSize: '18px', fontWeight: '700', color: '#E8820A' }}>{plan.price}<span style={{ fontSize: '14px', fontWeight: '400', color: '#9AA0A6' }}>/mo</span></span>
+                          <span style={{ fontSize: '16px', fontWeight: '600', color: '#33063D' }}>{plan.name}</span>
+                          <span style={{ fontSize: '18px', fontWeight: '700', color: '#8A63E6' }}>{plan.price}<span style={{ fontSize: '14px', fontWeight: '400', color: 'rgba(51, 6, 61, 0.7)' }}>/mo</span></span>
                         </div>
-                        <p style={{ fontSize: '13px', color: '#9AA0A6', margin: 0 }}>{plan.desc}</p>
+                        <p style={{ fontSize: '13px', color: 'rgba(51, 6, 61, 0.7)', margin: 0 }}>{plan.desc}</p>
                       </div>
                     ))}
                   </div>
@@ -1236,12 +1236,12 @@ function OnboardingForm() {
 
               <div style={{
                 padding: '16px',
-                background: 'rgba(167, 139, 250, 0.1)',
-                border: '1px solid #C4B5FD',
+                background: '#DAC0FD',
+                border: '1px solid #8A63E6',
                 borderRadius: '8px',
                 marginBottom: '24px',
                 fontSize: '13px',
-                color: '#C4B5FD',
+                color: '#8A63E6',
                 lineHeight: '1.6'
               }}>
                 <strong>3-day free trial</strong> — Your card will be charged after the trial period ends. Cancel anytime.
@@ -1250,11 +1250,11 @@ function OnboardingForm() {
               {error && (
                 <div style={{
                   padding: '12px 16px',
-                  background: 'rgba(239, 68, 68, 0.08)',
-                  border: '1px solid #FCA5A5',
+                  background: 'rgba(220, 38, 38, 0.08)',
+                  border: '1px solid #B91C1C',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  color: '#FCA5A5',
+                  color: '#B91C1C',
                   marginBottom: '20px'
                 }}>
                   {error}
@@ -1268,16 +1268,16 @@ function OnboardingForm() {
                   style={{
                     padding: '14px 24px',
                     background: 'transparent',
-                    color: '#9AA0A6',
+                    color: 'rgba(51, 6, 61, 0.7)',
                     fontSize: '15px',
                     fontWeight: '600',
-                    border: '1px solid #25282F',
+                    border: '1px solid #E5E5E5',
                     borderRadius: '8px',
                     cursor: paymentProcessing ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s'
                   }}
-                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = '#E8820A', e.currentTarget.style.color = '#E8820A')}
-                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = '#25282F', e.currentTarget.style.color = '#9AA0A6')}
+                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = '#8A63E6', e.currentTarget.style.color = '#8A63E6')}
+                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.borderColor = 'rgba(51, 6, 61, 0.2)', e.currentTarget.style.color = 'rgba(51, 6, 61, 0.7)')}
                 >
                   Back
                 </button>
@@ -1287,8 +1287,8 @@ function OnboardingForm() {
                   style={{
                     flex: 1,
                     padding: '14px',
-                    background: paymentProcessing ? '#9AA0A6' : '#E8820A',
-                    color: '#0B0C0F',
+                    background: paymentProcessing ? '#F4F4F4' : '#33063D',
+                    color: '#FFFFFF',
                     fontSize: '15px',
                     fontWeight: '600',
                     border: 'none',
@@ -1300,8 +1300,8 @@ function OnboardingForm() {
                     gap: '8px',
                     transition: 'all 0.2s'
                   }}
-                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.background = '#FF9820')}
-                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.background = '#E8820A')}
+                  onMouseOver={(e) => !paymentProcessing && (e.currentTarget.style.background = '#8A63E6')}
+                  onMouseOut={(e) => !paymentProcessing && (e.currentTarget.style.background = '#33063D')}
                 >
                   {paymentProcessing ? (
                     <><Loader2 size={18} className="animate-spin" /> Processing...</>
@@ -1320,25 +1320,25 @@ function OnboardingForm() {
                 <div style={{
                   width: '48px',
                   height: '48px',
-                  background: 'rgba(74, 222, 128, 0.1)',
+                  background: '#C8F6C0',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px'
                 }}>
-                  <CheckCircle size={24} style={{ color: '#4ADE80' }} />
+                  <CheckCircle size={24} style={{ color: '#33063D' }} />
                 </div>
                 <h2 style={{ 
                   fontSize: '24px', 
                   fontWeight: '600', 
-                  color: '#F5F5F5', 
+                  color: '#33063D', 
                   marginBottom: '8px',
                   fontFamily: "'PP Fragment', serif"
                 }}>
                   You're all set!
                 </h2>
-                <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '15px', color: 'rgba(51, 6, 61, 0.7)', lineHeight: '1.6' }}>
                   {productName 
                     ? `Your ${productName} ${planName ? planName + ' ' : ''}account is ready.`
                     : 'Your account is ready.'
@@ -1349,8 +1349,8 @@ function OnboardingForm() {
               {productName && (
                 <div style={{
                   padding: '20px',
-                  background: 'rgba(232, 130, 10, 0.08)',
-                  border: '1px solid #25282F',
+                  background: 'rgba(138, 99, 230, 0.10)',
+                  border: '1px solid #E5E5E5',
                   borderRadius: '12px',
                   marginBottom: '28px'
                 }}>
@@ -1359,17 +1359,17 @@ function OnboardingForm() {
                       {productName === 'iFu Comply' ? '🛡️' : '💰'}
                     </div>
                     <div>
-                      <div style={{ fontSize: '18px', fontWeight: '600', color: '#F5F5F5', fontFamily: "'PP Fragment', serif" }}>
+                      <div style={{ fontSize: '18px', fontWeight: '600', color: '#33063D', fontFamily: "'PP Fragment', serif" }}>
                         {productName}
                       </div>
                       {planName && (
-                        <div style={{ fontSize: '13px', color: '#9AA0A6' }}>
+                        <div style={{ fontSize: '13px', color: 'rgba(51, 6, 61, 0.7)' }}>
                           {planName} Plan
                         </div>
                       )}
                     </div>
                   </div>
-                  <p style={{ fontSize: '14px', color: '#9AA0A6', lineHeight: '1.6', margin: 0 }}>
+                  <p style={{ fontSize: '14px', color: 'rgba(51, 6, 61, 0.7)', lineHeight: '1.6', margin: 0 }}>
                     {productName === 'iFu Comply' 
                       ? 'Automated compliance monitoring for SOC 2, ISO 27001, and GDPR'
                       : 'AWS cost optimization and waste detection'
@@ -1383,8 +1383,8 @@ function OnboardingForm() {
                 style={{
                   width: '100%',
                   padding: '16px',
-                  background: '#E8820A',
-                  color: '#0B0C0F',
+                  background: '#33063D',
+                  color: '#FFFFFF',
                   fontSize: '16px',
                   fontWeight: '600',
                   border: 'none',
@@ -1396,8 +1396,8 @@ function OnboardingForm() {
                   gap: '8px',
                   transition: 'all 0.2s'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.background = '#FF9820'}
-                onMouseOut={(e) => e.currentTarget.style.background = '#E8820A'}
+                onMouseOver={(e) => e.currentTarget.style.background = '#8A63E6'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#33063D'}
               >
                 {productName ? `Open ${productName}` : 'Go to dashboard'} <ArrowRight size={20} />
               </button>
@@ -1408,7 +1408,7 @@ function OnboardingForm() {
 
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <p style={{ fontSize: '13px', color: '#6B7078' }}>
+          <p style={{ fontSize: '13px', color: 'rgba(51, 6, 61, 0.5)' }}>
             Step {step + 1} of {STEPS.length}
           </p>
         </div>
