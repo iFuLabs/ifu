@@ -2,14 +2,16 @@
 import useSWR from 'swr'
 import { api } from '@/lib/api'
 import { useState } from 'react'
+import { useParams } from 'next/navigation'
 import { ArrowLeft, CheckCircle, XCircle, Clock, Minus, ChevronDown, ChevronUp, Save } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import clsx from 'clsx'
 import { AiGapExplainer } from '@/components/AiGapExplainer'
 
-export default function ControlDetailPage({ params }: { params: { controlId: string } }) {
-  const { controlId } = params
+export default function ControlDetailPage() {
+  const params = useParams()
+  const controlId = params.controlId as string
   const { data: control, error, mutate } = useSWR(
     ['control', controlId],
     () => api.controls.get(controlId)

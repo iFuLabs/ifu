@@ -189,7 +189,17 @@ export default async function controlRoutes(fastify) {
       limit: 30
     })
 
-    return reply.send({ ...def, history })
+    // Get the latest result to merge with the definition
+    const latest = history[0]
+
+    return reply.send({ 
+      ...def, 
+      status: latest?.status || 'pending',
+      lastChecked: latest?.checkedAt || null,
+      evidence: latest?.evidence || null,
+      notes: latest?.notes || null,
+      history 
+    })
   })
 
   // PATCH /api/v1/controls/:controlId/notes
