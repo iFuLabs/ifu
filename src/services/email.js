@@ -33,13 +33,13 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
             <style>
               body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #33063D; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
               .logo { margin-bottom: 10px; }
               .logo img { height: 40px; width: auto; display: inline-block; }
-              .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 0; }
+              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #8A63E6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .button:hover { background: #33063D; }
+              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .button:hover { background: #15402F; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
               ul { padding-left: 20px; }
               li { margin: 8px 0; }
@@ -49,7 +49,7 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
             <div class="container">
               <div class="header">
                 <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
-                <p class="tagline">Both problems. One platform. A price that makes sense.</p>
+                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
               </div>
               <div class="content">
                 <p>Hi ${name || 'there'},</p>
@@ -73,7 +73,7 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
               </div>
               <div class="footer">
                 <p><strong>iFu Labs</strong></p>
-                <p style="margin: 5px 0;">Both problems. One platform. A price that makes sense.</p>
+                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
                 <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
               </div>
             </div>
@@ -98,7 +98,7 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
 /**
  * Send team invitation email
  */
-export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, inviteUrl, expiresAt }) {
+export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, product = 'comply', inviteUrl, expiresAt }) {
   try {
     const expiryDate = new Date(expiresAt).toLocaleDateString('en-US', { 
       month: 'long', 
@@ -106,11 +106,14 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
       year: 'numeric' 
     })
 
+    const productName = product === 'finops' ? 'iFu Labs FinOps' : 'iFu Labs Comply'
+    const productTagline = product === 'finops' ? 'Cloud Cost Optimization' : 'Compliance Automation'
+
     const emailConfig = getEmailConfig('team')
     const { data, error } = await resend.emails.send({
       ...emailConfig,
       to,
-      subject: `${inviterName} invited you to join ${orgName} on ${COMPANY_NAME}`,
+      subject: `${inviterName} invited you to join ${orgName} on ${productName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -119,14 +122,14 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
             <style>
               body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #33063D; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
               .logo { margin-bottom: 10px; }
               .logo img { height: 40px; width: auto; display: inline-block; }
-              .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 0; }
+              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #8A63E6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .button:hover { background: #33063D; }
-              .info-box { background: #F4F4F4; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #8A63E6; }
+              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .button:hover { background: #15402F; }
+              .info-box { background: #E8F2EE; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #1A4D3C; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
               .warning { color: #dc2626; font-size: 14px; margin-top: 20px; padding: 15px; background: #fef2f2; border-radius: 6px; border-left: 4px solid #dc2626; }
             </style>
@@ -135,15 +138,16 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
             <div class="container">
               <div class="header">
                 <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
-                <p class="tagline">Both problems. One platform. A price that makes sense.</p>
+                <p class="tagline">${productTagline}</p>
               </div>
               <div class="content">
                 <p>Hi there,</p>
                 
-                <p><strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on ${COMPANY_NAME}.</p>
+                <p><strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on <strong>${productName}</strong>.</p>
                 
                 <div class="info-box">
-                  <p style="margin: 0;"><strong>Role:</strong> ${role.charAt(0).toUpperCase() + role.slice(1)}</p>
+                  <p style="margin: 0;"><strong>Product:</strong> ${productName}</p>
+                  <p style="margin: 10px 0 0 0;"><strong>Role:</strong> ${role.charAt(0).toUpperCase() + role.slice(1)}</p>
                   <p style="margin: 10px 0 0 0;"><strong>Expires:</strong> ${expiryDate}</p>
                 </div>
                 
@@ -160,8 +164,8 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
                 <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
               </div>
               <div class="footer">
-                <p><strong>iFu Labs</strong></p>
-                <p style="margin: 5px 0;">Both problems. One platform. A price that makes sense.</p>
+                <p><strong>${productName}</strong></p>
+                <p style="margin: 5px 0;">${productTagline}</p>
                 <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This invitation was sent to ${to}</p>
               </div>
             </div>
@@ -184,7 +188,7 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
 }
 
 /**
- * Send password reset email
+ * Send password reset email (for future implementation)
  */
 export async function sendPasswordResetEmail({ to, name, resetUrl }) {
   try {
@@ -201,13 +205,13 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
             <style>
               body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #33063D; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
               .logo { margin-bottom: 10px; }
               .logo img { height: 40px; width: auto; display: inline-block; }
-              .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 0; }
+              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #8A63E6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .button:hover { background: #33063D; }
+              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .button:hover { background: #15402F; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
               .warning { color: #dc2626; font-size: 14px; margin-top: 20px; padding: 15px; background: #fef2f2; border-radius: 6px; border-left: 4px solid #dc2626; }
             </style>
@@ -216,7 +220,7 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
             <div class="container">
               <div class="header">
                 <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
-                <p class="tagline">Both problems. One platform. A price that makes sense.</p>
+                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
               </div>
               <div class="content">
                 <p>Hi ${name || 'there'},</p>
@@ -237,7 +241,7 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
               </div>
               <div class="footer">
                 <p><strong>iFu Labs</strong></p>
-                <p style="margin: 5px 0;">Both problems. One platform. A price that makes sense.</p>
+                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
                 <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
               </div>
             </div>
@@ -255,70 +259,6 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
     return { success: true, data }
   } catch (err) {
     console.error('Password reset email error:', err)
-    return { success: false, error: err.message }
-  }
-}
-
-/**
- * Send control-drift alert when a scan flips controls from pass to fail.
- */
-export async function sendControlDriftEmail({ to, orgName, drifted, scanId }) {
-  if (!to || drifted.length === 0) return { success: false, error: 'No recipient or empty drift' }
-
-  try {
-    const emailConfig = getEmailConfig('alerts')
-    const rows = drifted.slice(0, 10).map(d => `
-      <tr>
-        <td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;font-family:monospace;font-size:13px;color:#33063D;">${d.controlId}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;font-size:14px;color:#33063D;">${d.title}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#33063D;text-transform:uppercase;">${d.framework}</td>
-      </tr>`).join('')
-
-    const more = drifted.length > 10 ? `<p style="font-size:13px;color:#6B7280;">…and ${drifted.length - 10} more.</p>` : ''
-    const dashboardUrl = `${PORTAL_URL}/dashboard/scans${scanId ? `/${scanId}` : ''}`
-
-    const { data, error } = await resend.emails.send({
-      ...emailConfig,
-      to,
-      subject: `[${COMPANY_NAME}] ${drifted.length} control${drifted.length === 1 ? '' : 's'} now failing — ${orgName}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head><meta charset="utf-8"></head>
-          <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F9FAFB;margin:0;padding:0;">
-            <div style="max-width:640px;margin:0 auto;padding:20px;">
-              <div style="background:#33063D;color:#FFFFFF;padding:32px 28px;border-radius:8px 8px 0 0;">
-                <h1 style="margin:0;font-size:22px;font-weight:600;">Control drift detected</h1>
-                <p style="margin:6px 0 0;color:#DAC0FD;font-size:14px;">${orgName} · ${drifted.length} control${drifted.length === 1 ? '' : 's'} flipped from pass to fail</p>
-              </div>
-              <div style="background:#FFFFFF;padding:28px;border:1px solid #E5E7EB;border-top:none;border-radius:0 0 8px 8px;">
-                <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
-                  <thead>
-                    <tr style="background:#F4F4F4;">
-                      <th align="left" style="padding:10px 12px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;">Control</th>
-                      <th align="left" style="padding:10px 12px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;">Title</th>
-                      <th align="left" style="padding:10px 12px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.04em;">Framework</th>
-                    </tr>
-                  </thead>
-                  <tbody>${rows}</tbody>
-                </table>
-                ${more}
-                <a href="${dashboardUrl}" style="display:inline-block;background:#33063D;color:#FFFFFF;padding:12px 22px;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">View scan</a>
-                <p style="margin-top:24px;font-size:12px;color:#6B7280;">You're receiving this because you're an admin of ${orgName} on ${COMPANY_NAME}.</p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `
-    })
-
-    if (error) {
-      console.error('Control drift email error:', error)
-      return { success: false, error: error.message }
-    }
-    return { success: true, data }
-  } catch (err) {
-    console.error('Control drift email error:', err)
     return { success: false, error: err.message }
   }
 }

@@ -75,12 +75,8 @@ jobs:
         if: steps.check-service.outputs.service_exists == 'true' && steps.check-service.outputs.status != 'RUNNING'
         run: |
           echo "⚠️ App Runner service is in '${{ steps.check-service.outputs.status }}' state"
-          echo "The service needs to be in RUNNING state before deployment can start."
-          echo ""
-          echo "Next steps:"
-          echo "1. Delete the failed service: aws apprunner delete-service --service-arn ${{ steps.check-service.outputs.service_arn }}"
-          echo "2. Run Terraform apply to recreate the service (now that the Docker image exists)"
-          exit 0
+          echo "Service needs manual intervention. Please check AWS Console."
+          exit 1
 
       - name: Service Not Found
         if: steps.check-service.outputs.service_exists == 'false'

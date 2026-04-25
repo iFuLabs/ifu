@@ -42,7 +42,7 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
   findings.aiSummary = await generateFinOpsSummary(findings)
 
   const cacheKey = `finops:findings:${orgId}:current-month`
-  await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
+  await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
 
   await db.update(integrations)
     .set({ lastSyncAt: new Date(), updatedAt: new Date() })
