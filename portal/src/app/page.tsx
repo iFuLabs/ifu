@@ -87,7 +87,7 @@ export default function PortalPage() {
       onClick={() => handleProductClick(opts.product)}
       style={{
         background: '#FFFFFF',
-        border: '1px solid #E5E5E5',
+        border: '1px solid rgba(51, 6, 61, 0.2)',
         borderRadius: '16px',
         padding: '32px',
         cursor: 'pointer',

@@ -1,6 +1,119 @@
-# CLAUDE.md — Brand Identity & Light-Mode Conversion
+# CLAUDE.md — Brand Identity & Product Research
 
 ## Current task
+FinOps and Comply product research and improvement suggestions. (Brand light-mode conversion is the prior task — preserved below.)
+
+## FinOps current features
+**App:** `finops/src/app/dashboard/*` · **Connector:** `src/connectors/finops/checks.js`
+- Pages: Dashboard, Billing (Paystack), Integrations (AWS IAM-role), Team
+- API: `GET /api/v1/finops` (6h cache), `/finops/stream` (SSE progress), `/finops/summary`
+- Cloud: **AWS only**. STS AssumeRole + external ID for cross-account
+- AWS APIs: Cost Explorer (spend, forecast, rightsizing, RI/SP coverage), EC2, ELB/ELBv2, RDS, CloudWatch, Pricing API, Bedrock (Claude 3 Haiku for AI summaries)
+- Waste types (8): unattached EBS, unused EIPs, stopped EC2 (>30d), idle NAT, idle RDS, unused ALB/NLB/Classic LBs, old snapshots (>90d)
+- Recommendations: rightsizing (top 20 from AWS) + waste CLI commands; RI/SP coverage shown read-only
+- Forecast: end-of-month spend
+- AI: Bedrock summary (2-3 sentences, fallback rule-based)
+- Background jobs: scanWorker exists but **not wired** — scans are manual only
+- **Absent:** budgets, tag-based allocation/showback, anomaly detection (only rule-based thresholds, no ML), Slack/email alerts, scheduled scans, multi-cloud, custom date ranges, exports/reports, K8s cost, RI/SP automation
+
+## Comply current features
+**App:** `comply/src/app/dashboard/*` · **Backend:** `src/routes/*`
+- Pages: Dashboard, Controls (list/detail), Evidence, Integrations, Scans, Vendors, Team, Billing, FinOps widget
+- API: Controls (list/score/detail/notes), Integrations (AWS/GitHub setup + sync + delete), Evidence (CRUD + PDF export per framework), Scans (list/detail + BullMQ progress), Vendors (CRUD), AI (`POST /ai/explain/:controlId` + SSE), Plan gating (`/plan/features`, `/plan/check/:feature`), Team (members + invitations), Billing (Paystack)
+- Frameworks wired: SOC 2 (~25 controls, all plans), ISO 27001 (~30, Growth), GDPR (~20, Growth), HIPAA (~15, Growth). **PCI DSS = stub** (enum only)
+- Evidence: Auto via AWS connector (IAM, S3, CloudTrail, RDS, GuardDuty), GitHub (branch protection, secret scanning, CODEOWNERS), manual S3 upload, AI-generated remediation (Claude, Growth, 24h cache)
+- Integrations live: AWS, GitHub, Paystack, Auth0, Claude, S3, Redis, Postgres. **Stubs:** Okta, Google Workspace
+- Jobs: Daily 2AM UTC scan scheduler + BullMQ worker
+- Vendor risk: live (CRUD + cert expiry)
+- **Absent:** Trust Center, policy management, employee training/lifecycle, risk register, auditor role, custom frameworks, security questionnaire automation, ISO 42001 / NIST AI RMF, MDM/HRIS integrations, Slack/email alerting
+
+## Approved suggestions
+*(empty — awaiting permission per suggestion)*
+
+## Pending suggestions
+
+### FinOps
+- **F1** Wire scheduled scans (Critical, Simple)
+- **F2** Anomaly detection + Slack/email alerts (Critical, Medium)
+- **F3** Tag-based allocation/showback (Critical, Medium)
+- **F4** Budgets + variance alerts (High, Medium)
+- **F5** Custom date ranges + 90-day trends (High, Simple)
+- **F6** Recommendation workflow states (Open/Snoozed/Done) (High, Medium)
+- **F7** CSV export + monthly PDF reports (High, Simple)
+- **F8** AI/GPU spend view (Bedrock/SageMaker/idle GPU) (High, Medium)
+- **F9** FOCUS 1.1 export (High, Medium)
+- **F10** Slack integration (Medium, Simple)
+- **F11** Kubernetes cost (Defer)
+- **F12** Multi-cloud Azure/GCP (Defer)
+- **F13** RI/SP autopilot (Defer — high risk)
+
+### Comply
+- **C1** Trust Center w/ NDA-gated artifacts (Critical, Medium)
+- **C2** Policy management module + employee ack (Critical, Medium)
+- **C3** Employee lifecycle + training tracking (Critical, Medium)
+- **C4** PCI DSS 4.0 controls — load into existing stub enum (High, Medium)
+- **C5** Okta + Google Workspace connectors — finish stubs (High, Simple)
+- **C6** Risk register (High, Medium)
+- **C7** AI evidence remediation w/ IaC suggestions (High, Complex)
+- **C8** Slack/email alerts on control drift (High, Simple)
+- **C9** Security questionnaire automation (High, Complex)
+- **C10** Custom frameworks (Medium, Complex)
+- **C11** ISO 42001 / NIST AI RMF (High, Medium)
+- **C12** Auditor role + audit workflow (Medium, Medium)
+- **C13** Cross-framework evidence reuse (Medium, Medium)
+- **C14** MDM + HRIS integrations (Medium, Medium each)
+- **C15** Trust Center AI Q&A chatbot (Medium, Complex)
+
+### API & Integration
+- **A1** Public REST API + API keys (Medium)
+- **A2** Webhooks out — control drift, anomaly, scan complete (Simple)
+- **A3** Shared Slack app (Simple)
+- **A4** Microsoft Teams connector (Simple)
+- **A5** Jira / Linear ticket creation (Medium)
+- **A6** PagerDuty / Opsgenie (Simple)
+- **A7** GitHub Actions for compliance-as-code (Medium)
+- **A8** Terraform provider (Complex)
+- **A9** Okta + Google Workspace (overlaps C5)
+- **A10** Jamf / Kandji / Intune (Medium)
+- **A11** Rippling / Deel / Gusto (Medium)
+- **A12** Azure + GCP ingestion (Complex)
+- **A13** FOCUS 1.1 export (overlaps F9)
+- **A14** Cost anomaly Slack/email subscription (overlaps F2)
+- **A15** GitHub OAuth app (Medium)
+
+### Recommended Quick Wins (high impact, low complexity)
+F1, F5, F7, F10/A3, A2, C5, C8, F6, C4, C2
+
+## Rejected suggestions
+*(none yet)*
+
+## Implementation queue
+*(empty — populate only after explicit approval)*
+
+## Notes
+- **Job infrastructure ready:** `src/jobs/scanWorker.js`, `queues.js`, `scheduler.js` exist and are used by Comply daily scans. Wiring FinOps onto same BullMQ infra is small.
+- **PDF service ready:** `src/services/pdf/evidenceReport.js` already generates Comply PDFs — reusable for FinOps reports.
+- **Plan gating middleware:** `src/middleware/plan.js` returns 403 `PLAN_UPGRADE_REQUIRED` — pattern to follow for new gated features.
+- **AI infra:** Claude API + Bedrock both wired; 24h Redis caching + fallback patterns established (`src/services/ai.js`, `src/services/finops-ai.js`).
+- **PCI DSS enum value already in `control_definitions.framework`** — needs only control library + check fn implementations.
+- **Okta/Google Workspace types in integrations enum** — connector files don't exist yet.
+- **Subscriptions table** (`drizzle/0009_*.sql`) already supports per-product plans — multi-product gating is in place.
+- **Audit log table** is org-wide, immutable — usable for upcoming auditor-role workflow.
+- **Vendors table** has cert expiry — alert wiring would be incremental.
+- **AWS connector pattern** in `src/connectors/aws/checks/*` is the reference for adding new check fns (PCI controls, Okta evidence, etc.).
+- **No K8s integration yet** — would require either CloudWatch Container Insights or OpenCost integration.
+- **Cost Explorer data is the only cost source** — multi-cloud would require parallel Azure Cost Mgmt / GCP Billing connectors.
+- **Light-mode brand conversion is in-progress on `brand-identity` branch** — see prior task table below.
+
+## Todo
+- Await explicit approval per suggestion before any implementation work.
+- Resume website light-mode conversion (HomePageClient → about → for-startups → services → demos → legal pages) when product-research items are queued or deferred.
+
+---
+
+# Prior task — Brand Identity & Light-Mode Conversion (in progress)
+
+## Source
 Convert website + portal (auth/billing only) from dark to light mode using the official iFU Labs Brand Identity. Source: `/Users/titusquayson/Downloads/iFU Labs-compressed.pdf` → extracted to `brand.md`.
 
 ## Brand tokens (from PDF)
@@ -39,16 +152,18 @@ Convert website + portal (auth/billing only) from dark to light mode using the o
 | 16 | `website/src/app/brand-showcase/page.tsx` | ⏳ Pending |
 | 17 | `portal/src/app/globals.css` | ⏳ Pending |
 | 18 | `portal/src/app/layout.tsx` + `page.tsx` | ⏳ Pending |
-| 19 | `portal/src/app/login`, `forgot-password`, `reset-password/[token]`, `invite/[token]` | ⏳ Pending |
-| 20 | `portal/src/app/onboarding/page.tsx` (1,436 lines) | ⏳ Pending |
-| 21 | `portal/src/app/billing/subscribe`, `billing/callback` | ⏳ Pending |
+| 19 | `portal/src/app/login`, `forgot-password`, `reset-password/[token]`, `invite/[token]` | ✅ Done |
+| 20 | `portal/src/app/onboarding/page.tsx` (1,436 lines) | ✅ Done |
+| 21 | `portal/src/app/billing/subscribe`, `billing/callback` | ✅ Done |
 
 ## Open flags / deviations
-- Border `#E5E5E5` is off-palette (brand has no neutral mid-grey for hairlines — Grey `#F4F4F4` blends into white).
+- Border now `rgba(51, 6, 61, 0.2)` (Plum @ 20%) — meets WCAG 3:1 non-text contrast; replaces off-palette `#E5E5E5`.
 - Muted text = Plum @ 0.7 opacity. Brand guidance discourages opacity on brand colors, but hierarchy needs it. Alternative: Iris for secondary text — noted, not yet applied.
+- Primary button unified to Plum-fill / Iris-hover across website + portal (was Iris-fill on website, Plum-fill on portal — design-critique fix).
+- Iris-on-white usage audited: limited to links, large display numerals, uppercase tracked labels, and icons — within brand's link-color role. Body text uses Plum/muted.
 
 ## Last completed
-`website/src/components/BrandPatterns.tsx` + `CookieBanner.tsx` audit — all shared chrome done.
+Design-critique fixes: unified primary button to Plum, raised hairline contrast to WCAG 3:1, audited Iris-on-white text. Portal auth/onboarding/billing all converted.
 
 ## Next up
-Verification pass on the website (spin up preview, check nav/footer/home), then begin page-by-page conversion starting with `HomePageClient`.
+Begin website page-by-page conversion starting with `HomePageClient`, then about, for-startups, services, demos, legal pages.

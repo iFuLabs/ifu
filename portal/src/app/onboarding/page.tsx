@@ -443,7 +443,7 @@ function OnboardingForm() {
               gap: '6px',
               padding: '6px 14px',
               background: 'rgba(138, 99, 230, 0.08)',
-              border: '1px solid #E5E5E5',
+              border: '1px solid rgba(51, 6, 61, 0.2)',
               borderRadius: '20px',
               fontSize: '13px',
               color: '#8A63E6',
@@ -478,7 +478,7 @@ function OnboardingForm() {
         {/* Card */}
         <div style={{
           background: '#F4F4F4',
-          border: '1px solid #E5E5E5',
+          border: '1px solid rgba(51, 6, 61, 0.2)',
           borderRadius: '16px',
           padding: '40px',
           boxShadow: '0 6px 20px rgba(51, 6, 61, 0.08)'
@@ -538,7 +538,7 @@ function OnboardingForm() {
                     padding: '12px 16px',
                     fontSize: '15px',
                     background: '#FFFFFF',
-                    border: '1px solid #E5E5E5',
+                    border: '1px solid rgba(51, 6, 61, 0.2)',
                     borderRadius: '8px',
                     color: '#33063D',
                     outline: 'none',
@@ -835,7 +835,7 @@ function OnboardingForm() {
                     padding: '12px 16px',
                     fontSize: '15px',
                     background: '#FFFFFF',
-                    border: '1px solid #E5E5E5',
+                    border: '1px solid rgba(51, 6, 61, 0.2)',
                     borderRadius: '8px',
                     color: '#33063D',
                     outline: 'none',
@@ -875,7 +875,7 @@ function OnboardingForm() {
                     padding: '12px 16px',
                     fontSize: '15px',
                     background: '#FFFFFF',
-                    border: '1px solid #E5E5E5',
+                    border: '1px solid rgba(51, 6, 61, 0.2)',
                     borderRadius: '8px',
                     color: '#33063D',
                     outline: 'none',
@@ -922,7 +922,7 @@ function OnboardingForm() {
                     color: 'rgba(51, 6, 61, 0.7)',
                     fontSize: '15px',
                     fontWeight: '600',
-                    border: '1px solid #E5E5E5',
+                    border: '1px solid rgba(51, 6, 61, 0.2)',
                     borderRadius: '8px',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s'
@@ -996,7 +996,7 @@ function OnboardingForm() {
 
               <div style={{
                 background: 'rgba(138, 99, 230, 0.10)',
-                border: '1px solid #E5E5E5',
+                border: '1px solid rgba(51, 6, 61, 0.2)',
                 borderRadius: '12px',
                 padding: '16px',
                 marginBottom: '24px',
@@ -1037,7 +1037,7 @@ function OnboardingForm() {
                     fontSize: '14px',
                     fontFamily: "'Aeonik Fono', 'DM Mono', monospace",
                     background: skipAws ? '#F4F4F4' : '#FFFFFF',
-                    border: '1px solid #E5E5E5',
+                    border: '1px solid rgba(51, 6, 61, 0.2)',
                     borderRadius: '8px',
                     color: skipAws ? 'rgba(51, 6, 61, 0.5)' : '#33063D',
                     outline: 'none',
@@ -1072,7 +1072,7 @@ function OnboardingForm() {
                     color: 'rgba(51, 6, 61, 0.7)',
                     fontSize: '15px',
                     fontWeight: '600',
-                    border: '1px solid #E5E5E5',
+                    border: '1px solid rgba(51, 6, 61, 0.2)',
                     borderRadius: '8px',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s'
@@ -1217,7 +1217,7 @@ function OnboardingForm() {
                         style={{
                           padding: '16px',
                           background: selectedPlan === plan.id ? 'rgba(138, 99, 230, 0.10)' : '#FFFFFF',
-                          border: selectedPlan === plan.id ? '2px solid #8A63E6' : '1px solid #E5E5E5',
+                          border: selectedPlan === plan.id ? '2px solid #8A63E6' : '1px solid rgba(51, 6, 61, 0.2)',
                           borderRadius: '8px',
                           cursor: 'pointer',
                           transition: 'all 0.2s'
@@ -1271,7 +1271,7 @@ function OnboardingForm() {
                     color: 'rgba(51, 6, 61, 0.7)',
                     fontSize: '15px',
                     fontWeight: '600',
-                    border: '1px solid #E5E5E5',
+                    border: '1px solid rgba(51, 6, 61, 0.2)',
                     borderRadius: '8px',
                     cursor: paymentProcessing ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s'
@@ -1350,7 +1350,7 @@ function OnboardingForm() {
                 <div style={{
                   padding: '20px',
                   background: 'rgba(138, 99, 230, 0.10)',
-                  border: '1px solid #E5E5E5',
+                  border: '1px solid rgba(51, 6, 61, 0.2)',
                   borderRadius: '12px',
                   marginBottom: '28px'
                 }}>
