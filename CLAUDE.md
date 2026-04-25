@@ -34,6 +34,7 @@ FinOps and Comply product research and improvement suggestions. (Brand light-mod
 - **F5** Custom date ranges for FinOps — done 2026-04-25. `GET /api/v1/finops` accepts `startDate` + `endDate` (ISO yyyy-mm-dd). `runFinOpsChecks` and `getCurrentSpend` plumbed through; multi-month ranges aggregate top services. Cache key now namespaced `finops:findings:{orgId}:{rangeKey}` with legacy-key fallback.
 - **A2** Outbound webhooks — done 2026-04-25. Migration `0011_add_webhooks.sql` creates `webhooks` and `webhook_deliveries` tables. Service `src/services/webhooks.js` handles HMAC-SHA256 signing and delivery. Routes `src/routes/webhooks.js` provides CRUD + test endpoints. Worker `src/jobs/webhookWorker.js` processes deliveries with 5 retries. Integrated into `scanWorker.js` (scan.complete event) and `notificationWorker.js` (control.drift event).
 - **C4** PCI DSS 4.0 controls — done 2026-04-25. Added 29 PCI DSS control definitions to `src/db/seed.js` covering all 12 requirements. 17 controls mapped to existing AWS check functions (iamChecks, s3Checks, rdsChecks, ec2Checks, cloudtrailChecks, guarddutyChecks). Added `pci_dss` to Growth-tier frameworks in `src/middleware/plan.js`. Seeded to production (77 total controls now).
+- **F10/A3** Slack app — done 2026-04-25. Migration `0013_add_slack_workspaces.sql` creates `slack_workspaces` (orgId+teamId unique). New `src/services/slack.js` handles OAuth v2 token exchange, encrypted token storage, `postMessage`, channel listing, and Block Kit builders for drift / scan-complete. New `src/routes/slack.js` exposes `GET /api/v1/slack`, `GET /install` (admin, returns OAuth URL), `GET /callback` (consumes Redis-backed state, redirects to portal), `PATCH /channel`, `GET /channels`, `POST /test`, `DELETE /` (uninstall). Wired into `notificationWorker.js` so control-drift events also post to Slack. Required env: `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_REDIRECT_URI`, `PORTAL_URL`. Required Slack scopes: `chat:write`, `chat:write.public`, `channels:read`, `groups:read`.
 - **F6** Recommendation workflow states — done 2026-04-25. Migration `0012_add_finops_recommendation_states.sql` creates table with states (open/snoozed/done). New API endpoints: `PATCH /api/v1/finops/recommendations/:resourceId/state` and `GET /api/v1/finops/recommendations/states`. UI added to `finops/src/app/dashboard/page.tsx` with state indicators, filter buttons, and inline state controls on waste/rightsizing cards.
 
 ## Pending suggestions
@@ -48,7 +49,7 @@ FinOps and Comply product research and improvement suggestions. (Brand light-mod
 - ~~**F7** CSV export~~ ✅ implemented (monthly PDF report still pending)
 - **F8** AI/GPU spend view (Bedrock/SageMaker/idle GPU) (High, Medium)
 - **F9** FOCUS 1.1 export (High, Medium)
-- **F10** Slack integration (Medium, Simple)
+- ~~**F10** Slack integration~~ ✅ implemented (see F10/A3 above)
 - **F11** Kubernetes cost (Defer)
 - **F12** Multi-cloud Azure/GCP (Defer)
 - **F13** RI/SP autopilot (Defer — high risk)
@@ -73,7 +74,7 @@ FinOps and Comply product research and improvement suggestions. (Brand light-mod
 ### API & Integration
 - **A1** Public REST API + API keys (Medium)
 - ~~**A2** Webhooks out — control drift, anomaly, scan complete~~ ✅ complete
-- **A3** Shared Slack app (Simple)
+- ~~**A3** Shared Slack app~~ ✅ implemented (see F10/A3 above)
 - **A4** Microsoft Teams connector (Simple)
 - **A5** Jira / Linear ticket creation (Medium)
 - **A6** PagerDuty / Opsgenie (Simple)

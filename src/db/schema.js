@@ -387,3 +387,23 @@ export const finopsRecommendationStates = pgTable('finops_recommendation_states'
   uniqueIndex('idx_finops_states_org_resource').on(table.orgId, table.resourceId, table.category),
   index('idx_finops_states_org_state').on(table.orgId, table.state)
 ])
+
+// ── Slack workspaces (per-org Slack OAuth installs) ────────────────────────
+export const slackWorkspaces = pgTable('slack_workspaces', {
+  id:           uuid('id').primaryKey().defaultRandom(),
+  orgId:        uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  teamId:       text('team_id').notNull(),
+  teamName:     text('team_name'),
+  accessToken:  text('access_token').notNull(),
+  botUserId:    text('bot_user_id'),
+  scope:        text('scope'),
+  channelId:    text('channel_id'),
+  channelName:  text('channel_name'),
+  installedBy:  uuid('installed_by').references(() => users.id, { onDelete: 'set null' }),
+  active:       boolean('active').notNull().default(true),
+  createdAt:    timestamp('created_at').notNull().defaultNow(),
+  updatedAt:    timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  uniqueIndex('idx_slack_workspaces_org_team').on(table.orgId, table.teamId),
+  index('idx_slack_workspaces_org_id').on(table.orgId)
+])

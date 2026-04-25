@@ -5,6 +5,7 @@ import { users, organizations, controlDefinitions } from '../db/schema.js'
 import { eq, and, inArray, or } from 'drizzle-orm'
 import { sendControlDriftEmail } from '../services/email.js'
 import { dispatchWebhook } from '../services/webhooks.js'
+import { postMessage, buildDriftBlocks } from '../services/slack.js'
 import { logger } from '../services/logger.js'
 
 export const notificationWorker = new Worker('notifications', async (job) => {
@@ -57,6 +58,11 @@ export const notificationWorker = new Worker('notifications', async (job) => {
     drifted: driftPayload,
     notifiedRecipients: recipients.length
   }).catch(err => logger.warn({ err: err.message }, 'webhook dispatch failed'))
+
+  await postMessage(orgId, {
+    text: `Control drift detected for ${org.name}: ${drifted.length} control(s) flipped pass→fail`,
+    blocks: buildDriftBlocks({ orgName: org.name, drifted: driftPayload, scanId })
+  }).catch(err => logger.warn({ err: err.message }, 'slack post failed'))
 
   logger.info({ orgId, scanId, recipients: recipients.length, drifted: drifted.length }, 'Drift email sent')
   return { recipients: recipients.length, drifted: drifted.length }

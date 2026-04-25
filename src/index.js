@@ -32,6 +32,7 @@ import finopsRoutes from './routes/finops.js'
 import teamRoutes from './routes/team.js'
 import planRoutes from './routes/plan.js'
 import webhookRoutes from './routes/webhooks.js'
+import slackRoutes from './routes/slack.js'
 
 const app = Fastify({
   logger: {
@@ -102,6 +103,7 @@ await app.register(finopsRoutes,       { prefix: '/api/v1/finops' })
 await app.register(teamRoutes,         { prefix: '/api/v1/team' })
 await app.register(planRoutes,         { prefix: '/api/v1/plan' })
 await app.register(webhookRoutes,      { prefix: '/api/v1/webhooks' })
+await app.register(slackRoutes,        { prefix: '/api/v1/slack' })
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', async () => ({
