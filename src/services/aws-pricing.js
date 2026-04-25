@@ -35,7 +35,7 @@ export async function getEBSPricing(region, volumeType = 'gp2') {
       const priceDimension = Object.values(terms?.priceDimensions || {})[0]
       const pricePerGb = parseFloat(priceDimension?.pricePerUnit?.USD || '0.10')
       
-      await redis.setEx(cacheKey, PRICING_CACHE_TTL, pricePerGb.toString()).catch(() => {})
+      await redis.setex(cacheKey, PRICING_CACHE_TTL, pricePerGb.toString()).catch(() => {})
       return pricePerGb
     }
   } catch (err) {
@@ -73,7 +73,7 @@ export async function getSnapshotPricing(region) {
       const priceDimension = Object.values(terms?.priceDimensions || {})[0]
       const pricePerGb = parseFloat(priceDimension?.pricePerUnit?.USD || '0.05')
       
-      await redis.setEx(cacheKey, PRICING_CACHE_TTL, pricePerGb.toString()).catch(() => {})
+      await redis.setex(cacheKey, PRICING_CACHE_TTL, pricePerGb.toString()).catch(() => {})
       return pricePerGb
     }
   } catch (err) {
@@ -115,7 +115,7 @@ export async function getNATGatewayPricing(region) {
       const pricePerHour = parseFloat(hourlyDimension?.pricePerUnit?.USD || '0.045')
       const pricePerMonth = pricePerHour * 730 // ~730 hours/month
       
-      await redis.setEx(cacheKey, PRICING_CACHE_TTL, pricePerMonth.toString()).catch(() => {})
+      await redis.setex(cacheKey, PRICING_CACHE_TTL, pricePerMonth.toString()).catch(() => {})
       return pricePerMonth
     }
   } catch (err) {
@@ -158,7 +158,7 @@ export async function getLoadBalancerPricing(region, type = 'application') {
       const pricePerHour = parseFloat(priceDimension?.pricePerUnit?.USD || '0.025')
       const pricePerMonth = pricePerHour * 730
       
-      await redis.setEx(cacheKey, PRICING_CACHE_TTL, pricePerMonth.toString()).catch(() => {})
+      await redis.setex(cacheKey, PRICING_CACHE_TTL, pricePerMonth.toString()).catch(() => {})
       return pricePerMonth
     }
   } catch (err) {
@@ -210,7 +210,7 @@ export async function getRDSPricing(region, instanceClass, engine = 'postgres') 
       const pricePerHour = parseFloat(priceDimension?.pricePerUnit?.USD || '0')
       const pricePerMonth = pricePerHour * 730
       
-      await redis.setEx(cacheKey, PRICING_CACHE_TTL, pricePerMonth.toString()).catch(() => {})
+      await redis.setex(cacheKey, PRICING_CACHE_TTL, pricePerMonth.toString()).catch(() => {})
       return pricePerMonth
     }
   } catch (err) {

@@ -58,7 +58,7 @@ export default async function aiRoutes(fastify) {
       const explanation = await explainControlGap(control, org)
 
       // Cache the result
-      await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(explanation)).catch(() => null)
+      await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(explanation)).catch(() => null)
 
       return reply.send({ ...explanation, cached: false })
     } catch (err) {
@@ -181,7 +181,7 @@ export default async function aiRoutes(fastify) {
 
     try {
       const summary = await generateComplianceSummary({ controls, score, org, framework })
-      await redis.setEx(cacheKey, 60 * 60 * 6, JSON.stringify(summary)).catch(() => null)
+      await redis.setex(cacheKey, 60 * 60 * 6, JSON.stringify(summary)).catch(() => null)
       return reply.send({ ...summary, cached: false })
     } catch (err) {
       fastify.log.error(err, 'AI summary failed')
