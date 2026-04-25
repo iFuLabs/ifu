@@ -349,6 +349,8 @@ npm test -- --coverage
 - [TESTING.md](./TESTING.md) - Testing guide
 - [docs/api-reference.html](./docs/api-reference.html) - API reference
 - API docs: http://localhost:3000/docs (Swagger UI)
+- [BRAND_ADVANCED_GUIDELINES.md](./BRAND_ADVANCED_GUIDELINES.md) - Brand patterns & components
+- Brand showcase: http://localhost:3004/brand-showcase
 
 ## Troubleshooting
 

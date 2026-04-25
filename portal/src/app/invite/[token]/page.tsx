@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { AlertCircle, CheckCircle, Loader2, ArrowRight } from 'lucide-react'
+import { AlertCircle, Loader2, ArrowRight } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+
+const PLUM = '#33063D'
+const IRIS = '#8A63E6'
+const LAVENDER = '#DAC0FD'
+const BORDER = 'rgba(51, 6, 61, 0.2)'
+const MUTED = 'rgba(51, 6, 61, 0.7)'
+const SUBTLE = 'rgba(51, 6, 61, 0.5)'
 
 interface InvitationDetails {
   email: string
@@ -24,12 +31,12 @@ interface InvitationDetails {
 
 const PAGE_BG: React.CSSProperties = {
   minHeight: '100vh',
-  background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
+  background: 'radial-gradient(ellipse at top, ' + LAVENDER + ' 0%, #FFFFFF 60%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   padding: '40px 20px',
-  fontFamily: "'DM Sans', system-ui, sans-serif"
+  fontFamily: "'Aeonik', 'DM Sans', system-ui, sans-serif"
 }
 
 const LOGO_MARK = (
@@ -38,7 +45,7 @@ const LOGO_MARK = (
     display: 'flex',
     justifyContent: 'center'
   }}>
-    <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
+    <img src="/logos/plum.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
   </div>
 )
 
@@ -46,33 +53,31 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '14px 16px',
   fontSize: '15px',
-  background: '#0F1115',
-  border: '1px solid #25282F',
+  background: '#FFFFFF',
+  border: '1px solid ' + BORDER,
   borderRadius: '10px',
-  color: '#F5F5F5',
+  color: PLUM,
   outline: 'none',
   transition: 'all 0.2s',
-  fontFamily: "'DM Sans', sans-serif"
+  fontFamily: "'Aeonik', 'DM Sans', sans-serif"
 }
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: '13px',
   fontWeight: 500,
-  color: '#C4C7CC',
+  color: PLUM,
   marginBottom: '8px',
   letterSpacing: '0.02em',
   textTransform: 'uppercase'
 }
 
 function onFocus(e: React.FocusEvent<HTMLInputElement>) {
-  e.target.style.borderColor = '#E8820A'
-  e.target.style.background = '#14161B'
-  e.target.style.boxShadow = '0 0 0 3px rgba(232, 130, 10, 0.15)'
+  e.target.style.borderColor = IRIS
+  e.target.style.boxShadow = '0 0 0 3px rgba(138, 99, 230, 0.15)'
 }
 function onBlur(e: React.FocusEvent<HTMLInputElement>) {
-  e.target.style.borderColor = '#25282F'
-  e.target.style.background = '#0F1115'
+  e.target.style.borderColor = BORDER
   e.target.style.boxShadow = 'none'
 }
 
@@ -162,8 +167,8 @@ export default function AcceptInvitationPage() {
     return (
       <div style={PAGE_BG}>
         <div style={{ textAlign: 'center' }}>
-          <Loader2 size={32} className="animate-spin" style={{ color: '#E8820A', margin: '0 auto 14px' }} />
-          <p style={{ fontSize: '14px', color: '#9AA0A6' }}>Loading invitation...</p>
+          <Loader2 size={32} className="animate-spin" style={{ color: IRIS, margin: '0 auto 14px' }} />
+          <p style={{ fontSize: '14px', color: MUTED }}>Loading invitation...</p>
         </div>
         <style>{`
           .animate-spin { animation: spin 1s linear infinite; }
@@ -182,36 +187,35 @@ export default function AcceptInvitationPage() {
             <h1 style={{
               fontSize: '34px',
               fontWeight: 500,
-              color: '#F5F5F5',
+              color: PLUM,
               marginBottom: '8px',
-              fontFamily: "'Fraunces', serif",
+              fontFamily: "'PP Fragment', serif",
               letterSpacing: '-0.02em'
             }}>
               Invalid Invitation
             </h1>
-            <p style={{ fontSize: '15px', color: '#9AA0A6' }}>{error}</p>
+            <p style={{ fontSize: '15px', color: MUTED }}>{error}</p>
           </div>
           <div style={{
-            background: 'rgba(20, 22, 27, 0.8)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid #25282F',
+            background: '#FFFFFF',
+            border: '1px solid ' + BORDER,
             borderRadius: '16px',
             padding: '32px',
-            boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4)',
+            boxShadow: '0 12px 48px rgba(51, 6, 61, 0.12)',
             textAlign: 'center'
           }}>
             <div style={{
               width: '56px',
               height: '56px',
-              background: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              background: 'rgba(220, 38, 38, 0.08)',
+              border: '1px solid rgba(220, 38, 38, 0.25)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 18px'
             }}>
-              <AlertCircle size={26} style={{ color: '#FCA5A5' }} />
+              <AlertCircle size={26} style={{ color: '#B91C1C' }} />
             </div>
             <a
               href={process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'}
@@ -220,13 +224,13 @@ export default function AcceptInvitationPage() {
                 alignItems: 'center',
                 gap: '8px',
                 padding: '12px 22px',
-                background: '#E8820A',
-                color: '#0B0C0F',
+                background: PLUM,
+                color: '#FFFFFF',
                 fontSize: '14px',
                 fontWeight: 600,
                 borderRadius: '10px',
                 textDecoration: 'none',
-                boxShadow: '0 6px 16px rgba(232, 130, 10, 0.25)'
+                boxShadow: '0 6px 16px rgba(51, 6, 61, 0.22)'
               }}
             >
               Go to Home
@@ -251,31 +255,30 @@ export default function AcceptInvitationPage() {
           <h1 style={{
             fontSize: '34px',
             fontWeight: 500,
-            color: '#F5F5F5',
+            color: PLUM,
             marginBottom: '10px',
-            fontFamily: "'Fraunces', serif",
+            fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             You&apos;re invited
           </h1>
-          <p style={{ fontSize: '15px', color: '#9AA0A6', lineHeight: 1.55 }}>
-            <strong style={{ color: '#F5F5F5', fontWeight: 500 }}>{invitation?.invitedBy.name || invitation?.invitedBy.email}</strong> invited you to join{' '}
-            <strong style={{ color: '#F5F5F5', fontWeight: 500 }}>{invitation?.organization.name}</strong>
+          <p style={{ fontSize: '15px', color: MUTED, lineHeight: 1.55 }}>
+            <strong style={{ color: PLUM, fontWeight: 500 }}>{invitation?.invitedBy.name || invitation?.invitedBy.email}</strong> invited you to join{' '}
+            <strong style={{ color: PLUM, fontWeight: 500 }}>{invitation?.organization.name}</strong>
           </p>
         </div>
 
         <div style={{
-          background: 'rgba(20, 22, 27, 0.8)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid #25282F',
+          background: '#FFFFFF',
+          border: '1px solid ' + BORDER,
           borderRadius: '16px',
           padding: '36px',
-          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4)'
+          boxShadow: '0 12px 48px rgba(51, 6, 61, 0.12)'
         }}>
 
           <div style={{
-            background: '#0F1115',
-            border: '1px solid #25282F',
+            background: LAVENDER,
+            border: '1px solid ' + BORDER,
             borderRadius: '10px',
             padding: '16px 18px',
             marginBottom: '24px'
@@ -291,9 +294,9 @@ export default function AcceptInvitationPage() {
                 fontSize: '13px',
                 marginBottom: i === arr.length - 1 ? 0 : '10px'
               }}>
-                <span style={{ color: '#9AA0A6' }}>{row.k}</span>
+                <span style={{ color: MUTED }}>{row.k}</span>
                 <span style={{
-                  color: '#F5F5F5',
+                  color: PLUM,
                   fontWeight: 500,
                   textTransform: row.capitalize ? 'capitalize' : 'none'
                 }}>{row.v}</span>
@@ -352,11 +355,11 @@ export default function AcceptInvitationPage() {
                 alignItems: 'flex-start',
                 gap: '8px',
                 padding: '12px 16px',
-                background: 'rgba(239, 68, 68, 0.08)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
+                background: 'rgba(220, 38, 38, 0.08)',
+                border: '1px solid rgba(220, 38, 38, 0.25)',
                 borderRadius: '10px',
                 fontSize: '14px',
-                color: '#FCA5A5',
+                color: '#B91C1C',
                 marginBottom: '18px'
               }}>
                 <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
@@ -370,8 +373,8 @@ export default function AcceptInvitationPage() {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: accepting ? '#2A2D34' : '#E8820A',
-                color: accepting ? '#9AA0A6' : '#0B0C0F',
+                background: accepting ? '#F4F4F4' : PLUM,
+                color: accepting ? MUTED : '#FFFFFF',
                 fontSize: '15px',
                 fontWeight: 600,
                 border: 'none',
@@ -382,10 +385,10 @@ export default function AcceptInvitationPage() {
                 justifyContent: 'center',
                 gap: '8px',
                 transition: 'all 0.2s',
-                boxShadow: accepting ? 'none' : '0 6px 16px rgba(232, 130, 10, 0.25)'
+                boxShadow: accepting ? 'none' : '0 6px 16px rgba(51, 6, 61, 0.22)'
               }}
-              onMouseOver={(e) => !accepting && (e.currentTarget.style.background = '#FF9820')}
-              onMouseOut={(e) => !accepting && (e.currentTarget.style.background = '#E8820A')}
+              onMouseOver={(e) => !accepting && (e.currentTarget.style.background = IRIS)}
+              onMouseOut={(e) => !accepting && (e.currentTarget.style.background = PLUM)}
             >
               {accepting ? (
                 <><Loader2 size={18} className="animate-spin" /> Accepting...</>
@@ -395,7 +398,7 @@ export default function AcceptInvitationPage() {
             </button>
           </form>
 
-          <p style={{ fontSize: '12px', color: '#6B7078', textAlign: 'center', marginTop: '20px' }}>
+          <p style={{ fontSize: '12px', color: SUBTLE, textAlign: 'center', marginTop: '20px' }}>
             By accepting, you agree to create an account with iFu Labs
           </p>
         </div>

@@ -114,9 +114,9 @@ export default function DashboardPage() {
                 <RadialBar
                   dataKey="value"
                   cornerRadius={8}
-                  background={{ fill: '#E8F2EE' }}
+                  background={{ fill: '#F4F4F4' }}
                 >
-                  <Cell fill="#1A4D3C" />
+                  <Cell fill="#8A63E6" />
                 </RadialBar>
               </RadialBarChart>
             </ResponsiveContainer>

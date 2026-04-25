@@ -5,14 +5,21 @@ import { Loader2, ArrowRight, CheckCircle } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
+const PLUM = '#33063D'
+const IRIS = '#8A63E6'
+const LAVENDER = '#DAC0FD'
+const BORDER = 'rgba(51, 6, 61, 0.2)'
+const MUTED = 'rgba(51, 6, 61, 0.7)'
+const SUBTLE = 'rgba(51, 6, 61, 0.5)'
+
 const PAGE_BG: React.CSSProperties = {
   minHeight: '100vh',
-  background: 'radial-gradient(ellipse at top, #15171D 0%, #0B0C0F 60%)',
+  background: 'radial-gradient(ellipse at top, ' + LAVENDER + ' 0%, #FFFFFF 60%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   padding: '40px 20px',
-  fontFamily: "'DM Sans', system-ui, sans-serif"
+  fontFamily: "'Aeonik', 'DM Sans', system-ui, sans-serif"
 }
 
 function SubscribeForm() {
@@ -77,7 +84,6 @@ function SubscribeForm() {
     setError('')
 
     try {
-      // Auth cookie is sent automatically
       const res = await fetch(`${API_URL}/api/v1/billing/initialize`, {
         method: 'POST',
         credentials: 'include',
@@ -112,19 +118,19 @@ function SubscribeForm() {
             display: 'flex',
             justifyContent: 'center'
           }}>
-            <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
+            <img src="/logos/plum.svg" alt="iFu Labs" style={{ height: '56px', width: 'auto' }} />
           </div>
           <h1 style={{
             fontSize: '34px',
             fontWeight: 500,
-            color: '#F5F5F5',
+            color: PLUM,
             marginBottom: '8px',
-            fontFamily: "'Fraunces', serif",
+            fontFamily: "'PP Fragment', serif",
             letterSpacing: '-0.02em'
           }}>
             Subscribe to {productName}
           </h1>
-          <p style={{ fontSize: '15px', color: '#9AA0A6' }}>
+          <p style={{ fontSize: '15px', color: MUTED }}>
             Choose your plan and start your 3-day free trial
           </p>
         </div>
@@ -142,10 +148,9 @@ function SubscribeForm() {
                 key={plan.id}
                 onClick={() => setSelectedPlan(plan.id)}
                 style={{
-                  background: 'rgba(20, 22, 27, 0.8)',
-                  backdropFilter: 'blur(8px)',
-                  border: active ? '1px solid #E8820A' : '1px solid #25282F',
-                  boxShadow: active ? '0 0 0 3px rgba(232, 130, 10, 0.15), 0 12px 32px rgba(0, 0, 0, 0.35)' : '0 12px 32px rgba(0, 0, 0, 0.35)',
+                  background: '#FFFFFF',
+                  border: active ? '1px solid ' + IRIS : '1px solid ' + BORDER,
+                  boxShadow: active ? '0 0 0 3px rgba(138, 99, 230, 0.15), 0 12px 32px rgba(51, 6, 61, 0.12)' : '0 12px 32px rgba(51, 6, 61, 0.08)',
                   borderRadius: '16px',
                   padding: '32px',
                   cursor: 'pointer',
@@ -160,40 +165,40 @@ function SubscribeForm() {
                     right: '16px',
                     width: '24px',
                     height: '24px',
-                    background: '#E8820A',
+                    background: IRIS,
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 4px 10px rgba(232, 130, 10, 0.35)'
+                    boxShadow: '0 4px 10px rgba(138, 99, 230, 0.35)'
                   }}>
-                    <CheckCircle size={16} style={{ color: '#0B0C0F' }} />
+                    <CheckCircle size={16} style={{ color: '#FFFFFF' }} />
                   </div>
                 )}
 
                 <h3 style={{
                   fontSize: '22px',
                   fontWeight: 500,
-                  color: '#F5F5F5',
+                  color: PLUM,
                   marginBottom: '10px',
-                  fontFamily: "'Fraunces', serif",
+                  fontFamily: "'PP Fragment', serif",
                   letterSpacing: '-0.015em'
                 }}>
                   {plan.name}
                 </h3>
 
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '38px', fontWeight: 600, color: '#E8820A', fontFamily: "'DM Mono', monospace" }}>
+                  <span style={{ fontSize: '38px', fontWeight: 600, color: PLUM, fontFamily: "'Aeonik Fono', 'DM Mono', monospace" }}>
                     ${plan.price}
                   </span>
-                  <span style={{ fontSize: '14px', color: '#9AA0A6' }}>/month</span>
+                  <span style={{ fontSize: '14px', color: MUTED }}>/month</span>
                 </div>
 
-                <p style={{ fontSize: '14px', color: '#9AA0A6', marginBottom: '22px' }}>
+                <p style={{ fontSize: '14px', color: MUTED, marginBottom: '22px' }}>
                   {plan.description}
                 </p>
 
-                <div style={{ borderTop: '1px solid #25282F', paddingTop: '20px' }}>
+                <div style={{ borderTop: '1px solid ' + BORDER, paddingTop: '20px' }}>
                   {plan.features.map((feature, idx) => (
                     <div key={idx} style={{
                       display: 'flex',
@@ -201,9 +206,9 @@ function SubscribeForm() {
                       gap: '10px',
                       marginBottom: '12px',
                       fontSize: '14px',
-                      color: '#C4C7CC'
+                      color: PLUM
                     }}>
-                      <CheckCircle size={16} style={{ color: '#E8820A', flexShrink: 0 }} />
+                      <CheckCircle size={16} style={{ color: IRIS, flexShrink: 0 }} />
                       {feature}
                     </div>
                   ))}
@@ -214,9 +219,8 @@ function SubscribeForm() {
         </div>
 
         <div style={{
-          background: 'rgba(20, 22, 27, 0.8)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid #25282F',
+          background: LAVENDER,
+          border: '1px solid ' + BORDER,
           borderRadius: '12px',
           padding: '20px',
           marginBottom: '24px',
@@ -227,24 +231,24 @@ function SubscribeForm() {
           <div style={{
             width: '40px',
             height: '40px',
-            background: 'rgba(232, 130, 10, 0.12)',
-            border: '1px solid rgba(232, 130, 10, 0.35)',
+            background: '#FFFFFF',
+            border: '1px solid rgba(51, 6, 61, 0.12)',
             borderRadius: '10px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            color: '#E8820A'
+            color: PLUM
           }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2L15 8l6 1-4.5 4.4L18 20l-6-3-6 3 1.5-6.6L3 9l6-1z"/>
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: '15px', fontWeight: 600, color: '#F5F5F5', marginBottom: '4px' }}>
+            <div style={{ fontSize: '15px', fontWeight: 600, color: PLUM, marginBottom: '4px' }}>
               3-day free trial included
             </div>
-            <div style={{ fontSize: '13px', color: '#9AA0A6' }}>
+            <div style={{ fontSize: '13px', color: MUTED }}>
               Your card will be charged after the trial period ends. Cancel anytime.
             </div>
           </div>
@@ -253,11 +257,11 @@ function SubscribeForm() {
         {error && (
           <div style={{
             padding: '12px 16px',
-            background: 'rgba(239, 68, 68, 0.08)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
+            background: 'rgba(220, 38, 38, 0.08)',
+            border: '1px solid rgba(220, 38, 38, 0.25)',
             borderRadius: '10px',
             fontSize: '14px',
-            color: '#FCA5A5',
+            color: '#B91C1C',
             marginBottom: '20px'
           }}>
             {error}
@@ -270,8 +274,8 @@ function SubscribeForm() {
           style={{
             width: '100%',
             padding: '16px',
-            background: loading ? '#2A2D34' : '#E8820A',
-            color: loading ? '#9AA0A6' : '#0B0C0F',
+            background: loading ? '#F4F4F4' : PLUM,
+            color: loading ? MUTED : '#FFFFFF',
             fontSize: '15px',
             fontWeight: 600,
             border: 'none',
@@ -283,10 +287,10 @@ function SubscribeForm() {
             gap: '8px',
             transition: 'all 0.2s',
             marginBottom: '18px',
-            boxShadow: loading ? 'none' : '0 6px 16px rgba(232, 130, 10, 0.25)'
+            boxShadow: loading ? 'none' : '0 6px 16px rgba(51, 6, 61, 0.22)'
           }}
-          onMouseOver={(e) => !loading && (e.currentTarget.style.background = '#FF9820')}
-          onMouseOut={(e) => !loading && (e.currentTarget.style.background = '#E8820A')}
+          onMouseOver={(e) => !loading && (e.currentTarget.style.background = IRIS)}
+          onMouseOut={(e) => !loading && (e.currentTarget.style.background = PLUM)}
         >
           {loading ? (
             <><Loader2 size={18} className="animate-spin" /> Processing...</>
@@ -300,7 +304,7 @@ function SubscribeForm() {
             href="/"
             style={{
               fontSize: '13px',
-              color: '#6B7078',
+              color: SUBTLE,
               textDecoration: 'none'
             }}
           >
@@ -321,7 +325,7 @@ export default function SubscribePage() {
   return (
     <Suspense fallback={
       <div style={PAGE_BG}>
-        <Loader2 size={32} className="animate-spin" style={{ color: '#E8820A' }} />
+        <Loader2 size={32} className="animate-spin" style={{ color: IRIS }} />
         <style>{`
           .animate-spin { animation: spin 1s linear infinite; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

@@ -74,12 +74,12 @@ export default function ScheduleConsultationPageClient() {
           alignItems: 'center',
           gap: '8px',
           padding: '6px 14px',
-          background: 'var(--brand-light)',
+          background: 'var(--plum)',
           border: '1px solid var(--border)',
           borderRadius: '999px',
           fontSize: '12px',
           fontWeight: 500,
-          color: 'var(--brand)',
+          color: 'var(--white)',
           letterSpacing: '0.02em',
           marginBottom: '24px',
         }}>
@@ -95,7 +95,7 @@ export default function ScheduleConsultationPageClient() {
           marginBottom: '20px',
         }}>
           Schedule a free<br />
-          <em style={{ fontStyle: 'italic', color: 'var(--brand)' }}>consultation.</em>
+          <em style={{ fontStyle: 'italic', color: 'var(--accent)' }}>consultation.</em>
         </h1>
         <p style={{
           fontSize: '17px',
@@ -118,12 +118,12 @@ export default function ScheduleConsultationPageClient() {
           gap: '24px',
         }}>
           <div style={{
-            background: 'var(--card)',
+            background: 'var(--surface)',
             border: '1px solid var(--border)',
             borderRadius: '16px',
             padding: '32px',
           }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--brand)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '16px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '16px' }}>
               What to expect
             </div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -134,8 +134,8 @@ export default function ScheduleConsultationPageClient() {
               ].map(item => (
                 <li key={item.title} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0, marginTop: '2px' }}>
-                    <circle cx="9" cy="9" r="8" stroke="var(--brand)" strokeWidth="1.5" />
-                    <path d="M5.5 9L8 11.5L12.5 7" stroke="var(--brand)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="9" cy="9" r="8" stroke="var(--accent)" strokeWidth="1.5" />
+                    <path d="M5.5 9L8 11.5L12.5 7" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <div>
                     <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)', marginBottom: '2px' }}>{item.title}</div>
@@ -147,12 +147,12 @@ export default function ScheduleConsultationPageClient() {
           </div>
 
           <div style={{
-            background: 'var(--card)',
+            background: 'var(--surface)',
             border: '1px solid var(--border)',
             borderRadius: '16px',
             padding: '32px',
           }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--brand)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '16px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '16px' }}>
               Who you&apos;ll talk to
             </div>
             <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)', marginBottom: '8px' }}>
@@ -170,7 +170,7 @@ export default function ScheduleConsultationPageClient() {
       {/* Scheduler */}
       <section style={{ maxWidth: '1080px', margin: '32px auto', padding: '0 32px' }}>
         <div style={{
-          background: 'var(--card)',
+          background: 'var(--surface)',
           border: '1px solid var(--border)',
           borderRadius: '16px',
           padding: '32px',
@@ -205,7 +205,7 @@ export default function ScheduleConsultationPageClient() {
       {/* What to prepare */}
       <section style={{ maxWidth: '1080px', margin: '64px auto', padding: '0 32px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--brand)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' }}>
             Before the call
           </div>
           <h2 style={{
@@ -244,7 +244,7 @@ export default function ScheduleConsultationPageClient() {
             },
           ].map(item => (
             <div key={item.num} style={{
-              background: 'var(--card)',
+              background: 'var(--surface)',
               border: '1px solid var(--border)',
               borderRadius: '14px',
               padding: '28px',
@@ -252,7 +252,7 @@ export default function ScheduleConsultationPageClient() {
               <div style={{
                 fontSize: '12px',
                 fontWeight: 700,
-                color: 'var(--brand)',
+                color: 'var(--accent)',
                 letterSpacing: '0.08em',
                 marginBottom: '12px',
               }}>
@@ -291,7 +291,7 @@ export default function ScheduleConsultationPageClient() {
           ].map(t => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 7L6 11L12 3" stroke="var(--brand)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 7L6 11L12 3" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {t}
             </div>

@@ -82,7 +82,7 @@ export function SiteNav() {
 
       <nav className={scrolled ? 'scrolled' : ''}>
         <a href="/" className="logo">
-          <img src="/logos/white.svg" alt="iFu Labs" style={{ height: '34px', width: 'auto' }} />
+          <img src="/logos/plum.svg" alt="iFu Labs" style={{ height: '34px', width: 'auto' }} />
         </a>
         <ul className="nav-links">
           <li

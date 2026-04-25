@@ -9,6 +9,7 @@ export const integrationTypeEnum = pgEnum('integration_type', ['aws', 'github', 
 export const integrationStatusEnum = pgEnum('integration_status', ['connected', 'disconnected', 'error'])
 export const severityEnum = pgEnum('severity', ['critical', 'high', 'medium', 'low'])
 export const invitationStatusEnum = pgEnum('invitation_status', ['pending', 'accepted', 'expired'])
+export const recommendationStateEnum = pgEnum('recommendation_state', ['open', 'snoozed', 'done'])
 
 // ── Organizations (tenants) ────────────────────────────────────────────────
 export const organizations = pgTable('organizations', {
@@ -274,6 +275,32 @@ export const invitationsRelations = relations(invitations, ({ one }) => ({
   })
 }))
 
+export const webhooksRelations = relations(webhooks, ({ one, many }) => ({
+  org: one(organizations, {
+    fields: [webhooks.orgId],
+    references: [organizations.id]
+  }),
+  deliveries: many(webhookDeliveries)
+}))
+
+export const webhookDeliveriesRelations = relations(webhookDeliveries, ({ one }) => ({
+  webhook: one(webhooks, {
+    fields: [webhookDeliveries.webhookId],
+    references: [webhooks.id]
+  })
+}))
+
+export const finopsRecommendationStatesRelations = relations(finopsRecommendationStates, ({ one }) => ({
+  org: one(organizations, {
+    fields: [finopsRecommendationStates.orgId],
+    references: [organizations.id]
+  }),
+  updatedByUser: one(users, {
+    fields: [finopsRecommendationStates.updatedBy],
+    references: [users.id]
+  })
+}))
+
 // ── Password Reset Tokens ──────────────────────────────────────────────────
 export const passwordResetTokens = pgTable('password_reset_tokens', {
   id:             uuid('id').primaryKey().defaultRandom(),
@@ -312,3 +339,71 @@ export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
     references: [organizations.id]
   })
 }))
+
+// ── Webhooks (outbound) ────────────────────────────────────────────────────
+export const webhooks = pgTable('webhooks', {
+  id:          uuid('id').primaryKey().defaultRandom(),
+  orgId:       uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  url:         text('url').notNull(),
+  secret:      text('secret').notNull(),
+  events:      jsonb('events').notNull().default([]),
+  description: text('description'),
+  active:      boolean('active').notNull().default(true),
+  lastDeliveryAt:     timestamp('last_delivery_at'),
+  lastDeliveryStatus: text('last_delivery_status'),
+  createdAt:   timestamp('created_at').notNull().defaultNow(),
+  updatedAt:   timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_webhooks_org_id').on(table.orgId),
+  index('idx_webhooks_active').on(table.active)
+])
+
+export const webhookDeliveries = pgTable('webhook_deliveries', {
+  id:           uuid('id').primaryKey().defaultRandom(),
+  webhookId:    uuid('webhook_id').notNull().references(() => webhooks.id, { onDelete: 'cascade' }),
+  event:        text('event').notNull(),
+  statusCode:   integer('status_code'),
+  responseBody: text('response_body'),
+  error:        text('error'),
+  attempt:      integer('attempt').notNull().default(1),
+  deliveredAt:  timestamp('delivered_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_webhook_deliveries_webhook_id').on(table.webhookId)
+])
+
+// ── FinOps Recommendation States ──────────────────────────────────────────
+export const finopsRecommendationStates = pgTable('finops_recommendation_states', {
+  id:           uuid('id').primaryKey().defaultRandom(),
+  orgId:        uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  resourceId:   text('resource_id').notNull(),
+  category:     text('category').notNull(),
+  state:        recommendationStateEnum('state').notNull().default('open'),
+  snoozedUntil: timestamp('snoozed_until'),
+  notes:        text('notes'),
+  updatedBy:    uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt:    timestamp('created_at').notNull().defaultNow(),
+  updatedAt:    timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  uniqueIndex('idx_finops_states_org_resource').on(table.orgId, table.resourceId, table.category),
+  index('idx_finops_states_org_state').on(table.orgId, table.state)
+])
+
+// ── Slack workspaces (per-org Slack OAuth installs) ────────────────────────
+export const slackWorkspaces = pgTable('slack_workspaces', {
+  id:           uuid('id').primaryKey().defaultRandom(),
+  orgId:        uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  teamId:       text('team_id').notNull(),
+  teamName:     text('team_name'),
+  accessToken:  text('access_token').notNull(),
+  botUserId:    text('bot_user_id'),
+  scope:        text('scope'),
+  channelId:    text('channel_id'),
+  channelName:  text('channel_name'),
+  installedBy:  uuid('installed_by').references(() => users.id, { onDelete: 'set null' }),
+  active:       boolean('active').notNull().default(true),
+  createdAt:    timestamp('created_at').notNull().defaultNow(),
+  updatedAt:    timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  uniqueIndex('idx_slack_workspaces_org_team').on(table.orgId, table.teamId),
+  index('idx_slack_workspaces_org_id').on(table.orgId)
+])

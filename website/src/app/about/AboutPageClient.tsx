@@ -3,6 +3,7 @@ import '../globals.css'
 import { useEffect } from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { MintCard } from '@/components/BrandPatterns'
 
 function useScrollReveal() {
   useEffect(() => {

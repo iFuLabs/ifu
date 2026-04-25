@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SERVICES } from '@/lib/services'
+import { IrisButton, MintCard } from '@/components/BrandPatterns'
 
 export default function ServicesPageClient() {
   useEffect(() => {
@@ -79,12 +80,12 @@ export default function ServicesPageClient() {
           <h2 className="section-title">Let&apos;s talk about your<br/>AWS infrastructure.</h2>
           <p className="section-sub">Book a free 30-minute discovery call. No commitment, no sales pitch — just honest advice from engineers who&apos;ve seen it all.</p>
           <div className="hero-actions" style={{ justifyContent: 'center', marginTop: '32px' }}>
-            <a href="/schedule-consultation" className="btn-cta primary">
+            <IrisButton href="/schedule-consultation">
               Book a free discovery call
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
-            </a>
+            </IrisButton>
             <a href="mailto:info@ifulabs.com" className="btn-cta ghost">Email us directly</a>
           </div>
         </div>

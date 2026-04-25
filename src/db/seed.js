@@ -381,6 +381,74 @@ async function seedGdpr() {
   console.log(`✅ Seeded ${GDPR_CONTROLS.length} GDPR controls`)
 }
 
+// ── PCI DSS 4.0 Controls ───────────────────────────────────────────────────
+const PCI_DSS_CONTROLS = [
+  // Requirement 1: Install and maintain network security controls
+  { controlId: 'PCI-1.2.1-SG', framework: 'pci_dss', category: 'Network Security', title: 'Security groups restrict inbound traffic', description: 'Security groups must not allow unrestricted access (0.0.0.0/0) to sensitive ports.', guidance: 'Remove inbound rules allowing 0.0.0.0/0 to SSH (22), RDP (3389), database ports (3306, 5432, 1433), or cache ports (6379, 11211).', severity: 'critical', automatable: true, checkFn: 'ec2Checks' },
+  { controlId: 'PCI-1.3.1-RDS-PUBLIC', framework: 'pci_dss', category: 'Network Security', title: 'Databases not publicly accessible', description: 'RDS instances must not be publicly accessible from the internet.', guidance: 'Set PubliclyAccessible to false on all RDS instances. Place databases in private subnets.', severity: 'critical', automatable: true, checkFn: 'rdsChecks' },
+  { controlId: 'PCI-1.4.1-S3-PUBLIC', framework: 'pci_dss', category: 'Network Security', title: 'S3 buckets block public access', description: 'S3 buckets must not be publicly accessible unless explicitly required for business purposes.', guidance: 'Enable S3 Block Public Access at account level. Review bucket policies and ACLs.', severity: 'critical', automatable: true, checkFn: 's3Checks' },
+  
+  // Requirement 2: Apply secure configurations
+  { controlId: 'PCI-2.2.1-IAM-PASSWORD', framework: 'pci_dss', category: 'Configuration Management', title: 'Strong password policy enforced', description: 'IAM password policy must enforce complexity, length, and expiry requirements.', guidance: 'Set password policy: minimum 12 characters, uppercase, lowercase, numbers, symbols, 90-day expiry.', severity: 'high', automatable: true, checkFn: 'iamChecks' },
+  { controlId: 'PCI-2.2.7-RDS-ENCRYPTION', framework: 'pci_dss', category: 'Configuration Management', title: 'RDS instances encrypted at rest', description: 'All RDS database instances must have storage encryption enabled.', guidance: 'Enable encryption when creating RDS instances. For existing: snapshot → copy encrypted → restore.', severity: 'critical', automatable: true, checkFn: 'rdsChecks' },
+  { controlId: 'PCI-2.2.7-S3-ENCRYPTION', framework: 'pci_dss', category: 'Configuration Management', title: 'S3 buckets encrypted at rest', description: 'All S3 buckets must have server-side encryption enabled.', guidance: 'Enable default encryption on each S3 bucket using SSE-S3 or SSE-KMS.', severity: 'high', automatable: true, checkFn: 's3Checks' },
+  { controlId: 'PCI-2.2.7-EBS-ENCRYPTION', framework: 'pci_dss', category: 'Configuration Management', title: 'EBS volumes encrypted at rest', description: 'All EBS volumes must be encrypted.', guidance: 'Enable EBS encryption by default at account level: EC2 → Settings → EBS Encryption.', severity: 'high', automatable: true, checkFn: 'ec2Checks' },
+  
+  // Requirement 3: Protect stored account data
+  { controlId: 'PCI-3.5.1-ENCRYPTION-REST', framework: 'pci_dss', category: 'Data Protection', title: 'Cardholder data encrypted at rest', description: 'All storage containing cardholder data must be encrypted using strong cryptography.', guidance: 'Enable encryption on all data stores (RDS, S3, EBS). Use AWS KMS with customer-managed keys for cardholder data.', severity: 'critical', automatable: false, checkFn: null },
+  { controlId: 'PCI-3.6.1-KEY-MANAGEMENT', framework: 'pci_dss', category: 'Data Protection', title: 'Cryptographic key management procedures', description: 'Documented procedures for cryptographic key generation, distribution, storage, and destruction.', guidance: 'Use AWS KMS for key management. Enable automatic key rotation. Document key lifecycle procedures.', severity: 'high', automatable: false, checkFn: null },
+  
+  // Requirement 4: Protect cardholder data with strong cryptography during transmission
+  { controlId: 'PCI-4.2.1-ENCRYPTION-TRANSIT', framework: 'pci_dss', category: 'Data Protection', title: 'TLS 1.2+ for data in transit', description: 'All transmission of cardholder data must use TLS 1.2 or higher.', guidance: 'Configure ALB/CloudFront to enforce TLS 1.2+. Disable TLS 1.0 and 1.1. Use ACM for certificates.', severity: 'critical', automatable: false, checkFn: null },
+  
+  // Requirement 5: Protect all systems and networks from malicious software
+  { controlId: 'PCI-5.2.1-GUARDDUTY', framework: 'pci_dss', category: 'Malware Protection', title: 'GuardDuty threat detection enabled', description: 'AWS GuardDuty must be active to detect malicious activity and unauthorized behavior.', guidance: 'Enable GuardDuty in all regions where workloads run. Configure SNS notifications for findings.', severity: 'high', automatable: true, checkFn: 'guarddutyChecks' },
+  
+  // Requirement 6: Develop and maintain secure systems and software
+  { controlId: 'PCI-6.3.2-VULN-SCANNING', framework: 'pci_dss', category: 'Vulnerability Management', title: 'Vulnerability scanning process', description: 'Internal and external vulnerability scans must be performed at least quarterly.', guidance: 'Enable Amazon Inspector for EC2 and ECR scanning. Schedule quarterly external scans with ASV.', severity: 'high', automatable: false, checkFn: null },
+  { controlId: 'PCI-6.5.1-INJECTION', framework: 'pci_dss', category: 'Secure Development', title: 'Protection against injection flaws', description: 'Applications must be protected against injection attacks (SQL, command, LDAP).', guidance: 'Use parameterized queries. Enable AWS WAF with SQL injection rule sets. Review code for injection vulnerabilities.', severity: 'critical', automatable: false, checkFn: null },
+  
+  // Requirement 7: Restrict access to system components and cardholder data
+  { controlId: 'PCI-7.2.1-IAM-MFA', framework: 'pci_dss', category: 'Access Control', title: 'MFA for all access to cardholder data', description: 'Multi-factor authentication must be enabled for all users with access to cardholder data.', guidance: 'Enable MFA for all IAM users. Use IAM policies to deny actions unless MFA is present.', severity: 'critical', automatable: true, checkFn: 'iamChecks' },
+  { controlId: 'PCI-7.2.2-ROOT-MFA', framework: 'pci_dss', category: 'Access Control', title: 'Root account MFA enabled', description: 'The AWS root account must have MFA enabled and usage restricted.', guidance: 'Enable MFA on root account. Never use root for day-to-day operations. Monitor root usage via CloudTrail.', severity: 'critical', automatable: true, checkFn: 'iamChecks' },
+  { controlId: 'PCI-7.2.5-ACCESS-KEYS', framework: 'pci_dss', category: 'Access Control', title: 'Access keys rotated regularly', description: 'IAM access keys must be rotated at least every 90 days.', guidance: 'Rotate or disable access keys unused for 90+ days. Use IAM roles instead of long-lived keys where possible.', severity: 'high', automatable: true, checkFn: 'iamChecks' },
+  
+  // Requirement 8: Identify users and authenticate access
+  { controlId: 'PCI-8.3.1-MFA-ADMIN', framework: 'pci_dss', category: 'Authentication', title: 'MFA for administrative access', description: 'MFA must be required for all administrative access to systems.', guidance: 'Enforce MFA for all IAM users with administrative privileges. Use IAM Identity Center for centralized MFA.', severity: 'critical', automatable: true, checkFn: 'iamChecks' },
+  { controlId: 'PCI-8.3.6-PASSWORD-STRENGTH', framework: 'pci_dss', category: 'Authentication', title: 'Password complexity requirements', description: 'Passwords must meet minimum complexity requirements (length, character types).', guidance: 'IAM password policy: minimum 12 characters, uppercase, lowercase, numbers, symbols.', severity: 'high', automatable: true, checkFn: 'iamChecks' },
+  
+  // Requirement 9: Restrict physical access (not applicable to cloud-only)
+  { controlId: 'PCI-9.1.1-PHYSICAL-AWS', framework: 'pci_dss', category: 'Physical Security', title: 'AWS data center physical security', description: 'AWS is responsible for physical security of data centers (shared responsibility model).', guidance: 'Review AWS compliance reports (SOC 2, PCI DSS AOC) available in AWS Artifact. No customer action required.', severity: 'low', automatable: false, checkFn: null },
+  
+  // Requirement 10: Log and monitor all access
+  { controlId: 'PCI-10.2.1-CLOUDTRAIL', framework: 'pci_dss', category: 'Logging & Monitoring', title: 'CloudTrail logging enabled', description: 'A multi-region CloudTrail trail must be active and logging all management events.', guidance: 'Create multi-region CloudTrail trail. Enable log file validation. Store logs in dedicated S3 bucket.', severity: 'critical', automatable: true, checkFn: 'cloudtrailChecks' },
+  { controlId: 'PCI-10.2.2-CLOUDTRAIL-VALIDATION', framework: 'pci_dss', category: 'Logging & Monitoring', title: 'CloudTrail log file validation enabled', description: 'Log file validation ensures audit logs have not been tampered with.', guidance: 'Enable log file validation when creating CloudTrail trail. This creates digest files for integrity checking.', severity: 'high', automatable: true, checkFn: 'cloudtrailChecks' },
+  { controlId: 'PCI-10.3.1-S3-LOGGING', framework: 'pci_dss', category: 'Logging & Monitoring', title: 'S3 access logging enabled', description: 'S3 bucket access logging must be enabled to track all requests.', guidance: 'Enable server access logging on each S3 bucket. Configure dedicated logging bucket.', severity: 'medium', automatable: true, checkFn: 's3Checks' },
+  { controlId: 'PCI-10.7.2-LOG-RETENTION', framework: 'pci_dss', category: 'Logging & Monitoring', title: 'Audit logs retained for at least 1 year', description: 'Audit logs must be retained for at least one year, with at least 3 months immediately available.', guidance: 'Configure S3 lifecycle policies on CloudTrail bucket: transition to Glacier after 90 days, retain for 1 year minimum.', severity: 'high', automatable: false, checkFn: null },
+  
+  // Requirement 11: Test security of systems and networks regularly
+  { controlId: 'PCI-11.3.1-PENETRATION-TEST', framework: 'pci_dss', category: 'Security Testing', title: 'Annual penetration testing', description: 'Internal and external penetration tests must be performed at least annually.', guidance: 'Engage qualified penetration testing firm. Test after significant changes. Document findings and remediation.', severity: 'high', automatable: false, checkFn: null },
+  { controlId: 'PCI-11.3.2-VULN-SCAN-QUARTERLY', framework: 'pci_dss', category: 'Security Testing', title: 'Quarterly vulnerability scans', description: 'External vulnerability scans must be performed quarterly by an ASV.', guidance: 'Contract with PCI SSC Approved Scanning Vendor (ASV). Perform scans quarterly and after significant changes.', severity: 'high', automatable: false, checkFn: null },
+  
+  // Requirement 12: Support information security with organizational policies
+  { controlId: 'PCI-12.1.1-SECURITY-POLICY', framework: 'pci_dss', category: 'Policy & Procedures', title: 'Information security policy established', description: 'A formal information security policy must be established, published, and maintained.', guidance: 'Document security policy covering all PCI DSS requirements. Review annually. Communicate to all personnel.', severity: 'high', automatable: false, checkFn: null },
+  { controlId: 'PCI-12.3.1-ACCEPTABLE-USE', framework: 'pci_dss', category: 'Policy & Procedures', title: 'Acceptable use policy for technology', description: 'An acceptable use policy must define proper use of technology and information assets.', guidance: 'Create acceptable use policy. Require acknowledgment from all users. Review annually.', severity: 'medium', automatable: false, checkFn: null },
+  { controlId: 'PCI-12.6.1-SECURITY-AWARENESS', framework: 'pci_dss', category: 'Policy & Procedures', title: 'Annual security awareness training', description: 'All personnel must receive security awareness training at least annually.', guidance: 'Implement security awareness training program. Track completion. Cover phishing, password security, incident reporting.', severity: 'high', automatable: false, checkFn: null },
+  { controlId: 'PCI-12.10.1-INCIDENT-RESPONSE', framework: 'pci_dss', category: 'Policy & Procedures', title: 'Incident response plan documented', description: 'An incident response plan must be created, tested, and maintained.', guidance: 'Document incident response procedures. Assign roles. Test plan annually. Include breach notification procedures.', severity: 'high', automatable: false, checkFn: null }
+]
+
+async function seedPciDss() {
+  console.log('🌱 Seeding PCI DSS 4.0 control definitions...')
+  for (const control of PCI_DSS_CONTROLS) {
+    await db.insert(controlDefinitions).values(control)
+      .onConflictDoUpdate({
+        target: controlDefinitions.controlId,
+        set: { title: control.title, description: control.description, guidance: control.guidance, severity: control.severity, automatable: control.automatable }
+      })
+  }
+  console.log(`✅ Seeded ${PCI_DSS_CONTROLS.length} PCI DSS 4.0 controls`)
+}
+
 // Run all seeds
 async function seedAll() {
   try {
@@ -388,6 +456,7 @@ async function seedAll() {
     await seedGithub()
     await seedIso27001()
     await seedGdpr()
+    await seedPciDss()
     console.log('\n🎉 All controls seeded successfully')
   } finally {
     // Close the database connection pool

@@ -8,6 +8,8 @@ import { scanQueue } from '../jobs/queues.js'
 import { validateAwsRole } from '../connectors/aws/validate.js'
 import { validateInstallation } from '../connectors/github/client.js'
 import { handleGithubWebhook } from '../connectors/github/webhook.js'
+import { validateOktaCredentials } from '../connectors/okta/checks.js'
+import { validateGoogleWorkspaceCredentials } from '../connectors/google-workspace/checks.js'
 
 export default async function integrationRoutes(fastify) {
 
@@ -300,6 +302,144 @@ export default async function integrationRoutes(fastify) {
       ...integration,
       message: `GitHub org ${validation.orgLogin} connected. Initial scan queued.`
     })
+  })
+
+  // POST /api/v1/integrations/okta
+  // Connect Okta via API token
+  fastify.post('/okta', {
+    preHandler: [verifyToken, requireUser, requireAdmin],
+    schema: {
+      tags: ['Integrations'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['domain', 'apiToken'],
+        properties: {
+          domain:   { type: 'string', minLength: 4, description: 'e.g. acme.okta.com' },
+          apiToken: { type: 'string', minLength: 10 }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { domain, apiToken } = request.body
+    const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '')
+
+    const validation = await validateOktaCredentials(cleanDomain, apiToken)
+    if (!validation.success) {
+      return reply.status(400).send({
+        error: 'Integration Error',
+        message: validation.error,
+        hint: 'Ensure the API token has read access to users, groups, and policies.'
+      })
+    }
+
+    const existing = await db.query.integrations.findFirst({
+      where: and(eq(integrations.orgId, request.orgId), eq(integrations.type, 'okta'))
+    })
+
+    const encryptedCredentials = encrypt(JSON.stringify({ domain: cleanDomain, apiToken }))
+    const metadata = { domain: cleanDomain, identity: validation.identity }
+
+    let integration
+    if (existing) {
+      ;[integration] = await db.update(integrations).set({
+        status: 'connected', credentials: encryptedCredentials, metadata,
+        lastError: null, lastErrorAt: null, updatedAt: new Date()
+      }).where(eq(integrations.id, existing.id))
+        .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
+    } else {
+      ;[integration] = await db.insert(integrations).values({
+        orgId: request.orgId, type: 'okta', status: 'connected',
+        credentials: encryptedCredentials, metadata
+      }).returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
+    }
+
+    await scanQueue.add('scan', {
+      orgId: request.orgId,
+      integrationId: integration.id,
+      integrationType: 'okta',
+      triggeredBy: 'manual'
+    }, { priority: 1 })
+
+    await auditAction({
+      orgId: request.orgId, userId: request.user.id,
+      action: 'integration.connected', resource: 'okta',
+      resourceId: integration.id, metadata: { domain: cleanDomain }
+    })
+
+    return reply.status(201).send({ ...integration, message: `Okta org ${cleanDomain} connected. Initial scan queued.` })
+  })
+
+  // POST /api/v1/integrations/google-workspace
+  // Connect Google Workspace via service account JSON + admin email
+  fastify.post('/google-workspace', {
+    preHandler: [verifyToken, requireUser, requireAdmin],
+    schema: {
+      tags: ['Integrations'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['serviceAccount', 'adminEmail'],
+        properties: {
+          serviceAccount: {
+            description: 'Service account JSON object or stringified JSON',
+            oneOf: [
+              { type: 'string', minLength: 50 },
+              { type: 'object' }
+            ]
+          },
+          adminEmail: { type: 'string', format: 'email' }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { serviceAccount, adminEmail } = request.body
+
+    const validation = await validateGoogleWorkspaceCredentials(serviceAccount, adminEmail)
+    if (!validation.success) {
+      return reply.status(400).send({
+        error: 'Integration Error',
+        message: validation.error,
+        hint: 'Service account must have domain-wide delegation enabled and the admin user must be a Workspace super-admin.'
+      })
+    }
+
+    const existing = await db.query.integrations.findFirst({
+      where: and(eq(integrations.orgId, request.orgId), eq(integrations.type, 'google_workspace'))
+    })
+
+    const saString = typeof serviceAccount === 'string' ? serviceAccount : JSON.stringify(serviceAccount)
+    const encryptedCredentials = encrypt(JSON.stringify({ serviceAccount: saString, adminEmail }))
+    const metadata = { domain: validation.domain, adminEmail }
+
+    let integration
+    if (existing) {
+      ;[integration] = await db.update(integrations).set({
+        status: 'connected', credentials: encryptedCredentials, metadata,
+        lastError: null, lastErrorAt: null, updatedAt: new Date()
+      }).where(eq(integrations.id, existing.id))
+        .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
+    } else {
+      ;[integration] = await db.insert(integrations).values({
+        orgId: request.orgId, type: 'google_workspace', status: 'connected',
+        credentials: encryptedCredentials, metadata
+      }).returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
+    }
+
+    await scanQueue.add('scan', {
+      orgId: request.orgId,
+      integrationId: integration.id,
+      integrationType: 'google_workspace',
+      triggeredBy: 'manual'
+    }, { priority: 1 })
+
+    await auditAction({
+      orgId: request.orgId, userId: request.user.id,
+      action: 'integration.connected', resource: 'google_workspace',
+      resourceId: integration.id, metadata: { domain: validation.domain }
+    })
+
+    return reply.status(201).send({ ...integration, message: `Google Workspace ${validation.domain} connected. Initial scan queued.` })
   })
 
   // POST /api/v1/integrations/github/webhook

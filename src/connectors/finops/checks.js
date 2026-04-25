@@ -45,8 +45,9 @@ import { getEBSPricing, getSnapshotPricing, getNATGatewayPricing, getLoadBalance
  * Runs all FinOps checks for a connected AWS account.
  * Returns a structured findings object with savings opportunities.
  */
-export async function runFinOpsChecks({ credentials, region, onProgress }) {
+export async function runFinOpsChecks({ credentials, region, onProgress, startDate, endDate }) {
   const cfg = { region, credentials }
+  const range = resolveDateRange(startDate, endDate)
 
   const findings = {
     monthlyCost:        null,
@@ -60,9 +61,11 @@ export async function runFinOpsChecks({ credentials, region, onProgress }) {
     summary:            {}
   }
 
+  findings.dateRange = range
+
   // ── 1. Current spend & top services ──────────────────────────
   try {
-    const spend = await getCurrentSpend(cfg)
+    const spend = await getCurrentSpend(cfg, range)
     findings.monthlyCost  = spend.monthlyCost
     findings.topServices  = spend.topServices
     await onProgress(15)
@@ -143,30 +146,43 @@ export async function runFinOpsChecks({ credentials, region, onProgress }) {
 
 // ── Individual check functions ─────────────────────────────────
 
-async function getCurrentSpend(cfg) {
+function resolveDateRange(startDate, endDate) {
+  if (startDate && endDate) {
+    return { start: startDate, end: endDate, custom: true }
+  }
+  const end = new Date()
+  const start = new Date(end.getFullYear(), end.getMonth(), 1)
+  return {
+    start: start.toISOString().slice(0, 10),
+    end:   end.toISOString().slice(0, 10),
+    custom: false
+  }
+}
+
+async function getCurrentSpend(cfg, range) {
   const ce = new CostExplorerClient(cfg)
 
-  const end   = new Date()
-  const start = new Date(end.getFullYear(), end.getMonth(), 1) // first of this month
-
   const { ResultsByTime } = await ce.send(new GetCostAndUsageCommand({
-    TimePeriod: {
-      Start: start.toISOString().slice(0, 10),
-      End:   end.toISOString().slice(0, 10),
-    },
+    TimePeriod: { Start: range.start, End: range.end },
     Granularity: 'MONTHLY',
     Metrics: ['UnblendedCost'],
     GroupBy: [{ Type: 'DIMENSION', Key: 'SERVICE' }]
   }))
 
-  const groups = ResultsByTime?.[0]?.Groups || []
+  // Aggregate across months so custom multi-month ranges produce a single top-services list
+  const totals = new Map()
+  let unit = 'USD'
+  for (const period of ResultsByTime || []) {
+    for (const g of period.Groups || []) {
+      const svc = g.Keys[0]
+      const amt = parseFloat(g.Metrics.UnblendedCost.Amount || '0')
+      totals.set(svc, (totals.get(svc) || 0) + amt)
+      unit = g.Metrics.UnblendedCost.Unit || unit
+    }
+  }
 
-  const topServices = groups
-    .map(g => ({
-      service: g.Keys[0],
-      cost: parseFloat(g.Metrics.UnblendedCost.Amount || '0'),
-      unit: g.Metrics.UnblendedCost.Unit
-    }))
+  const topServices = [...totals.entries()]
+    .map(([service, cost]) => ({ service, cost, unit }))
     .sort((a, b) => b.cost - a.cost)
     .slice(0, 10)
 

@@ -8,7 +8,7 @@ const PLAN_FEATURES = {
     regulatoryAlerts: false
   },
   growth: {
-    frameworks: ['soc2', 'iso27001', 'gdpr', 'hipaa'],
+    frameworks: ['soc2', 'iso27001', 'gdpr', 'hipaa', 'pci_dss'],
     aiFeatures: true,
     maxTeamMembers: null, // unlimited
     regulatoryAlerts: true
