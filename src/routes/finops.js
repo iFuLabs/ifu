@@ -64,7 +64,7 @@ export default async function finopsRoutes(fastify) {
       const aiSummary = await generateFinOpsSummary(findings)
       findings.aiSummary = aiSummary
 
-      await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
+      await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
 
       await auditAction({
         orgId: request.orgId,
@@ -141,7 +141,7 @@ export default async function finopsRoutes(fastify) {
       const aiSummary = await generateFinOpsSummary(findings)
       findings.aiSummary = aiSummary
       
-      await redis.setEx(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
+      await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
 
       send({ type: 'complete', findings })
     } catch (err) {
