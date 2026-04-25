@@ -66,7 +66,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}>
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-5 border-b border-border">
-          <img src="/logos/black.svg" alt="iFu Labs" style={{ height: '28px', width: 'auto' }} />
+          <img src="/logomark.png" alt="iFu" style={{ height: '32px', width: '32px' }} />
+          <span className="font-semibold text-ink">iFu Comply</span>
         </div>
 
         {/* Main nav */}
