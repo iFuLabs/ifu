@@ -162,6 +162,7 @@ export default async function teamRoutes(fastify) {
         where: eq(organizations.id, request.orgId) 
       })).name,
       role: body.role,
+      product: body.product || 'comply',
       inviteUrl,
       expiresAt: invitation.expiresAt
     })

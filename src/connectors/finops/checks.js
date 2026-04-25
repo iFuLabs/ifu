@@ -218,8 +218,6 @@ async function detectWaste(cfg, region) {
     )
 
     for (const vol of Volumes) {
-      // Skip recently created volumes (< 7 days old)
-      if (vol.CreateTime && new Date(vol.CreateTime) > sevenDaysAgo) continue
 
       const sizeGb = vol.Size || 0
       const volumeType = vol.VolumeType || 'gp2'

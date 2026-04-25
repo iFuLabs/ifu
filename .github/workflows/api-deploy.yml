@@ -71,20 +71,11 @@ jobs:
           aws apprunner start-deployment --service-arn ${{ steps.check-service.outputs.service_arn }}
           echo "✅ Deployment started successfully!"
 
-      - name: Handle Failed Service
-        if: steps.check-service.outputs.service_exists == 'true' && (steps.check-service.outputs.status == 'CREATE_FAILED' || steps.check-service.outputs.status == 'OPERATION_IN_PROGRESS')
-        run: |
-          echo "⚠️ App Runner service is in '${{ steps.check-service.outputs.status }}' state"
-          echo "🗑️ Deleting failed service..."
-          aws apprunner delete-service --service-arn ${{ steps.check-service.outputs.service_arn }}
-          echo "✅ Failed service deleted. Run Terraform to recreate it."
-          exit 0
-      
       - name: Service Not Ready
-        if: steps.check-service.outputs.service_exists == 'true' && steps.check-service.outputs.status != 'RUNNING' && steps.check-service.outputs.status != 'CREATE_FAILED' && steps.check-service.outputs.status != 'OPERATION_IN_PROGRESS'
+        if: steps.check-service.outputs.service_exists == 'true' && steps.check-service.outputs.status != 'RUNNING'
         run: |
           echo "⚠️ App Runner service is in '${{ steps.check-service.outputs.status }}' state"
-          echo "Waiting for service to be ready..."
+          echo "Service needs manual intervention. Please check AWS Console."
           exit 1
 
       - name: Service Not Found
