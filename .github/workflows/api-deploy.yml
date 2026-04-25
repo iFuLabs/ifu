@@ -71,16 +71,21 @@ jobs:
           aws apprunner start-deployment --service-arn ${{ steps.check-service.outputs.service_arn }}
           echo "✅ Deployment started successfully!"
 
-      - name: Service Not Ready
-        if: steps.check-service.outputs.service_exists == 'true' && steps.check-service.outputs.status != 'RUNNING'
+      - name: Handle Failed Service
+        if: steps.check-service.outputs.service_exists == 'true' && (steps.check-service.outputs.status == 'CREATE_FAILED' || steps.check-service.outputs.status == 'OPERATION_IN_PROGRESS')
         run: |
           echo "⚠️ App Runner service is in '${{ steps.check-service.outputs.status }}' state"
-          echo "The service needs to be in RUNNING state before deployment can start."
-          echo ""
-          echo "Next steps:"
-          echo "1. Delete the failed service: aws apprunner delete-service --service-arn ${{ steps.check-service.outputs.service_arn }}"
-          echo "2. Run Terraform apply to recreate the service (now that the Docker image exists)"
+          echo "🗑️ Deleting failed service..."
+          aws apprunner delete-service --service-arn ${{ steps.check-service.outputs.service_arn }}
+          echo "✅ Failed service deleted. Run Terraform to recreate it."
           exit 0
+      
+      - name: Service Not Ready
+        if: steps.check-service.outputs.service_exists == 'true' && steps.check-service.outputs.status != 'RUNNING' && steps.check-service.outputs.status != 'CREATE_FAILED' && steps.check-service.outputs.status != 'OPERATION_IN_PROGRESS'
+        run: |
+          echo "⚠️ App Runner service is in '${{ steps.check-service.outputs.status }}' state"
+          echo "Waiting for service to be ready..."
+          exit 1
 
       - name: Service Not Found
         if: steps.check-service.outputs.service_exists == 'false'
