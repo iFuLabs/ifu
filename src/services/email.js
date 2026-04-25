@@ -98,7 +98,7 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
 /**
  * Send team invitation email
  */
-export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, inviteUrl, expiresAt }) {
+export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, product = 'comply', inviteUrl, expiresAt }) {
   try {
     const expiryDate = new Date(expiresAt).toLocaleDateString('en-US', { 
       month: 'long', 
@@ -106,11 +106,14 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
       year: 'numeric' 
     })
 
+    const productName = product === 'finops' ? 'iFu Labs FinOps' : 'iFu Labs Comply'
+    const productTagline = product === 'finops' ? 'Cloud Cost Optimization' : 'Compliance Automation'
+
     const emailConfig = getEmailConfig('team')
     const { data, error } = await resend.emails.send({
       ...emailConfig,
       to,
-      subject: `${inviterName} invited you to join ${orgName} on ${COMPANY_NAME}`,
+      subject: `${inviterName} invited you to join ${orgName} on ${productName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -135,15 +138,16 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
             <div class="container">
               <div class="header">
                 <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
-                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
+                <p class="tagline">${productTagline}</p>
               </div>
               <div class="content">
                 <p>Hi there,</p>
                 
-                <p><strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on ${COMPANY_NAME}.</p>
+                <p><strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on <strong>${productName}</strong>.</p>
                 
                 <div class="info-box">
-                  <p style="margin: 0;"><strong>Role:</strong> ${role.charAt(0).toUpperCase() + role.slice(1)}</p>
+                  <p style="margin: 0;"><strong>Product:</strong> ${productName}</p>
+                  <p style="margin: 10px 0 0 0;"><strong>Role:</strong> ${role.charAt(0).toUpperCase() + role.slice(1)}</p>
                   <p style="margin: 10px 0 0 0;"><strong>Expires:</strong> ${expiryDate}</p>
                 </div>
                 
@@ -160,8 +164,8 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
                 <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
               </div>
               <div class="footer">
-                <p><strong>iFu Labs</strong></p>
-                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
+                <p><strong>${productName}</strong></p>
+                <p style="margin: 5px 0;">${productTagline}</p>
                 <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This invitation was sent to ${to}</p>
               </div>
             </div>

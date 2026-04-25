@@ -32,6 +32,7 @@ resource "aws_iam_role_policy_attachment" "apprunner_ecr" {
 }
 
 # App Runner Service
+# Recreated after failed deployment
 resource "aws_apprunner_service" "api" {
   service_name = var.service_name
 
