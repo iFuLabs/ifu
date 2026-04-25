@@ -10,6 +10,7 @@ import { runAwsChecks } from '../connectors/aws/checks/index.js'
 import { runGithubChecks } from '../connectors/github/checks.js'
 import { getInstallationClient } from '../connectors/github/client.js'
 import { notificationQueue } from './queues.js'
+import { dispatchWebhook } from '../services/webhooks.js'
 
 export const scanWorker = new Worker('scans', async (job) => {
   const { orgId, integrationId, integrationType, triggeredBy } = job.data
@@ -84,7 +85,19 @@ export const scanWorker = new Worker('scans', async (job) => {
     const now = new Date()
     const nextCheck = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
+    // Snapshot prior statuses so we can detect pass → fail drift after upsert
+    const priorResults = await db.query.controlResults.findMany({
+      where: eq(controlResults.orgId, orgId)
+    })
+    const priorStatusByDef = new Map(priorResults.map(r => [r.controlDefId, r.status]))
+    const drifted = []
+
     for (const result of results) {
+      const prior = priorStatusByDef.get(result.controlDefId)
+      if (prior === 'pass' && result.status === 'fail') {
+        drifted.push(result.controlDefId)
+      }
+
       await db.insert(controlResults).values({
         orgId,
         controlDefId: result.controlDefId,
@@ -117,17 +130,29 @@ export const scanWorker = new Worker('scans', async (job) => {
       completedAt: new Date()
     }).where(eq(scans.id, scan.id))
 
-    // Queue notifications for newly failing controls
-    if (failCount > 0) {
-      await notificationQueue.add('scan-complete', {
+    // Queue notifications for newly failing controls (drift only — not every fail)
+    if (drifted.length > 0) {
+      await notificationQueue.add('control-drift', {
         orgId,
         scanId: scan.id,
+        driftedControlDefIds: drifted,
         failCount,
         passCount
       })
     }
 
     await job.updateProgress(100)
+
+    await dispatchWebhook(orgId, 'scan.complete', {
+      scanId: scan.id,
+      integrationType,
+      totalControls: results.length,
+      passCount,
+      failCount,
+      reviewCount,
+      driftedCount: drifted.length,
+      completedAt: new Date().toISOString()
+    }).catch(err => logger.warn({ err: err.message }, 'webhook dispatch failed'))
 
     return { scanId: scan.id, passCount, failCount, reviewCount }
 

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { TrendingDown, AlertTriangle, Zap, BarChart2, RefreshCw, ChevronDown, ChevronUp, DollarSign, ArrowRight } from 'lucide-react'
+import { TrendingDown, AlertTriangle, Zap, BarChart2, RefreshCw, ChevronDown, ChevronUp, DollarSign, ArrowRight, Check, Clock, X } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import clsx from 'clsx'
 
@@ -62,6 +62,17 @@ interface Summary {
   checkedAt: string
 }
 
+type RecommendationState = 'open' | 'snoozed' | 'done'
+
+interface RecommendationStateData {
+  id: string
+  resourceId: string
+  category: string
+  state: RecommendationState
+  notes?: string
+  snoozedUntil?: string
+}
+
 export default function FinOpsPage() {
   const [findings, setFindings] = useState<Finding | null>(null)
   const [scanning, setScanning] = useState(false)
@@ -69,14 +80,25 @@ export default function FinOpsPage() {
   const [statusMsg, setStatusMsg] = useState('')
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<'waste' | 'rightsizing' | 'coverage'>('waste')
+  const [states, setStates] = useState<Map<string, RecommendationStateData>>(new Map())
+  const [stateFilter, setStateFilter] = useState<RecommendationState | 'all'>('all')
   const esRef = useRef<EventSource | null>(null)
 
-  // Load cached findings on mount
+  // Load cached findings and states on mount
   useEffect(() => {
-    fetch('/api/v1/finops')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data && !data.error) setFindings(data) })
-      .catch(() => {})
+    Promise.all([
+      fetch('/api/v1/finops').then(r => r.ok ? r.json() : null),
+      fetch('/api/v1/finops/recommendations/states').then(r => r.ok ? r.json() : null)
+    ]).then(([findingsData, statesData]) => {
+      if (findingsData && !findingsData.error) setFindings(findingsData)
+      if (statesData?.states) {
+        const stateMap = new Map()
+        statesData.states.forEach((s: RecommendationStateData) => {
+          stateMap.set(`${s.category}:${s.resourceId}`, s)
+        })
+        setStates(stateMap)
+      }
+    }).catch(() => {})
   }, [])
 
   const runScan = () => {
@@ -117,6 +139,32 @@ export default function FinOpsPage() {
   const stopScan = () => {
     esRef.current?.close()
     setScanning(false)
+  }
+
+  const updateState = async (resourceId: string, category: 'waste' | 'rightsizing', newState: RecommendationState) => {
+    try {
+      const response = await fetch(`/api/v1/finops/recommendations/${encodeURIComponent(resourceId)}/state`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, state: newState })
+      })
+      
+      if (response.ok) {
+        const updated = await response.json()
+        setStates(prev => new Map(prev).set(`${category}:${resourceId}`, updated))
+      }
+    } catch (err) {
+      console.error('Failed to update state:', err)
+    }
+  }
+
+  const getState = (resourceId: string, category: 'waste' | 'rightsizing'): RecommendationState => {
+    return states.get(`${category}:${resourceId}`)?.state || 'open'
+  }
+
+  const filterItems = <T extends { resourceId: string }>(items: T[], category: 'waste' | 'rightsizing'): T[] => {
+    if (stateFilter === 'all') return items
+    return items.filter(item => getState(item.resourceId, category) === stateFilter)
   }
 
   if (!findings && !scanning) {
@@ -263,35 +311,67 @@ export default function FinOpsPage() {
             </div>
           )}
 
-          {/* Tabs */}
-          <div className="flex gap-1 bg-surface border border-border rounded-lg p-1 w-fit">
-            {(['waste', 'rightsizing', 'coverage'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={clsx(
-                  'px-4 py-1.5 text-xs font-medium rounded transition-all capitalize',
-                  activeTab === tab
-                    ? 'bg-card text-ink shadow-sm'
-                    : 'text-muted hover:text-ink'
-                )}
-              >
-                {tab === 'waste' && `Waste (${findings.waste.length})`}
-                {tab === 'rightsizing' && `Rightsizing (${findings.rightsizing.length})`}
-                {tab === 'coverage' && `Coverage gaps (${findings.summary.coverageGaps})`}
-              </button>
-            ))}
+          {/* Tabs and filter */}
+          <div className="flex items-center justify-between">
+            <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
+              {(['waste', 'rightsizing', 'coverage'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={clsx(
+                    'px-4 py-1.5 text-xs font-medium rounded transition-all capitalize',
+                    activeTab === tab
+                      ? 'bg-card text-ink shadow-sm'
+                      : 'text-muted hover:text-ink'
+                  )}
+                >
+                  {tab === 'waste' && `Waste (${filterItems(findings.waste, 'waste').length})`}
+                  {tab === 'rightsizing' && `Rightsizing (${filterItems(findings.rightsizing, 'rightsizing').length})`}
+                  {tab === 'coverage' && `Coverage gaps (${findings.summary.coverageGaps})`}
+                </button>
+              ))}
+            </div>
+
+            {(activeTab === 'waste' || activeTab === 'rightsizing') && (
+              <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
+                {(['all', 'open', 'snoozed', 'done'] as const).map(filter => (
+                  <button
+                    key={filter}
+                    onClick={() => setStateFilter(filter)}
+                    className={clsx(
+                      'px-3 py-1 text-xs font-medium rounded transition-all capitalize',
+                      stateFilter === filter
+                        ? 'bg-card text-ink shadow-sm'
+                        : 'text-muted hover:text-ink'
+                    )}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Waste tab */}
           {activeTab === 'waste' && (
             <div className="space-y-2">
-              {findings.waste.length === 0 ? (
-                <EmptyState icon="✓" title="No waste detected" desc="No idle or unattached resources found in your account." />
+              {filterItems(findings.waste, 'waste').length === 0 ? (
+                <EmptyState 
+                  icon={stateFilter === 'all' ? "✓" : "—"} 
+                  title={stateFilter === 'all' ? "No waste detected" : `No ${stateFilter} items`}
+                  desc={stateFilter === 'all' ? "No idle or unattached resources found in your account." : `No waste items in ${stateFilter} state.`}
+                />
               ) : (
-                findings.waste
+                filterItems(findings.waste, 'waste')
                   .sort((a, b) => b.estimatedMonthlySavings - a.estimatedMonthlySavings)
-                  .map((item, i) => <WasteCard key={i} item={item} />)
+                  .map((item, i) => (
+                    <WasteCard 
+                      key={i} 
+                      item={item} 
+                      state={getState(item.resourceId, 'waste')}
+                      onStateChange={(newState) => updateState(item.resourceId, 'waste', newState)}
+                    />
+                  ))
               )}
             </div>
           )}
@@ -299,12 +379,23 @@ export default function FinOpsPage() {
           {/* Rightsizing tab */}
           {activeTab === 'rightsizing' && (
             <div className="space-y-2">
-              {findings.rightsizing.length === 0 ? (
-                <EmptyState icon="✓" title="No rightsizing opportunities" desc="All EC2 instances appear to be appropriately sized." />
+              {filterItems(findings.rightsizing, 'rightsizing').length === 0 ? (
+                <EmptyState 
+                  icon={stateFilter === 'all' ? "✓" : "—"} 
+                  title={stateFilter === 'all' ? "No rightsizing opportunities" : `No ${stateFilter} items`}
+                  desc={stateFilter === 'all' ? "All EC2 instances appear to be appropriately sized." : `No rightsizing items in ${stateFilter} state.`}
+                />
               ) : (
-                findings.rightsizing
+                filterItems(findings.rightsizing, 'rightsizing')
                   .sort((a, b) => b.estimatedMonthlySavings - a.estimatedMonthlySavings)
-                  .map((item, i) => <RightsizingCard key={i} item={item} />)
+                  .map((item, i) => (
+                    <RightsizingCard 
+                      key={i} 
+                      item={item}
+                      state={getState(item.resourceId, 'rightsizing')}
+                      onStateChange={(newState) => updateState(item.resourceId, 'rightsizing', newState)}
+                    />
+                  ))
               )}
             </div>
           )}
@@ -344,12 +435,19 @@ function SummaryCard({ label, value, sub, icon, highlight }: {
   )
 }
 
-function WasteCard({ item }: { item: WasteItem }) {
+function WasteCard({ item, state, onStateChange }: { 
+  item: WasteItem
+  state: RecommendationState
+  onStateChange: (state: RecommendationState) => void
+}) {
   const [expanded, setExpanded] = useState(false)
   const severityColor = { high: 'text-danger bg-danger/10', medium: 'text-warn bg-warn/10', low: 'text-muted bg-border' }
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <div className={clsx(
+      'bg-card border rounded-xl overflow-hidden transition-all',
+      state === 'done' ? 'border-green/30 opacity-60' : 'border-border'
+    )}>
       <div
         className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-bg transition-colors"
         onClick={() => setExpanded(!expanded)}
@@ -360,6 +458,7 @@ function WasteCard({ item }: { item: WasteItem }) {
             <span className={clsx('font-mono text-[10px] px-1.5 py-0.5 rounded capitalize', severityColor[item.severity])}>
               {item.severity}
             </span>
+            <StateIndicator state={state} />
           </div>
           <p className="text-sm text-muted truncate">{item.description}</p>
         </div>
@@ -383,17 +482,25 @@ function WasteCard({ item }: { item: WasteItem }) {
             </div>
             <p className="text-xs text-muted leading-relaxed">{item.recommendation}</p>
           </div>
+          <StateButtons currentState={state} onChange={onStateChange} />
         </div>
       )}
     </div>
   )
 }
 
-function RightsizingCard({ item }: { item: RightsizingItem }) {
+function RightsizingCard({ item, state, onStateChange }: { 
+  item: RightsizingItem
+  state: RecommendationState
+  onStateChange: (state: RecommendationState) => void
+}) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <div className={clsx(
+      'bg-card border rounded-xl overflow-hidden transition-all',
+      state === 'done' ? 'border-green/30 opacity-60' : 'border-border'
+    )}>
       <div
         className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-bg transition-colors"
         onClick={() => setExpanded(!expanded)}
@@ -407,6 +514,7 @@ function RightsizingCard({ item }: { item: RightsizingItem }) {
             )}>
               {item.action}
             </span>
+            <StateIndicator state={state} />
           </div>
           <p className="text-sm text-ink">
             {item.currentType}
@@ -424,11 +532,12 @@ function RightsizingCard({ item }: { item: RightsizingItem }) {
         {expanded ? <ChevronUp size={14} className="text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-muted flex-shrink-0" />}
       </div>
       {expanded && (
-        <div className="px-5 pb-4 border-t border-border bg-bg">
+        <div className="px-5 pb-4 border-t border-border bg-bg space-y-3">
           <div className="flex items-center gap-1.5 text-xs font-medium text-ink mb-1">
             <ArrowRight size={12} className="text-green" /> Recommendation
           </div>
           <p className="text-xs text-muted leading-relaxed">{item.recommendation}</p>
+          <StateButtons currentState={state} onChange={onStateChange} />
         </div>
       )}
     </div>
@@ -461,6 +570,72 @@ function EmptyState({ icon, title, desc }: { icon: string; title: string; desc: 
       <div className="text-3xl mb-3">{icon}</div>
       <p className="text-sm font-medium text-ink mb-1">{title}</p>
       <p className="text-xs text-muted">{desc}</p>
+    </div>
+  )
+}
+
+function StateIndicator({ state }: { state: RecommendationState }) {
+  const config = {
+    open: { icon: null, color: '' },
+    snoozed: { icon: Clock, color: 'text-warn bg-warn/10' },
+    done: { icon: Check, color: 'text-green bg-green/10' }
+  }
+  
+  const { icon: Icon, color } = config[state]
+  if (!Icon) return null
+  
+  return (
+    <span className={clsx('flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded capitalize', color)}>
+      <Icon size={10} />
+      {state}
+    </span>
+  )
+}
+
+function StateButtons({ currentState, onChange }: { 
+  currentState: RecommendationState
+  onChange: (state: RecommendationState) => void
+}) {
+  return (
+    <div className="flex items-center gap-2 pt-2 border-t border-border">
+      <span className="text-[10px] font-mono uppercase tracking-wider text-muted">Status:</span>
+      <div className="flex gap-1">
+        <button
+          onClick={(e) => { e.stopPropagation(); onChange('open') }}
+          className={clsx(
+            'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
+            currentState === 'open'
+              ? 'bg-brand text-white'
+              : 'bg-surface text-muted hover:text-ink hover:bg-border'
+          )}
+        >
+          Open
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onChange('snoozed') }}
+          className={clsx(
+            'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
+            currentState === 'snoozed'
+              ? 'bg-warn text-white'
+              : 'bg-surface text-muted hover:text-ink hover:bg-border'
+          )}
+        >
+          <Clock size={10} />
+          Snooze
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onChange('done') }}
+          className={clsx(
+            'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
+            currentState === 'done'
+              ? 'bg-green text-white'
+              : 'bg-surface text-muted hover:text-ink hover:bg-border'
+          )}
+        >
+          <Check size={10} />
+          Done
+        </button>
+      </div>
     </div>
   )
 }

@@ -14,6 +14,9 @@ import { authPlugin } from './middleware/auth.js'
 // Background jobs
 import { startScheduler } from './jobs/scheduler.js'
 import './jobs/scanWorker.js'
+import './jobs/finopsWorker.js'
+import './jobs/notificationWorker.js'
+import './jobs/webhookWorker.js'
 
 // Routes
 import authRoutes from './routes/auth.js'
@@ -28,6 +31,7 @@ import aiRoutes from './routes/ai.js'
 import finopsRoutes from './routes/finops.js'
 import teamRoutes from './routes/team.js'
 import planRoutes from './routes/plan.js'
+import webhookRoutes from './routes/webhooks.js'
 
 const app = Fastify({
   logger: {
@@ -97,6 +101,7 @@ await app.register(aiRoutes,           { prefix: '/api/v1/ai' })
 await app.register(finopsRoutes,       { prefix: '/api/v1/finops' })
 await app.register(teamRoutes,         { prefix: '/api/v1/team' })
 await app.register(planRoutes,         { prefix: '/api/v1/plan' })
+await app.register(webhookRoutes,      { prefix: '/api/v1/webhooks' })
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', async () => ({
