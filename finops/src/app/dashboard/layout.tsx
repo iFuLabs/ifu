@@ -77,9 +77,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={clsx(
                   'flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all',
                   active
-                    ? 'bg-brand-light text-brand font-medium border-r-2 border-brand -mr-3 pr-3'
-                    : 'text-muted hover:text-ink hover:bg-bg'
+                    ? 'font-semibold text-ink'
+                    : 'text-muted hover:text-ink hover:bg-surface-hover'
                 )}
+                style={active ? { background: '#DAC0FD', borderLeft: '3px solid #8A63E6', paddingLeft: 9, color: '#33063D' } : undefined}
               >
                 <Icon size={15} />
                 {label}
@@ -95,9 +96,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               key={href}
               href={href}
               className={clsx(
-                'flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all text-muted hover:text-ink hover:bg-bg',
-                pathname === href && 'bg-brand-light text-brand font-medium'
+                'flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all',
+                pathname === href ? 'font-semibold text-ink' : 'text-muted hover:text-ink hover:bg-surface-hover'
               )}
+              style={pathname === href ? { background: '#DAC0FD', borderLeft: '3px solid #8A63E6', paddingLeft: 9, color: '#33063D' } : undefined}
             >
               <Icon size={15} />
               {label}

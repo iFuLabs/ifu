@@ -47,23 +47,23 @@ function ScanRow({ scan }: { scan: any }) {
   const statusConfig = {
     complete: { 
       label: 'Complete', 
-      color: 'text-accent bg-accent-light border-accent/20',
-      icon: <CheckCircle size={12} className="text-accent" />
+      style: { color: '#067647', background: '#ECFDF3', border: '1px solid rgba(6, 118, 71, 0.2)' },
+      icon: <CheckCircle size={12} style={{ color: '#067647' }} />
     },
     running: { 
       label: 'Running', 
-      color: 'text-warn bg-warn/10 border-warn/20',
-      icon: <RefreshCw size={12} className="text-warn animate-spin" />
+      style: { color: '#B54708', background: '#FFFAEB', border: '1px solid rgba(181, 71, 8, 0.2)' },
+      icon: <RefreshCw size={12} style={{ color: '#B54708' }} className="animate-spin" />
     },
     pending: { 
       label: 'Pending', 
-      color: 'text-muted bg-border/50 border-border',
-      icon: <Clock size={12} className="text-muted" />
+      style: { color: '#B54708', background: '#FFFAEB', border: '1px solid rgba(181, 71, 8, 0.2)' },
+      icon: <Clock size={12} style={{ color: '#B54708' }} />
     },
     failed: { 
       label: 'Failed', 
-      color: 'text-danger bg-danger/10 border-danger/20',
-      icon: <AlertTriangle size={12} className="text-danger" />
+      style: { color: '#B42318', background: '#FEF3F2', border: '1px solid rgba(180, 35, 24, 0.2)' },
+      icon: <AlertTriangle size={12} style={{ color: '#B42318' }} />
     },
   }
   const config = statusConfig[scan.status as keyof typeof statusConfig] || statusConfig.pending
@@ -74,33 +74,36 @@ function ScanRow({ scan }: { scan: any }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="font-mono text-sm text-ink capitalize font-medium">{scan.integrationType}</span>
-            <span className="text-muted text-xs">·</span>
-            <span className="text-xs text-muted">{scan.triggeredBy}</span>
+            <span className="text-xs" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>·</span>
+            <span className="text-xs" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>{scan.triggeredBy}</span>
           </div>
           {scan.status === 'complete' && (
-            <p className="text-sm text-muted">
-              <span className="text-accent font-medium">{scan.passCount} passed</span>
+            <p className="text-sm" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>
+              <span style={{ color: '#067647' }} className="font-medium">{scan.passCount} passed</span>
               {scan.failCount > 0 && (
-                <> · <span className="text-danger font-medium">{scan.failCount} failed</span></>
+                <> · <span style={{ color: '#B42318' }} className="font-medium">{scan.failCount} failed</span></>
               )}
               {scan.reviewCount > 0 && (
-                <> · <span className="text-warn font-medium">{scan.reviewCount} review</span></>
+                <> · <span style={{ color: '#B54708' }} className="font-medium">{scan.reviewCount} review</span></>
               )}
             </p>
           )}
           {scan.status === 'running' && (
-            <p className="text-sm text-warn">Scanning your infrastructure...</p>
+            <p className="text-sm" style={{ color: '#B54708' }}>Scanning your infrastructure...</p>
           )}
           {scan.status === 'pending' && (
-            <p className="text-sm text-muted">Waiting to start...</p>
+            <p className="text-sm" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>Waiting to start...</p>
           )}
           {scan.status === 'failed' && (
-            <p className="text-sm text-danger">{scan.error || 'Scan failed'}</p>
+            <p className="text-sm" style={{ color: '#B42318' }}>{scan.error || 'Scan failed'}</p>
           )}
         </div>
-        <div className={clsx('flex items-center gap-1.5 font-mono text-[10px] px-2.5 py-1 rounded-full border', config.color)}>
+        <div
+          className="flex items-center gap-1.5 font-mono text-[10px] px-2 py-1"
+          style={{ ...config.style, borderRadius: 6, fontWeight: 500, height: 24 }}
+        >
           {config.icon}
-          <span className="font-medium">{config.label}</span>
+          <span>{config.label}</span>
         </div>
       </div>
       

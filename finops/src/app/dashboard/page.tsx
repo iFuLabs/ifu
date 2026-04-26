@@ -204,10 +204,21 @@ export default function FinOpsPage() {
         <div>
           <h1 className="font-serif text-2xl font-normal text-ink">FinOps</h1>
           {findings?.summary?.checkedAt && (
-            <p className="text-xs text-muted mt-0.5 font-mono">
-              Last analysed {new Date(findings.summary.checkedAt).toLocaleString()}
-              {findings.cached && ' · cached'}
-            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-xs font-mono" style={{ color: 'rgba(51, 6, 61, 0.65)', fontSize: 13 }}>
+                Last analysed {new Date(findings.summary.checkedAt).toLocaleString()}
+                {findings.cached && ' · cached'}
+              </p>
+              <button
+                onClick={runScan}
+                disabled={scanning}
+                className="flex items-center gap-1 text-xs text-accent hover:underline"
+                style={{ fontSize: 13 }}
+              >
+                <RefreshCw size={12} />
+                Refresh
+              </button>
+            </div>
           )}
         </div>
         <button
@@ -303,7 +314,7 @@ export default function FinOpsPage() {
                   <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'Cost']} />
                   <Bar dataKey="cost" radius={[0, 4, 4, 0]}>
                     {findings.topServices.slice(0, 8).map((_, i) => (
-                      <Cell key={i} fill={i === 0 ? '#8A63E6' : i < 3 ? '#DAC0FD' : '#D1D5DB'} />
+                      <Cell key={i} fill={i === 0 ? '#8A63E6' : i < 3 ? 'rgba(138, 99, 230, 0.3)' : '#D1D5DB'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -424,13 +435,13 @@ function SummaryCard({ label, value, sub, icon, highlight }: {
   label: string; value: string; sub?: string; icon: React.ReactNode; highlight?: boolean
 }) {
   return (
-    <div className={clsx('border rounded-xl p-4', highlight ? 'bg-green-light border-green/20' : 'bg-card border-border')}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-muted">{label}</span>
+    <div className={clsx('border rounded-xl p-6', highlight ? 'bg-green-light border-green/20' : 'bg-card border-border')}>
+      <div className="flex items-center justify-between mb-4">
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(51, 6, 61, 0.65)' }}>{label}</span>
         {icon}
       </div>
-      <div className={clsx('font-mono text-2xl font-medium', highlight ? 'text-green' : 'text-ink')}>{value}</div>
-      {sub && <div className="text-xs text-muted mt-1">{sub}</div>}
+      <div className={clsx('font-mono font-semibold', highlight ? 'text-green' : 'text-ink')} style={{ fontSize: 24 }}>{value}</div>
+      {sub && <div className="text-xs mt-2" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>{sub}</div>}
     </div>
   )
 }

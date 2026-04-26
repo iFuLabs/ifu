@@ -3,7 +3,7 @@ import useSWR from 'swr'
 import { api } from '@/lib/api'
 import { AiInsightCard } from '@/components/AiInsightCard'
 import { RadialBarChart, RadialBar, ResponsiveContainer, Cell } from 'recharts'
-import { Shield, AlertTriangle, CheckCircle, Clock, RefreshCw, ChevronRight, Zap, TrendingDown, DollarSign, Lock } from 'lucide-react'
+import { Shield, AlertTriangle, CheckCircle, Clock, RefreshCw, ChevronRight, Zap, TrendingDown, DollarSign, Lock, CheckCircle2, AlertCircle, MoonStar } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
@@ -42,13 +42,58 @@ export default function DashboardPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
 
+      {/* T1: Integration error banner */}
+      {(() => {
+        const dismissed = typeof window !== 'undefined' && sessionStorage.getItem('comply.banner.integrations-dismissed')
+        const hasError = integrations?.some(i => i.status === 'error' || i.status === 'disconnected')
+        if (hasError && !dismissed) {
+          return (
+            <div
+              style={{ background: '#FFFAEB', border: '1px solid #FEDF89', borderRadius: 12, padding: '12px 16px' }}
+              className="flex items-center gap-3"
+            >
+              <AlertTriangle size={16} style={{ color: '#B54708', flexShrink: 0 }} />
+              <p style={{ color: '#B54708', fontSize: 14, flex: 1 }}>
+                AWS integration is disconnected. Reconnect to resume scans.
+              </p>
+              <Link
+                href="/dashboard/integrations"
+                style={{ color: '#B54708', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', textDecoration: 'underline' }}
+              >
+                Reconnect
+              </Link>
+              <button
+                onClick={() => { sessionStorage.setItem('comply.banner.integrations-dismissed', '1'); window.location.reload() }}
+                style={{ color: '#B54708', opacity: 0.6, padding: 4 }}
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          )
+        }
+        return null
+      })()}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="font-serif text-2xl font-normal text-ink">Overview</h1>
-          <p className="text-sm text-muted mt-0.5">
-            {score ? `Last updated ${formatDistanceToNow(new Date(score.lastUpdated), { addSuffix: true })}` : 'Loading...'}
-          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-sm" style={{ color: 'rgba(51, 6, 61, 0.65)', fontSize: 13 }}>
+              {score ? `Last updated ${formatDistanceToNow(new Date(score.lastUpdated), { addSuffix: true })}` : 'Loading...'}
+            </p>
+            {score && (
+              <button
+                onClick={() => { mutateScore(); mutateControls(); mutateScans() }}
+                className="flex items-center gap-1 text-xs text-accent hover:underline"
+                style={{ fontSize: 13 }}
+              >
+                <RefreshCw size={12} />
+                Refresh
+              </button>
+            )}
+          </div>
           {showScanningIndicator && (
             <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-accent/10 border border-accent/20 rounded-lg text-xs text-accent">
               <RefreshCw size={12} className="animate-spin" />
@@ -101,8 +146,12 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         {/* Overall score — radial chart */}
-        <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center">
-          <p className="font-mono text-xs text-muted uppercase tracking-widest mb-2">Overall Score</p>
+        <Link
+          href={failingControls.length > 0 ? '/dashboard/controls?status=fail&severity=critical' : '/dashboard/controls'}
+          className="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center hover:bg-surface-hover transition-colors focus:outline-none focus:ring-2 focus:ring-iris/40 focus:ring-offset-2"
+          role="link"
+        >
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(51, 6, 61, 0.65)' }} className="mb-2">Overall Score</p>
           <div className="relative w-36 h-36">
             <ResponsiveContainer width="100%" height="100%">
               <RadialBarChart
@@ -114,18 +163,28 @@ export default function DashboardPage() {
                 <RadialBar
                   dataKey="value"
                   cornerRadius={8}
-                  background={{ fill: '#F4F4F4' }}
+                  background={{ fill: '#F8F7FA' }}
                 >
                   <Cell fill="#8A63E6" />
                 </RadialBar>
               </RadialBarChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-mono text-3xl font-medium text-ink">{score?.overall ?? '—'}%</span>
+              <span className="font-mono text-ink" style={{ fontSize: 48, fontWeight: 600 }}>{score?.overall ?? '—'}%</span>
             </div>
           </div>
-          <ScoreBadge score={score?.overall} />
-        </div>
+          {failingControls.length > 0 ? (
+            <div className="mt-3 text-center">
+              <p className="text-sm" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>{failingControls.length} control{failingControls.length !== 1 ? 's' : ''} failing</p>
+              <p className="text-sm font-medium text-ink mt-1">Fix top critical →</p>
+            </div>
+          ) : (
+            <div className="mt-3 flex items-center gap-1.5">
+              <CheckCircle size={14} style={{ color: '#067647' }} />
+              <span className="text-sm font-medium" style={{ color: '#067647' }}>All controls passing</span>
+            </div>
+          )}
+        </Link>
 
         {/* Framework scores */}
         <div className="md:col-span-2 grid grid-cols-2 gap-3">
@@ -254,24 +313,68 @@ export default function DashboardPage() {
                 </>
               ) : integrations && integrations.some(i => i.status === 'connected') ? (
                 <>
-                  <p className="text-sm text-muted">No scans yet. Click "Run scan" to start your first scan.</p>
+                  <Zap size={28} style={{ color: 'rgba(51, 6, 61, 0.2)' }} className="mx-auto mb-2" />
+                  <p className="text-sm font-medium text-ink">No scans yet</p>
+                  <button
+                    onClick={async () => {
+                      setIsScanning(true)
+                      setLastScanTime(Date.now())
+                      try {
+                        const connected = (await api.integrations.list()).filter(i => i.status === 'connected')
+                        await Promise.all(connected.map(i => api.integrations.sync(i.id)))
+                        mutateScans()
+                      } catch (e) { console.error(e) }
+                      finally { setIsScanning(false) }
+                    }}
+                    className="text-xs text-accent hover:underline mt-2 inline-block font-medium"
+                  >
+                    Run scan →
+                  </button>
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-muted">No scans yet. Connect an integration to start.</p>
-                  <Link href="/dashboard/integrations" className="text-xs text-accent hover:underline mt-2 inline-block">
+                  <Zap size={28} style={{ color: 'rgba(51, 6, 61, 0.2)' }} className="mx-auto mb-2" />
+                  <p className="text-sm font-medium text-ink">No scans yet</p>
+                  <p className="text-xs text-muted mt-1">Connect an integration to start.</p>
+                  <Link href="/dashboard/integrations" className="text-xs text-accent hover:underline mt-2 inline-block font-medium">
                     Connect AWS →
                   </Link>
                 </>
               )}
             </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {scans.slice(0, 6).map(scan => (
-                <ScanRow key={scan.id} scan={scan} />
-              ))}
-            </div>
-          )}
+          ) : (() => {
+            // T10: Collapse failed scans from errored integrations
+            const erroredIntegrationIds = new Set(
+              integrations?.filter(i => i.status === 'error' || i.status === 'disconnected').map(i => i.id) || []
+            )
+            const recentScans = scans.slice(0, 6)
+            const erroredScans = recentScans.filter(s => s.status === 'failed' && erroredIntegrationIds.has(s.integrationId))
+            const normalScans = recentScans.filter(s => !(s.status === 'failed' && erroredIntegrationIds.has(s.integrationId)))
+
+            return (
+              <div className="divide-y divide-border">
+                {erroredScans.length > 0 && (
+                  <div className="flex items-center gap-3 px-5 py-3.5">
+                    <AlertCircle size={14} style={{ color: '#B54708' }} />
+                    <span className="text-sm" style={{ color: '#B54708' }}>
+                      AWS scans paused — integration disconnected
+                    </span>
+                    <Link href="/dashboard/integrations" className="ml-auto text-xs font-medium" style={{ color: '#B54708' }}>
+                      Reconnect →
+                    </Link>
+                  </div>
+                )}
+                {normalScans.length > 0 ? (
+                  normalScans.map(scan => <ScanRow key={scan.id} scan={scan} />)
+                ) : erroredScans.length === 0 ? (
+                  <div className="px-5 py-10 text-center">
+                    <Zap size={28} style={{ color: 'rgba(51, 6, 61, 0.2)' }} className="mx-auto mb-2" />
+                    <p className="text-sm font-medium text-ink">No recent scans</p>
+                  </div>
+                ) : null}
+              </div>
+            )
+          })()}
         </div>
       </div>
     </div>
@@ -283,9 +386,13 @@ export default function DashboardPage() {
 function ScoreBadge({ score }: { score?: number }) {
   if (score === undefined) return null
   const label = score >= 90 ? 'Excellent' : score >= 70 ? 'Good' : score >= 50 ? 'Fair' : 'At Risk'
-  const color = score >= 90 ? 'text-accent bg-accent-light' : score >= 70 ? 'text-warn bg-warn/10' : 'text-danger bg-danger/10'
+  const style = score >= 90
+    ? { color: '#067647', background: '#ECFDF3' }
+    : score >= 70
+    ? { color: '#B54708', background: '#FFFAEB' }
+    : { color: '#B42318', background: '#FEF3F2' }
   return (
-    <span className={clsx('font-mono text-xs px-2 py-0.5 rounded mt-2', color)}>{label}</span>
+    <span className="font-mono text-xs px-2 py-0.5 mt-2" style={{ ...style, borderRadius: 6 }}>{label}</span>
   )
 }
 
@@ -297,53 +404,58 @@ function FrameworkCard({ framework, data, planFeatures }: { framework: string; d
   // Check if framework is locked
   const isLocked = planFeatures && !planFeatures.features.frameworks.includes(framework)
   
-  const scoreColor = data.score >= 80 ? 'text-accent' : data.score >= 60 ? 'text-warn' : 'text-danger'
-  const barColor = data.score >= 80 ? 'bg-accent' : data.score >= 60 ? 'bg-warn' : 'bg-danger'
+  const scoreColor = data.score >= 80 ? '#067647' : data.score >= 60 ? '#B54708' : '#B42318'
+  const barColor = data.score >= 80 ? '#8A63E6' : data.score >= 60 ? '#B54708' : '#B42318'
 
   if (isLocked) {
     return (
       <Link 
         href="/dashboard/billing"
-        className="bg-card border border-border rounded-xl p-4 hover:border-accent/30 transition-colors relative overflow-hidden group"
+        className="bg-card border border-border rounded-xl p-6 hover:bg-surface-hover transition-colors relative overflow-hidden group"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-border/30 to-transparent" />
         <div className="relative">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-xs text-muted uppercase tracking-wider">{labels[framework] || framework}</span>
-            <Lock size={14} className="text-muted" />
+            <span className="text-base font-semibold text-ink">{labels[framework] || framework}</span>
+            <Lock size={14} style={{ color: 'rgba(51, 6, 61, 0.65)' }} />
           </div>
-          <p className="text-xs text-muted">Growth plan required</p>
+          <p className="text-xs" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>Growth plan required</p>
         </div>
       </Link>
     )
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 hover:border-accent/30 transition-colors">
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-mono text-xs text-muted uppercase tracking-wider">{labels[framework] || framework}</span>
-        <span className={clsx('font-mono text-lg font-medium', scoreColor)}>{data.score}%</span>
+    <Link
+      href={`/dashboard/controls?framework=${framework}`}
+      className="bg-card border border-border rounded-xl p-6 hover:bg-surface-hover transition-colors"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-base font-semibold text-ink">{labels[framework] || framework}</span>
+        <span className="font-mono" style={{ fontSize: 16, fontWeight: 600, color: scoreColor }}>{data.score}%</span>
       </div>
-      <div className="h-1.5 bg-border rounded-full overflow-hidden mb-2">
-        <div className={clsx('h-full rounded-full transition-all', barColor)} style={{ width: `${data.score}%` }} />
+      <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ background: 'rgba(51, 6, 61, 0.08)' }}>
+        <div className="h-full rounded-full transition-all" style={{ width: `${data.score}%`, background: barColor }} />
       </div>
-      <div className="flex items-center gap-3 text-xs text-muted font-mono">
-        <span className="text-accent">↑ {data.pass}</span>
-        <span className="text-danger">↓ {data.fail}</span>
-        <span>{data.pending} pending</span>
+      <div className="flex items-center justify-between text-xs" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>
+        <div className="flex items-center gap-3 font-mono">
+          <span style={{ color: '#067647' }}>↑ {data.pass}</span>
+          <span style={{ color: '#B42318' }}>↓ {data.fail}</span>
+          <span>{data.pending} pending</span>
+        </div>
+        <span className="font-medium text-ink">View →</span>
       </div>
-    </div>
+    </Link>
   )
 }
 
 function StatCard({ label, value, icon, color }: { label: string; value: any; icon: React.ReactNode; color: string }) {
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-muted">{label}</span>
+    <div className="bg-card border border-border rounded-xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(51, 6, 61, 0.65)' }}>{label}</span>
         {icon}
       </div>
-      <span className={clsx('font-mono text-2xl font-medium', color)}>{value}</span>
+      <span className={clsx('font-mono', color)} style={{ fontSize: 24, fontWeight: 600 }}>{value}</span>
     </div>
   )
 }
@@ -373,23 +485,23 @@ function ScanRow({ scan }: { scan: any }) {
   const statusConfig = {
     complete: { 
       label: 'Complete', 
-      color: 'text-accent bg-accent-light border-accent/20',
-      icon: <CheckCircle size={12} className="text-accent" />
+      style: { color: '#067647', background: '#ECFDF3', border: '1px solid rgba(6, 118, 71, 0.2)' },
+      icon: <CheckCircle2 size={12} style={{ color: '#067647' }} />
     },
     running: { 
       label: 'Running', 
-      color: 'text-warn bg-warn/10 border-warn/20',
-      icon: <RefreshCw size={12} className="text-warn animate-spin" />
+      style: { color: '#B54708', background: '#FFFAEB', border: '1px solid rgba(181, 71, 8, 0.2)' },
+      icon: <RefreshCw size={12} style={{ color: '#B54708' }} className="animate-spin" />
     },
     pending: { 
       label: 'Pending', 
-      color: 'text-muted bg-border/50 border-border',
-      icon: <Clock size={12} className="text-muted" />
+      style: { color: '#B54708', background: '#FFFAEB', border: '1px solid rgba(181, 71, 8, 0.2)' },
+      icon: <Clock size={12} style={{ color: '#B54708' }} />
     },
     failed: { 
       label: 'Failed', 
-      color: 'text-danger bg-danger/10 border-danger/20',
-      icon: <AlertTriangle size={12} className="text-danger" />
+      style: { color: '#B42318', background: '#FEF3F2', border: '1px solid rgba(180, 35, 24, 0.2)' },
+      icon: <AlertCircle size={12} style={{ color: '#B42318' }} />
     },
   }
   const config = statusConfig[scan.status as keyof typeof statusConfig] || statusConfig.pending
@@ -399,35 +511,38 @@ function ScanRow({ scan }: { scan: any }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className="font-mono text-xs text-ink capitalize font-medium">{scan.integrationType}</span>
-          <span className="text-muted text-xs">·</span>
-          <span className="text-xs text-muted">{scan.triggeredBy}</span>
+          <span style={{ color: 'rgba(51, 6, 61, 0.65)' }} className="text-xs">·</span>
+          <span className="text-xs" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>{scan.triggeredBy}</span>
         </div>
         {scan.status === 'complete' && (
-          <p className="text-sm text-muted">
-            <span className="text-accent font-medium">{scan.passCount} passed</span>
+          <p className="text-sm" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>
+            <span style={{ color: '#067647' }} className="font-medium">{scan.passCount} passed</span>
             {scan.failCount > 0 && (
-              <> · <span className="text-danger font-medium">{scan.failCount} failed</span></>
+              <> · <span style={{ color: '#B42318' }} className="font-medium">{scan.failCount} failed</span></>
             )}
           </p>
         )}
         {scan.status === 'running' && (
-          <p className="text-sm text-warn">Scanning your infrastructure...</p>
+          <p className="text-sm" style={{ color: '#B54708' }}>Scanning your infrastructure...</p>
         )}
         {scan.status === 'pending' && (
-          <p className="text-sm text-muted">Waiting to start...</p>
+          <p className="text-sm" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>Waiting to start...</p>
         )}
         {scan.status === 'failed' && (
-          <p className="text-sm text-danger truncate">{scan.error || 'Scan failed'}</p>
+          <p className="text-sm truncate" style={{ color: '#B42318' }}>{scan.error || 'Scan failed'}</p>
         )}
-        <p className="text-xs text-muted mt-1">
+        <p className="text-xs mt-1" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>
           {scan.completedAt
             ? formatDistanceToNow(new Date(scan.completedAt), { addSuffix: true })
             : formatDistanceToNow(new Date(scan.createdAt), { addSuffix: true })}
         </p>
       </div>
-      <div className={clsx('flex items-center gap-1.5 font-mono text-[10px] px-2.5 py-1 rounded-full border', config.color)}>
+      <div
+        className="flex items-center gap-1.5 font-mono text-[10px] px-2 py-1"
+        style={{ ...config.style, borderRadius: 6, fontWeight: 500, height: 24 }}
+      >
         {config.icon}
-        <span className="font-medium">{config.label}</span>
+        <span>{config.label}</span>
       </div>
     </div>
   )
