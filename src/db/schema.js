@@ -284,21 +284,6 @@ export const invitationsRelations = relations(invitations, ({ one }) => ({
   })
 }))
 
-export const webhooksRelations = relations(webhooks, ({ one, many }) => ({
-  org: one(organizations, {
-    fields: [webhooks.orgId],
-    references: [organizations.id]
-  }),
-  deliveries: many(webhookDeliveries)
-}))
-
-export const webhookDeliveriesRelations = relations(webhookDeliveries, ({ one }) => ({
-  webhook: one(webhooks, {
-    fields: [webhookDeliveries.webhookId],
-    references: [webhooks.id]
-  })
-}))
-
 export const finopsRecommendationStatesRelations = relations(finopsRecommendationStates, ({ one }) => ({
   org: one(organizations, {
     fields: [finopsRecommendationStates.orgId],
@@ -530,3 +515,20 @@ export const slackWorkspaces = pgTable('slack_workspaces', {
   uniqueIndex('idx_slack_workspaces_org_team').on(table.orgId, table.teamId),
   index('idx_slack_workspaces_org_id').on(table.orgId)
 ])
+
+
+// ── Webhooks relations (must be after table definitions) ───────────────────
+export const webhooksRelations = relations(webhooks, ({ one, many }) => ({
+  org: one(organizations, {
+    fields: [webhooks.orgId],
+    references: [organizations.id]
+  }),
+  deliveries: many(webhookDeliveries)
+}))
+
+export const webhookDeliveriesRelations = relations(webhookDeliveries, ({ one }) => ({
+  webhook: one(webhooks, {
+    fields: [webhookDeliveries.webhookId],
+    references: [webhooks.id]
+  })
+}))
