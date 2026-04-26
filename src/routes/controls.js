@@ -560,4 +560,71 @@ export default async function controlRoutes(fastify) {
 
     return reply.send(updated)
   })
+
+  // PATCH /api/v1/controls/bulk (C-A12)
+  // Bulk update remediation on multiple controls
+  fastify.patch('/bulk', {
+    preHandler: [verifyToken, requireUser],
+    schema: {
+      tags: ['Controls'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['ids'],
+        properties: {
+          ids: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 50 },
+          remediationOwnerId: { type: 'string' },
+          remediationDueDate: { type: 'string' },
+          remediationStatus: { type: 'string', enum: ['open', 'in_progress', 'blocked', 'completed', 'exempted'] }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { ids, remediationOwnerId, remediationDueDate, remediationStatus } = request.body
+
+    if (!remediationOwnerId && !remediationDueDate && !remediationStatus) {
+      return reply.status(400).send({ error: 'At least one field to update is required' })
+    }
+
+    // Validate owner belongs to org
+    if (remediationOwnerId) {
+      const owner = await db.query.users.findFirst({
+        where: and(eq(users.id, remediationOwnerId), eq(users.orgId, request.orgId))
+      })
+      if (!owner) return reply.status(400).send({ error: 'Owner not in this organization' })
+    }
+
+    // Find control defs by controlId strings
+    const defs = await db.query.controlDefinitions.findMany({
+      where: inArray(controlDefinitions.controlId, ids)
+    })
+
+    const defIds = defs.map(d => d.id)
+    if (defIds.length === 0) return reply.status(404).send({ error: 'No matching controls found' })
+
+    const patch = {}
+    if (remediationOwnerId) patch.remediationOwnerId = remediationOwnerId
+    if (remediationDueDate) patch.remediationDueDate = new Date(remediationDueDate)
+    if (remediationStatus) {
+      patch.remediationStatus = remediationStatus
+      if (remediationStatus === 'in_progress') patch.remediationStartedAt = new Date()
+      if (remediationStatus === 'completed') patch.remediationCompletedAt = new Date()
+    }
+
+    await db.update(controlResults)
+      .set(patch)
+      .where(and(
+        eq(controlResults.orgId, request.orgId),
+        inArray(controlResults.controlDefId, defIds)
+      ))
+
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user.id,
+      action: 'control.bulk_remediation_updated',
+      metadata: { controlIds: ids, patch }
+    })
+
+    return reply.send({ updated: ids.length, patch })
+  })
 }

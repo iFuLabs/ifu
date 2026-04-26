@@ -214,6 +214,17 @@ export default function PortalPage() {
 
         <div style={{ textAlign: 'center', marginTop: '36px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <a
+            href="/login"
+            style={{
+              fontSize: '14px',
+              color: '#33063D',
+              textDecoration: 'none',
+              fontWeight: 600
+            }}
+          >
+            Already have an account? Sign in
+          </a>
+          <a
             href="/onboarding"
             style={{
               fontSize: '14px',

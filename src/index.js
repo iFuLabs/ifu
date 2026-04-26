@@ -37,6 +37,7 @@ import slackRoutes from './routes/slack.js'
 import budgetRoutes from './routes/budgets.js'
 import auditLogRoutes from './routes/audit-log.js'
 import exemptionRoutes from './routes/exemptions.js'
+import auditCalendarRoutes from './routes/audits.js'
 
 const app = Fastify({
   logger: {
@@ -111,6 +112,7 @@ await app.register(slackRoutes,        { prefix: '/api/v1/slack' })
 await app.register(budgetRoutes,       { prefix: '/api/v1/budgets' })
 await app.register(auditLogRoutes,     { prefix: '/api/v1/audit-log' })
 await app.register(exemptionRoutes,    { prefix: '/api/v1/exemptions' })
+await app.register(auditCalendarRoutes, { prefix: '/api/v1/audits' })
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', async () => ({

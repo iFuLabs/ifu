@@ -118,6 +118,44 @@ export function startScheduler() {
     }
   }, { timezone: 'UTC' })
 
+  // Daily vendor cert expiry check — 06:00 UTC (C-A9)
+  cron.schedule('0 6 * * *', async () => {
+    logger.info('Vendor cert expiry check triggered')
+    try {
+      const { vendors: vendorsTable } = await import('../db/schema.js')
+      const { dispatchWebhook } = await import('../services/webhooks.js')
+
+      const allVendors = await db.query.vendors.findMany()
+      const now = new Date()
+      const thresholds = [30, 14, 7, 1] // days before expiry
+
+      for (const vendor of allVendors) {
+        for (const field of ['soc2ExpiresAt', 'iso27001ExpiresAt']) {
+          const expiryDate = vendor[field]
+          if (!expiryDate) continue
+
+          const daysUntil = Math.ceil((new Date(expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+          const matchedThreshold = thresholds.find(t => daysUntil <= t && daysUntil > (t === 1 ? -1 : t - (thresholds[thresholds.indexOf(t) + 1] || 0)))
+
+          if (matchedThreshold && daysUntil >= 0) {
+            const certType = field === 'soc2ExpiresAt' ? 'SOC 2' : 'ISO 27001'
+
+            await dispatchWebhook(vendor.orgId, 'vendor.cert_expiring', {
+              vendorName: vendor.name,
+              certType,
+              expiresAt: expiryDate,
+              daysUntil
+            }).catch(() => null)
+
+            logger.info({ orgId: vendor.orgId, vendor: vendor.name, certType, daysUntil }, 'Vendor cert expiry alert')
+          }
+        }
+      }
+    } catch (err) {
+      logger.error({ err }, 'Vendor cert expiry check error')
+    }
+  }, { timezone: 'UTC' })
+
   // Daily remediation overdue check — 08:00 UTC (C-A1)
   cron.schedule('0 8 * * *', async () => {
     logger.info('Remediation overdue check triggered')

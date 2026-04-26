@@ -1,7 +1,7 @@
 import { verifyToken, requireUser, requireOwner } from '../middleware/auth.js'
 import { db } from '../db/client.js'
-import { organizations } from '../db/schema.js'
-import { eq } from 'drizzle-orm'
+import { organizations, subscriptions as subscriptionsTable } from '../db/schema.js'
+import { eq, and } from 'drizzle-orm'
 import {
   initializeTransaction,
   verifyTransaction,
@@ -62,21 +62,40 @@ export default async function billingRoutes(fastify) {
       ? Math.ceil((new Date(org.trialEndsAt) - now) / (1000 * 60 * 60 * 24))
       : 0
 
+    // Check subscriptions table first (multi-product), fall back to org row
+    const activeSub = await db.query.subscriptions.findFirst({
+      where: and(
+        eq(subscriptionsTable.orgId, request.orgId),
+        eq(subscriptionsTable.status, 'active')
+      )
+    }) || await db.query.subscriptions.findFirst({
+      where: and(
+        eq(subscriptionsTable.orgId, request.orgId),
+        eq(subscriptionsTable.status, 'trialing')
+      )
+    })
+
     let subscription = null
-    if (org.paystackSubscriptionCode) {
+    const subCode = activeSub?.paystackSubscriptionCode || org.paystackSubscriptionCode
+    if (subCode) {
       try {
-        subscription = await getSubscription(org.paystackSubscriptionCode)
+        subscription = await getSubscription(subCode)
       } catch (err) {
         logger.warn({ err: err.message }, 'Failed to fetch Paystack subscription')
       }
     }
 
+    // Determine status: Paystack active > subscriptions table > trial > expired
+    const paystackActive = subscription?.status === 'active'
+    const subTableActive = activeSub?.status === 'active' || activeSub?.status === 'trialing'
+
     return reply.send({
-      plan: org.plan,
-      status: subscription?.status === 'active' ? 'active'
-        : trialActive ? 'trialing'
+      plan: activeSub?.plan || org.plan,
+      product: activeSub?.product || null,
+      status: paystackActive ? 'active'
+        : (subTableActive || trialActive) ? 'trialing'
         : 'expired',
-      trialEndsAt: org.trialEndsAt,
+      trialEndsAt: activeSub?.trialEndsAt || org.trialEndsAt,
       trialDaysLeft,
       hasPaymentMethod: !!org.paystackAuthCode,
       subscription: subscription ? {

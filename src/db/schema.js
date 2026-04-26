@@ -403,6 +403,26 @@ export const finopsRecommendationStates = pgTable('finops_recommendation_states'
   index('idx_finops_states_org_state').on(table.orgId, table.state)
 ])
 
+// ── Audits (C-A6) ──────────────────────────────────────────────────────────
+export const audits = pgTable('audits', {
+  id:              uuid('id').primaryKey().defaultRandom(),
+  orgId:           uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  framework:       text('framework').notNull(),
+  type:            text('type').notNull().default('type2'),
+  status:          text('status').notNull().default('planning'),
+  kickoffAt:       timestamp('kickoff_at'),
+  fieldworkAt:     timestamp('fieldwork_at'),
+  expectedCloseAt: timestamp('expected_close_at'),
+  completedAt:     timestamp('completed_at'),
+  auditorFirm:     text('auditor_firm'),
+  notes:           text('notes'),
+  createdAt:       timestamp('created_at').notNull().defaultNow(),
+  updatedAt:       timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_audits_org_id').on(table.orgId),
+  index('idx_audits_expected_close').on(table.expectedCloseAt)
+])
+
 // ── Control Comments (C-A5) ────────────────────────────────────────────────
 export const controlComments = pgTable('control_comments', {
   id:              uuid('id').primaryKey().defaultRandom(),
