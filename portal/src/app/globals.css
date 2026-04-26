@@ -1,6 +1,6 @@
-/* Portal — minimal global CSS for mobile responsiveness.
-   Portal pages use inline styles throughout; these rules apply only
-   below 600px and use !important to override inline values where needed. */
+/* Portal — global CSS for mobile responsiveness.
+   Portal pages use inline styles throughout; these rules use attribute
+   selectors + !important to override inline values on small screens. */
 
 html, body {
   margin: 0;
@@ -13,39 +13,89 @@ html, body {
 
 img, svg { max-width: 100%; height: auto; }
 
-/* Prevent iOS zoom on input focus — needs 16px minimum */
-@media (max-width: 600px) {
-  input, select, textarea {
-    font-size: 16px !important;
-  }
-
-  /* Cards (backdrop-filtered container pattern): tighten padding */
-  [style*="backdrop-filter"] {
-    padding: 28px 20px !important;
-  }
-
-  /* Auth H1 headings: cap at 28px on small phones */
-  h1 {
-    font-size: clamp(24px, 7vw, 32px) !important;
-    line-height: 1.15 !important;
-  }
-
-  /* Outer wrapper padding: tighten */
-  [style*="padding: 40px 20px"] {
-    padding: 24px 16px !important;
-  }
-
-  /* Onboarding / subscribe wider cards scale down too */
-  [style*="maxWidth: '640px'"],
-  [style*="max-width: 640px"] {
-    max-width: 100% !important;
-  }
-}
-
 /* Touch target floor for interactive elements */
 button, a, [role="button"] {
   min-height: 44px;
 }
 
-/* Exclude inline links inside paragraphs from min-height */
+/* Exclude inline links inside paragraphs / small toggle buttons from min-height */
 p a, span a, li a { min-height: 0; }
+
+/* Tablet (≤900px) */
+@media (max-width: 900px) {
+  /* Multi-column product/plan grids → single column */
+  [style*="repeat(auto-fit, minmax(320px"],
+  [style*="repeat(auto-fit, minmax(280px"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Phones (≤600px) */
+@media (max-width: 600px) {
+  /* Prevent iOS zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Outer page wrappers: scale 40px padding down */
+  [style*="padding: 40px 20px"],
+  [style*="padding:40px 20px"],
+  [style*="padding: 60px 20px"],
+  [style*="padding: 48px 20px"] {
+    padding: 24px 14px !important;
+  }
+
+  /* Cards / containers with thick padding */
+  [style*="padding: 40px"],
+  [style*="padding: 36px"],
+  [style*="padding: 32px"] {
+    padding: 24px 18px !important;
+  }
+
+  /* Backdrop-filtered card pattern */
+  [style*="backdrop-filter"] {
+    padding: 24px 18px !important;
+  }
+
+  /* Wider max-width cards take full width on phones */
+  [style*="maxWidth: '640px'"],
+  [style*="max-width: 640px"],
+  [style*="maxWidth: '900px'"],
+  [style*="max-width: 900px"],
+  [style*="maxWidth: '540px'"],
+  [style*="max-width: 540px"],
+  [style*="maxWidth: '460px'"],
+  [style*="max-width: 460px"],
+  [style*="maxWidth: '440px'"],
+  [style*="max-width: 440px"] {
+    max-width: 100% !important;
+  }
+
+  /* Auth H1 cap */
+  h1 {
+    font-size: clamp(22px, 6.5vw, 28px) !important;
+    line-height: 1.2 !important;
+  }
+  h2 {
+    font-size: clamp(18px, 5vw, 22px) !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Onboarding progress bar: allow wrap and shrink gaps */
+  [style*="gap: '12px'"][style*="display: 'flex'"] {
+    gap: 6px !important;
+  }
+}
+
+/* Small phones (≤380px) */
+@media (max-width: 380px) {
+  [style*="padding: 40px 20px"],
+  [style*="padding:40px 20px"] {
+    padding: 20px 12px !important;
+  }
+  [style*="padding: 40px"],
+  [style*="padding: 36px"],
+  [style*="padding: 32px"] {
+    padding: 20px 14px !important;
+  }
+}
