@@ -1,5 +1,11 @@
 # CLAUDE.md — Brand Identity & Product Research
 
+### Team overview document
+- Location: TEAM_OVERVIEW.md
+- Created: 2026-04-26
+- Purpose: Team briefing document for May 1st product testing call
+- Last updated: 2026-04-26
+
 ## Current task
 FinOps and Comply product research and improvement suggestions. (Brand light-mode conversion is the prior task — preserved below.)
 

@@ -1,0 +1,357 @@
+# iFU Labs — Team Overview
+
+**Audience:** internal team
+**Purpose:** brief everyone before the **May 1st product testing call**
+**Date created:** 2026-04-26
+**Source:** built only from what is in the codebase. Where something was unclear or only partially built, it is flagged as such.
+
+---
+
+## About iFU Labs
+
+iFU Labs is an **AWS-focused engineering company** that combines a **consultancy** (humans doing AWS work for customers) with **two SaaS products** (software customers run themselves). The company is an **AWS Partner Network member** and describes itself as "remote-first."
+
+The tagline that runs through the website is **"Expert AWS engineering for startups that ship fast."**
+
+### Who we're for
+The marketing copy speaks directly to **startups** — pre-seed through Series C — and small/fast-growing teams that need AWS expertise without hiring a full platform team. The pricing page also targets **mid-sized companies** through the Managed Services tiers.
+
+### What we sell (three lines of business)
+1. **Consultancy projects** — fixed-scope engagements (cost audit, compliance gap assessment, CI/CD build, migration). Pricing is "POA" (price on application) or "Custom" — no fixed dollar amount on the website.
+2. **SaaS products** — `iFu Comply` and `iFu Costless` (FinOps), self-serve, monthly subscription billed annually.
+3. **Managed services** — ongoing retainer with a dedicated engineer + bundled SaaS tools, $2,500–$5,000/month and up.
+
+### What makes us different (claims from the website)
+- **Read-only infrastructure access, always.** We never take production write access.
+- **SOC 2 compliant practice.**
+- **Full IaC handover at the end of every engagement** — no vendor lock-in.
+- **AWS Activate credits facilitation** for eligible startups.
+- **A 4-step engagement model:** Discovery (48h assessment) → Architecture → Delivery (embedded engineer) → Handover (docs + training).
+- **Certified team** — AWS Solutions Architect, DevOps Engineer Professional, Security Specialty, Data Engineer, ML Engineer certifications are listed.
+
+### Stage
+Founders are **not named in the codebase.** The codebase is mature and active: two SaaS products are live with real billing (Paystack), a shared backend with 12+ database migrations, automated background jobs, multiple third-party integrations, and ongoing feature work tracked in `CLAUDE.md`. This looks like an established post-launch company actively shipping new features — not a pre-launch project.
+
+---
+
+## Our Products
+
+### Product 1 — `iFu Costless` (the FinOps product)
+
+**Tagline on the pricing page:** *"Live AWS cost dashboard with waste detection and anomaly alerts."*
+
+#### What it is
+A self-serve dashboard that connects to a customer's AWS account and tells them **where they are wasting money and what to do about it.**
+
+#### The problem it solves
+Most startups overspend on AWS — they leave unused resources running, don't buy reserved capacity, and don't know which services are eating their bill. iFu Costless **scans the AWS account, finds the waste, and recommends fixes.**
+
+#### Who it's for
+AWS-using startups (the only cloud supported today is AWS). Sold at **$199/month, billed annually**, with a **14-day free trial.**
+
+#### How it connects to AWS
+The customer creates an **IAM role in their own AWS account** that trusts iFu Labs' AWS account, with an **external ID** for security. iFu Labs uses **AWS STS AssumeRole** to read (not write) the customer's account. The role ARN and external ID are stored encrypted in the database.
+
+#### Step-by-step user flow
+1. Sign up in the **portal** (email + password + organisation name).
+2. Choose a product → FinOps.
+3. Subscribe via **Paystack** (or start the 14-day trial).
+4. In the dashboard's **Integrations** page, paste the AWS role ARN + external ID.
+5. The system runs a scan (manual button or automatic daily scan at 03:00 UTC).
+6. The dashboard shows: monthly spend, forecast, top services, waste findings, rightsizing recommendations, RI/Savings Plan coverage, an AI summary of the situation.
+7. The user can **snooze, mark done, or dismiss** each recommendation.
+8. The user can **export findings to CSV/JSON**, including the industry-standard **FOCUS 1.1** format.
+
+#### Every feature it currently has
+- **8 types of waste detection**:
+  1. Unattached EBS volumes
+  2. Unused Elastic IPs
+  3. Stopped EC2 instances older than 30 days
+  4. Idle NAT Gateways
+  5. Idle RDS instances
+  6. Unused load balancers (ALB / NLB / Classic)
+  7. Old snapshots (older than 90 days)
+  8. AI/GPU spend breakdown (Bedrock, SageMaker, idle GPUs)
+- **Rightsizing recommendations** — top 20 from AWS Compute Optimizer (CPU/memory utilisation shown).
+- **Reserved Instances & Savings Plans coverage** — read-only, shows % of on-demand spend covered (no auto-purchasing).
+- **End-of-month spend forecast** — from AWS Cost Explorer.
+- **AI summary** — 2–3 sentence plain-English summary, generated by **AWS Bedrock (Claude 3 Haiku)**, with a rule-based fallback if AI is unavailable.
+- **Custom date ranges** — user can pick any start/end date; multi-month ranges are aggregated.
+- **Tag-based allocation/showback** — `/allocation` API endpoint exists (group spend by tag like `Environment` or `Team`); the standalone allocation page exists but is not yet integrated into the main dashboard.
+- **Recommendation workflow states** — every waste finding can be marked Open, Snoozed, Done, or Dismissed (with reason and notes).
+- **CSV/JSON/FOCUS 1.1 export** of all findings.
+- **Real-time scan progress** via Server-Sent Events (the dashboard shows the scan running live).
+
+#### What the API does
+The backend API is at `src/routes/finops.js`:
+- `GET /api/v1/finops` — returns the full findings (waste, rightsizing, coverage). 6-hour cache.
+- `GET /api/v1/finops/stream` — live progress while a scan runs.
+- `GET /api/v1/finops/summary` — high-level KPIs.
+- `GET /api/v1/finops/trend?days=30|90|180` — daily cost time-series.
+- `GET /api/v1/finops/allocation` — spend grouped by AWS tag.
+- `GET /api/v1/finops/purchase-recommendations` — RI / Savings Plan suggestions.
+- `GET /api/v1/finops/ai-gpu` — AI/GPU spend breakdown.
+- `GET /api/v1/finops/export?format=csv|json|focus` — export findings.
+- `GET /api/v1/finops/recommendations/states` and `PATCH /…/state` — workflow state management.
+
+#### Background jobs
+- **Daily FinOps scan at 03:00 UTC** — automatically scans every customer with an active FinOps subscription and a connected AWS integration. Wired through `src/jobs/scheduler.js` → `finopsScanQueue` → `src/jobs/finopsWorker.js`.
+- **Anomaly detection worker** exists but is **rules-based only** — there is no machine-learning anomaly detection yet, and **the "weekly anomaly alerts" promised on the pricing page do not currently fire to email or Slack.**
+
+#### Third-party integrations
+- **AWS** — Cost Explorer, EC2, ELB, RDS, CloudWatch, Pricing API, Bedrock (for AI).
+- **Paystack** — billing.
+- **Slack** — drift / scan notifications (shared with Comply).
+- **Redis** — caches scan results for 6 hours.
+
+---
+
+### Product 2 — `iFu Comply` (the Compliance product)
+
+**Tagline on the pricing page:** *"SOC 2 automation for early-stage teams"* (Starter) and *"SOC 2, ISO 27001, GDPR, and HIPAA — plus AI gap explanations"* (Growth).
+
+#### What it is
+A self-serve dashboard that **automates compliance evidence collection** across multiple frameworks. It connects to AWS and GitHub, runs continuous checks, and produces audit-ready evidence.
+
+#### The problem it solves
+Compliance audits (SOC 2, ISO 27001, etc.) are expensive and manual. Every quarter someone has to re-screenshot AWS settings, prove that branch protection is enabled in GitHub, prove that data is encrypted at rest, and so on. iFu Comply **does this automatically every day** and **generates a PDF evidence pack** the customer can hand to an auditor.
+
+#### Who it's for
+- **Starter tier ($299/month, annual)** — early-stage startups doing their first SOC 2.
+- **Growth tier ($799/month, annual)** — larger teams that need multiple frameworks (ISO 27001, GDPR, HIPAA, PCI DSS) plus AI features.
+
+#### Frameworks covered (77 controls total, seeded into the database)
+| Framework | # of controls | Plan tier |
+|---|---|---|
+| SOC 2 | ~25 | Starter and Growth |
+| ISO 27001 | ~30 | Growth only |
+| GDPR | ~20 | Growth only |
+| HIPAA | ~15 | Growth only |
+| PCI DSS 4.0 | 29 | Growth only — added 2026-04-25, 17 of 29 are auto-checked against AWS |
+
+#### Step-by-step user flow
+1. Sign up in the **portal**.
+2. Choose Comply → pick Starter or Growth → subscribe (Paystack) or start trial.
+3. Connect **AWS** (IAM role + external ID) and/or **GitHub** (install the GitHub App).
+4. The first scan runs and populates the dashboard.
+5. Open any control to see: pass/fail status, the evidence collected, history, AI-generated remediation guidance (Growth tier).
+6. Assign **remediation owners and due dates** for failing controls; team members track their own to-do list.
+7. Add **manual evidence** (file upload to S3) for controls that aren't auto-checked.
+8. **Export a PDF evidence pack per framework** to hand to an auditor.
+9. Track **vendor risk** (third-party SaaS providers and their certificate expiry).
+10. Get an **email and Slack alert** when a previously-passing control flips to fail (drift detection).
+
+#### Every feature it currently has
+- **Compliance dashboard** — overall score, per-framework score, failing controls, latest scan status.
+- **Controls list and detail** — filter by framework / status (pass / fail / review / not_applicable).
+- **Evidence collection** — automatic from AWS (IAM, S3, CloudTrail, RDS, GuardDuty) and GitHub (branch protection, secret scanning, CODEOWNERS); plus manual S3 file uploads.
+- **AI gap explanations** — Growth tier only. `POST /api/v1/ai/explain/:controlId` calls Anthropic Claude, with a 24-hour cache.
+- **Manual notes** per control.
+- **Remediation tracking** — owner, due date, status (open / in-progress / blocked / completed / exempted), comments. Includes a "My open remediation" card on the dashboard.
+- **Threaded comments** on controls.
+- **Bulk actions** on controls.
+- **Scans page** — list of past scans, real-time progress (BullMQ).
+- **Vendor risk register** — CRUD with certificate expiry tracking.
+- **Team management** — invite by email, four roles: `owner`, `admin`, `member`, `auditor` (auditor is read-only, blocked from any write action across the entire backend).
+- **Plan gating** — Starter is limited to SOC 2 and 3 team members; Growth unlocks everything.
+- **PDF evidence export** per framework.
+- **Outbound webhooks** — customers can register URLs to receive `scan.complete`, `control.drift`, `control.remediation_assigned`, `control.remediation_overdue` events (HMAC-SHA256 signed).
+- **Slack integration** — OAuth install, channel selection, drift + scan notifications via Block Kit.
+- **Audit log** — immutable record of every state change.
+
+#### What the API does
+Backend routes in `src/routes/`:
+- `controls.js` — list, score, detail, notes, comments, remediation, bulk update, AI explain.
+- `integrations.js` — AWS, GitHub connect / sync / disconnect.
+- `evidence.js` — list, upload, delete, PDF export.
+- `scans.js` — list, detail, manual trigger.
+- `vendors.js` — CRUD with cert expiry.
+- `team.js` — members, invitations, roles.
+- `ai.js` — Claude-powered gap explanations.
+- `plan.js` — feature gating.
+- `billing.js` — Paystack initialise, verify, webhook.
+- `webhooks.js` — outbound webhooks CRUD.
+- `slack.js` — Slack OAuth + channel management.
+
+#### Background jobs
+- **Daily compliance scan at 02:00 UTC** — runs all connected integrations, upserts control results, snapshots scores, detects pass→fail drift.
+- **Notification worker** — sends drift emails to admins and posts to Slack.
+- **Webhook worker** — delivers signed webhooks with up to 5 retries.
+- **Score-snapshot worker** — daily compliance-score snapshots for trend charts.
+
+#### Third-party integrations
+- **AWS** (live) — IAM, S3, CloudTrail, RDS, GuardDuty, Config.
+- **GitHub** (live) — GitHub App: branch protection, secret scanning, CODEOWNERS.
+- **Slack** (live) — OAuth + notifications.
+- **Anthropic Claude** (live) — AI explanations (Growth tier).
+- **Paystack** (live) — billing.
+- **Resend** (live) — transactional email.
+- **S3** (live) — evidence file storage.
+- **Postgres + Redis** (live) — data + queue + cache.
+- **Auth0** — set up as a fallback option; primary auth is local JWT.
+- **Okta** — schema/enum slot exists, **no real connector code yet** (stub).
+- **Google Workspace** — schema/enum slot exists, **no real connector code yet** (stub).
+
+---
+
+### Product 3 — Portal (the launcher)
+
+The portal is **not a product the customer pays for** — it's the entry point that ties the two SaaS products together.
+
+#### Its role
+Three jobs:
+1. **Authentication** — login, password reset, invitations.
+2. **Onboarding** — sign up, create the organisation, collect AWS role / GitHub install, pick which products to subscribe to.
+3. **Subscription management** — Paystack checkout for both products, invoice callback handling.
+
+#### How it connects to FinOps and Comply
+After login, the portal home page checks which subscriptions the user's organisation has and **routes the user** to `comply/dashboard` or `finops/dashboard` (separate Next.js apps on the same domain). The login cookie is shared because all three apps are served from the same parent domain, so the user is auto-logged-in once they cross over.
+
+#### What a user can do inside it
+- Sign up / log in / reset password / accept invitations.
+- Complete onboarding (1,400+ line single-page flow): organisation details, AWS role setup, GitHub App install, product selection, team invites.
+- Subscribe to Comply Starter, Comply Growth, or FinOps via Paystack.
+- See which products their organisation has access to and click into them.
+
+---
+
+## How the products work together
+
+- **One backend for all of it.** The Fastify API in `src/` serves the portal, comply, and finops apps. Same database, same auth, same job system.
+- **One sign-up, multiple products.** An organisation can subscribe to **just Comply, just FinOps, or both.** The `subscriptions` table has a `product` column so each product has its own plan tier and billing status independently.
+- **Shared login.** Authentication is a single **JWT cookie** set by the backend. Because the four apps (website, portal, comply, finops) all live under the same domain, the cookie travels with the user as they navigate between them. There is **no second login** when moving from portal → comply or portal → finops.
+- **Shared billing.** Paystack handles all subscription billing. There are three Paystack plan codes wired in: `PAYSTACK_COMPLY_STARTER_PLAN`, `PAYSTACK_COMPLY_GROWTH_PLAN`, `PAYSTACK_FINOPS_PLAN`. A customer who subscribes to both products gets two separate subscription rows in the database.
+- **Shared infrastructure.** AWS (Bedrock, S3, STS), Slack workspace, Redis, Postgres, and outbound webhooks are all shared between the two products.
+
+---
+
+## What we are trying to achieve
+
+Reading across the marketing site, the products, the pricing, and the engagement model, the picture is consistent:
+
+> **iFU Labs wants to be the AWS partner for startups — combining hands-on engineering services with self-serve software that handles the two most painful parts of running on AWS: cost control and compliance.**
+
+**The gap in the market** they're filling: startups can't afford a full DevOps + compliance + FinOps team, but they still get audited, still overspend, and still have to answer security questionnaires. Big-enterprise tools (Vanta, CloudHealth, Apptio) are too expensive and too heavy. iFU Labs targets the **lighter, faster, AWS-only, founder-friendly** end of that market — and uses its consultancy arm to convert customers from "we hired iFU for a project" into "we now also pay for the SaaS."
+
+**What success looks like (read from the codebase):**
+- Customers self-serve onto Comply and Costless.
+- The consultancy continues to win fixed-scope and managed-service engagements.
+- More customers subscribe to **both** SaaS products.
+- The platform expands beyond AWS-only and beyond the current 5 frameworks.
+
+---
+
+## Current state — what works, what is in progress
+
+### Fully built and working
+- ✅ Website with full pricing, services, demos, brand showcase, legal pages.
+- ✅ Portal: login, password reset, invitations, onboarding, Paystack subscribe + callback.
+- ✅ Auth (local JWT) and shared cookie across apps.
+- ✅ FinOps: 8 waste detectors, rightsizing, RI/SP coverage, forecast, AI summary, daily scheduled scan, recommendation workflow states, CSV / JSON / FOCUS 1.1 export, custom date ranges, real-time scan progress.
+- ✅ Comply: 5 frameworks (SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS — 77 controls total), AWS + GitHub auto-evidence, manual S3 uploads, AI gap explanations, daily scheduled scan, drift detection, email + Slack alerts, vendor risk, team RBAC including a read-only auditor role, PDF evidence export, audit log.
+- ✅ Outbound webhooks with HMAC signing and retry worker.
+- ✅ Slack app (OAuth, channel selection, Block Kit notifications) — added 2026-04-25.
+- ✅ Background-job system (BullMQ + node-cron) with 6 workers running.
+- ✅ Light-mode brand conversion of portal auth, onboarding, and billing pages.
+
+### Partially built
+- 🟡 **FinOps anomaly detection** — rules-based only; no ML; **the "weekly anomaly alerts" promised on the pricing page do not yet fire.**
+- 🟡 **FinOps tag-based allocation** — API endpoint exists; standalone page exists; not yet integrated into the main dashboard.
+- 🟡 **FinOps budgets** — table and endpoint exist; not yet wired to the UI or to alerts.
+- 🟡 **Comply remediation overdue alerts** — schema and assignment events are in; the daily overdue worker that pages overdue owners is not yet wired into the scheduler.
+- 🟡 **Light-mode brand conversion of the website** — homepage, about, for-startups, services, demos, legal pages are still on the old dark theme.
+
+### Planned but not yet built
+- 🔴 Trust Center with NDA-gated artifacts (Comply C1).
+- 🔴 Policy management module + employee acknowledgements (Comply C2).
+- 🔴 Employee lifecycle and security training (Comply C3).
+- 🔴 Risk register (Comply C6).
+- 🔴 Security questionnaire automation (Comply C9).
+- 🔴 Custom frameworks (Comply C10).
+- 🔴 ISO 42001 / NIST AI RMF (Comply C11).
+- 🔴 Auditor workflow + cross-framework evidence reuse (Comply C12, C13).
+- 🔴 Okta / Google Workspace connectors (Comply C5 / API A9) — directories exist, **no implementation files**.
+- 🔴 MDM / HRIS integrations (Comply C14, API A10/A11).
+- 🔴 Public REST API + API keys (API A1).
+- 🔴 Microsoft Teams, Jira / Linear, PagerDuty / Opsgenie connectors (API A4–A6).
+- 🔴 Terraform provider, GitHub Actions (API A7, A8).
+- 🔴 FinOps Kubernetes cost, multi-cloud (Azure / GCP), RI/SP autopilot (FinOps F11–F13 — explicitly deferred).
+- 🔴 Monthly FinOps PDF report (advertised in pricing copy as "monthly spend report").
+
+### Marketing-vs-reality gaps to be aware of (so the team isn't surprised on the call)
+| Pricing page promises | Reality in code |
+|---|---|
+| "Weekly anomaly alerts" (FinOps) | Anomaly detector is rules-based; no scheduled email or Slack alert is fired |
+| "Monthly spend report" (FinOps) | On-demand CSV/JSON export only — no scheduled monthly PDF |
+| "Regulatory change alerts" (Comply Growth) | No code path was found that watches regulator updates and notifies |
+| "AWS Activate credits facilitation" | Marketing claim — handled by humans, not in product code |
+
+These aren't lies — they're standard SaaS-pricing language for things that may be partly delivered by humans rather than software. But the team should know which boxes the **product** ticks vs which the **service team** delivers.
+
+---
+
+## For the team — what to focus on during testing on May 1st
+
+The smartest test of these two products is to **run the actual customer journey end-to-end** as a brand-new customer would. Here are the priority flows.
+
+### 1. Sign-up and onboarding (the portal)
+- Sign up at `portal/onboarding` with a brand-new email.
+- Create an organisation, walk through every onboarding step.
+- Provision a real AWS IAM role with the documented external ID.
+- Install the GitHub App on a real repo.
+- Pick a product, hit Paystack, complete a real (test-mode) subscription.
+- Confirm you land in the right dashboard automatically.
+
+**What to look out for:** confusing copy, broken back/forward navigation, mobile rendering, any step where a non-technical founder would be stuck.
+
+### 2. iFu Costless (FinOps) — first scan to first action
+- From a fresh account, trigger the first FinOps scan.
+- Watch the live SSE progress.
+- Read the AI summary — does it make sense?
+- Open every type of waste finding — is the recommended action clear?
+- Try the recommendation workflow: snooze something, mark something done, dismiss something with a reason.
+- Change the date range to last 90 days.
+- Export findings as CSV and as FOCUS 1.1.
+- Open the allocation API or page and try grouping by an AWS tag.
+- Wait until the next morning to confirm the **daily 03:00 UTC scan** runs without intervention.
+
+**What to look out for:** does any waste finding feel wrong, expensive to act on, or scary to apply? Is the savings number believable?
+
+### 3. iFu Comply — first scan to first PDF
+- Connect AWS and GitHub from a fresh org.
+- Run the first compliance scan — let it complete.
+- Open the dashboard score and per-framework scores.
+- Open a passing control and a failing control — is the evidence convincing?
+- Try the AI explanation on a failing control (Growth tier).
+- Add a manual notes entry, upload a manual S3 evidence file.
+- Assign a remediation owner and due date to a failing control. Confirm it shows up under "My open remediation."
+- Invite a teammate as `auditor` — log in as them and confirm they can read everything but cannot edit anything.
+- Trigger a control drift (flip a passing control by changing AWS state) — does the email arrive? Does Slack arrive?
+- Export a SOC 2 PDF evidence pack.
+- Add a vendor with a soon-to-expire certificate.
+
+**What to look out for:** does the PDF feel audit-ready? Does the AI explanation actually help, or is it generic? Is the auditor role truly read-only?
+
+### 4. Cross-product flow
+- Subscribe one organisation to **both** Comply and FinOps. Confirm both show up on the portal launcher and that switching between them is seamless (no second login).
+- Cancel one subscription and confirm the launcher and gating respond correctly.
+
+### 5. Mobile
+- Walk all of the above on a phone (375px–414px width). Mobile optimisation was just shipped — this is a good time to spot anything still broken.
+
+### 6. Notifications
+- Register an outbound webhook (e.g. via webhook.site) and confirm `scan.complete`, `control.drift`, and `control.remediation_assigned` all arrive with valid HMAC signatures.
+- Install the Slack app and confirm drift + scan notifications post into the chosen channel.
+
+### Things NOT to test on May 1st (because they aren't built yet)
+- Trust Center, policy management, employee training, risk register, questionnaire automation.
+- Okta / Google Workspace integrations.
+- Multi-cloud (Azure / GCP) cost.
+- Kubernetes cost.
+- RI / SP auto-purchase.
+- Public API / API keys.
+- Custom frameworks.
+
+---
+
+*Document lives at `TEAM_OVERVIEW.md` in the repo root. Built read-only from the codebase on 2026-04-26.*

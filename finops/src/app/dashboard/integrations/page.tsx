@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Cloud, CheckCircle, AlertCircle, RefreshCw, Plus } from 'lucide-react'
+import { Cloud, CheckCircle, AlertCircle, RefreshCw, Plus, MessageSquare, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 
 interface Integration {
@@ -21,10 +21,16 @@ export default function IntegrationsPage() {
   const [awsAccountId, setAwsAccountId] = useState('385936845264')
   const [connecting, setConnecting] = useState(false)
   const [error, setError] = useState('')
+  const [slackStatus, setSlackStatus] = useState<any>(null)
 
   useEffect(() => {
     loadIntegrations()
     loadAwsSetupInfo()
+    // Load Slack status
+    fetch('/api/v1/slack', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setSlackStatus(data))
+      .catch(() => {})
   }, [])
 
   const loadAwsSetupInfo = async () => {
@@ -258,6 +264,74 @@ export default function IntegrationsPage() {
               </div>
             )}
           </>
+        )}
+      </div>
+
+      {/* Slack */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-[#4A154B]/10 rounded-lg flex items-center justify-center">
+              <MessageSquare size={24} style={{ color: '#4A154B' }} />
+            </div>
+            <div>
+              <h2 className="text-base font-medium text-ink">Slack</h2>
+              <p className="text-xs text-muted">Cost alerts and anomaly notifications</p>
+            </div>
+          </div>
+          {slackStatus?.connected ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-light text-green">
+              <CheckCircle size={12} /> Connected
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-border text-muted">
+              Not connected
+            </div>
+          )}
+        </div>
+
+        {slackStatus?.connected ? (
+          <div className="space-y-3">
+            <div className="text-sm">
+              <span className="text-muted">Workspace:</span>{' '}
+              <span className="font-mono text-ink">{slackStatus.teamName}</span>
+            </div>
+            {slackStatus.channelName && (
+              <div className="text-sm">
+                <span className="text-muted">Channel:</span>{' '}
+                <span className="font-mono text-ink">#{slackStatus.channelName}</span>
+              </div>
+            )}
+            <button
+              onClick={async () => {
+                if (!confirm('Disconnect Slack?')) return
+                await fetch('/api/v1/slack', { method: 'DELETE', credentials: 'include' })
+                setSlackStatus(null)
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted hover:text-danger border border-border rounded transition-all"
+            >
+              <Trash2 size={14} /> Disconnect
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm text-muted mb-4">
+              Get real-time cost anomaly and budget alerts in your Slack workspace.
+            </p>
+            <button
+              onClick={async () => {
+                const res = await fetch('/api/v1/slack/install', { credentials: 'include' })
+                if (res.ok) {
+                  const { installUrl } = await res.json()
+                  window.location.href = installUrl
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-white transition-all"
+              style={{ background: '#4A154B' }}
+            >
+              <Plus size={16} /> Add to Slack
+            </button>
+          </div>
         )}
       </div>
 

@@ -6,7 +6,7 @@ import { api } from '@/lib/api'
 type Integration = any
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Plus, CheckCircle, XCircle, AlertCircle, RefreshCw, Trash2, Cloud, GitBranch } from 'lucide-react'
+import { Plus, CheckCircle, XCircle, AlertCircle, RefreshCw, Trash2, Cloud, GitBranch, MessageSquare } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
 
@@ -17,6 +17,8 @@ export default function IntegrationsPage() {
   const [syncing, setSyncing] = useState<string | null>(null)
   const [autoConnecting, setAutoConnecting] = useState(false)
   const [autoConnectError, setAutoConnectError] = useState('')
+  const [slackStatus, setSlackStatus] = useState<any>(null)
+  const [slackLoading, setSlackLoading] = useState(true)
   const searchParams = useSearchParams()
 
   const awsIntegration    = integrations?.find(i => i.type === 'aws')
@@ -53,6 +55,36 @@ export default function IntegrationsPage() {
         })
     }
   }, [searchParams, githubIntegration])
+
+  // Load Slack status
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/slack`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setSlackStatus(data))
+      .catch(() => {})
+      .finally(() => setSlackLoading(false))
+  }, [])
+
+  const handleSlackConnect = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/slack/install`, { credentials: 'include' })
+      if (res.ok) {
+        const { installUrl } = await res.json()
+        window.location.href = installUrl
+      }
+    } catch (err) {
+      console.error('Failed to start Slack install:', err)
+    }
+  }
+
+  const handleSlackDisconnect = async () => {
+    if (!confirm('Disconnect Slack? You will stop receiving notifications.')) return
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/slack`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+    setSlackStatus(null)
+  }
 
   const handleSync = async (id: string) => {
     setSyncing(id)
@@ -141,6 +173,55 @@ export default function IntegrationsPage() {
           />
         )}
       </IntegrationCard>
+
+      {/* Slack */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="flex items-center gap-4 px-6 py-5 border-b border-border">
+          <div className="w-10 h-10 bg-[#4A154B]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+            <MessageSquare size={18} style={{ color: '#4A154B' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm font-medium text-ink">Slack</h2>
+            <p className="text-xs text-muted mt-0.5 truncate">Real-time compliance and cost alerts in your Slack workspace</p>
+          </div>
+          {slackStatus?.connected ? (
+            <span className="flex items-center gap-1 font-mono text-xs px-2 py-1 rounded text-accent bg-accent-light flex-shrink-0">
+              <CheckCircle size={12} /> Connected
+            </span>
+          ) : (
+            <button
+              onClick={handleSlackConnect}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded transition-all flex-shrink-0"
+              style={{ background: '#4A154B', color: '#fff' }}
+            >
+              <Plus size={12} /> Add to Slack
+            </button>
+          )}
+        </div>
+
+        {slackStatus?.connected && (
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-6 text-xs font-mono mb-4">
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-muted mb-1">Workspace</div>
+                <div className="text-ink">{slackStatus.teamName}</div>
+              </div>
+              {slackStatus.channelName && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted mb-1">Channel</div>
+                  <div className="text-ink">#{slackStatus.channelName}</div>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleSlackDisconnect}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded hover:border-danger/30 hover:text-danger transition-all text-muted"
+            >
+              <Trash2 size={12} /> Disconnect
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Coming soon */}
       {[
