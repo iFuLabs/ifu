@@ -84,6 +84,7 @@ export default function IntegrationsPage() {
       credentials: 'include'
     })
     setSlackStatus(null)
+    window.location.reload()
   }
 
   const handleSync = async (id: string) => {
@@ -96,6 +97,7 @@ export default function IntegrationsPage() {
     if (!confirm('Disconnect this integration? Scan history will be preserved.')) return
     await api.integrations.disconnect(id)
     mutate()
+    window.location.reload()
   }
 
   return (

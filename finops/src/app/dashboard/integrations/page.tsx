@@ -163,15 +163,34 @@ export default function IntegrationsPage() {
             {awsIntegration.lastError && (
               <div className="text-xs text-danger bg-danger/5 border border-danger/20 rounded p-2">
                 {awsIntegration.lastError}
+                <button
+                  onClick={() => setShowAwsForm(true)}
+                  className="text-danger underline mt-1 font-medium block"
+                >
+                  Reconnect →
+                </button>
               </div>
             )}
-            <button
-              onClick={loadIntegrations}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted hover:text-ink border border-border rounded transition-all"
-            >
-              <RefreshCw size={14} />
-              Refresh status
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={loadIntegrations}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted hover:text-ink border border-border rounded transition-all"
+              >
+                <RefreshCw size={14} />
+                Refresh status
+              </button>
+              <button
+                onClick={async () => {
+                  if (!confirm('Disconnect AWS? Scan history will be preserved.')) return
+                  const res = await fetch(`/api/v1/integrations/${awsIntegration.id}`, { method: 'DELETE', credentials: 'include' })
+                  if (res.ok) window.location.reload()
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted hover:text-danger border border-border rounded transition-all"
+              >
+                <Trash2 size={14} />
+                Disconnect
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -307,6 +326,7 @@ export default function IntegrationsPage() {
                 if (!confirm('Disconnect Slack?')) return
                 await fetch('/api/v1/slack', { method: 'DELETE', credentials: 'include' })
                 setSlackStatus(null)
+                window.location.reload()
               }}
               className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted hover:text-danger border border-border rounded transition-all"
             >
