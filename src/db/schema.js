@@ -196,105 +196,6 @@ export const auditLog = pgTable('audit_log', {
 ])
 
 
-// ── Relations ──────────────────────────────────────────────────────────────
-export const organizationsRelations = relations(organizations, ({ many }) => ({
-  users: many(users),
-  integrations: many(integrations),
-  controlResults: many(controlResults),
-  scans: many(scans),
-  evidenceItems: many(evidenceItems),
-  vendors: many(vendors),
-  auditLogs: many(auditLog),
-  invitations: many(invitations),
-  subscriptions: many(subscriptions)
-}))
-
-export const usersRelations = relations(users, ({ one, many }) => ({
-  org: one(organizations, {
-    fields: [users.orgId],
-    references: [organizations.id]
-  }),
-  auditLogs: many(auditLog),
-  invitationsSent: many(invitations)
-}))
-
-export const integrationsRelations = relations(integrations, ({ one }) => ({
-  org: one(organizations, {
-    fields: [integrations.orgId],
-    references: [organizations.id]
-  })
-}))
-
-export const controlResultsRelations = relations(controlResults, ({ one, many }) => ({
-  org: one(organizations, {
-    fields: [controlResults.orgId],
-    references: [organizations.id]
-  }),
-  controlDef: one(controlDefinitions, {
-    fields: [controlResults.controlDefId],
-    references: [controlDefinitions.id]
-  }),
-  evidenceItems: many(evidenceItems)
-}))
-
-export const evidenceItemsRelations = relations(evidenceItems, ({ one }) => ({
-  org: one(organizations, {
-    fields: [evidenceItems.orgId],
-    references: [organizations.id]
-  }),
-  controlResult: one(controlResults, {
-    fields: [evidenceItems.controlResultId],
-    references: [controlResults.id]
-  })
-}))
-
-export const vendorsRelations = relations(vendors, ({ one }) => ({
-  org: one(organizations, {
-    fields: [vendors.orgId],
-    references: [organizations.id]
-  })
-}))
-
-export const scansRelations = relations(scans, ({ one }) => ({
-  org: one(organizations, {
-    fields: [scans.orgId],
-    references: [organizations.id]
-  })
-}))
-
-export const auditLogRelations = relations(auditLog, ({ one }) => ({
-  org: one(organizations, {
-    fields: [auditLog.orgId],
-    references: [organizations.id]
-  }),
-  user: one(users, {
-    fields: [auditLog.userId],
-    references: [users.id]
-  })
-}))
-
-export const invitationsRelations = relations(invitations, ({ one }) => ({
-  org: one(organizations, {
-    fields: [invitations.orgId],
-    references: [organizations.id]
-  }),
-  inviter: one(users, {
-    fields: [invitations.invitedBy],
-    references: [users.id]
-  })
-}))
-
-export const finopsRecommendationStatesRelations = relations(finopsRecommendationStates, ({ one }) => ({
-  org: one(organizations, {
-    fields: [finopsRecommendationStates.orgId],
-    references: [organizations.id]
-  }),
-  updatedByUser: one(users, {
-    fields: [finopsRecommendationStates.updatedBy],
-    references: [users.id]
-  })
-}))
-
 // ── Password Reset Tokens ──────────────────────────────────────────────────
 export const passwordResetTokens = pgTable('password_reset_tokens', {
   id:             uuid('id').primaryKey().defaultRandom(),
@@ -327,12 +228,6 @@ export const subscriptions = pgTable('subscriptions', {
   index('idx_subscriptions_status').on(table.status)
 ])
 
-export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
-  org: one(organizations, {
-    fields: [subscriptions.orgId],
-    references: [organizations.id]
-  })
-}))
 
 // ── Webhooks (outbound) ────────────────────────────────────────────────────
 export const webhooks = pgTable('webhooks', {
@@ -517,18 +412,54 @@ export const slackWorkspaces = pgTable('slack_workspaces', {
 ])
 
 
-// ── Webhooks relations (must be after table definitions) ───────────────────
+// ── ALL Relations (after all table definitions) ────────────────────────────
+
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  users: many(users), integrations: many(integrations), controlResults: many(controlResults),
+  scans: many(scans), evidenceItems: many(evidenceItems), vendors: many(vendors),
+  auditLogs: many(auditLog), invitations: many(invitations), subscriptions: many(subscriptions)
+}))
+export const usersRelations = relations(users, ({ one, many }) => ({
+  org: one(organizations, { fields: [users.orgId], references: [organizations.id] }),
+  auditLogs: many(auditLog), invitationsSent: many(invitations)
+}))
+export const integrationsRelations = relations(integrations, ({ one }) => ({
+  org: one(organizations, { fields: [integrations.orgId], references: [organizations.id] })
+}))
+export const controlResultsRelations = relations(controlResults, ({ one, many }) => ({
+  org: one(organizations, { fields: [controlResults.orgId], references: [organizations.id] }),
+  controlDef: one(controlDefinitions, { fields: [controlResults.controlDefId], references: [controlDefinitions.id] }),
+  evidenceItems: many(evidenceItems)
+}))
+export const evidenceItemsRelations = relations(evidenceItems, ({ one }) => ({
+  org: one(organizations, { fields: [evidenceItems.orgId], references: [organizations.id] }),
+  controlResult: one(controlResults, { fields: [evidenceItems.controlResultId], references: [controlResults.id] })
+}))
+export const vendorsRelations = relations(vendors, ({ one }) => ({
+  org: one(organizations, { fields: [vendors.orgId], references: [organizations.id] })
+}))
+export const scansRelations = relations(scans, ({ one }) => ({
+  org: one(organizations, { fields: [scans.orgId], references: [organizations.id] })
+}))
+export const auditLogRelations = relations(auditLog, ({ one }) => ({
+  org: one(organizations, { fields: [auditLog.orgId], references: [organizations.id] }),
+  user: one(users, { fields: [auditLog.userId], references: [users.id] })
+}))
+export const invitationsRelations = relations(invitations, ({ one }) => ({
+  org: one(organizations, { fields: [invitations.orgId], references: [organizations.id] }),
+  inviter: one(users, { fields: [invitations.invitedBy], references: [users.id] })
+}))
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  org: one(organizations, { fields: [subscriptions.orgId], references: [organizations.id] })
+}))
 export const webhooksRelations = relations(webhooks, ({ one, many }) => ({
-  org: one(organizations, {
-    fields: [webhooks.orgId],
-    references: [organizations.id]
-  }),
+  org: one(organizations, { fields: [webhooks.orgId], references: [organizations.id] }),
   deliveries: many(webhookDeliveries)
 }))
-
 export const webhookDeliveriesRelations = relations(webhookDeliveries, ({ one }) => ({
-  webhook: one(webhooks, {
-    fields: [webhookDeliveries.webhookId],
-    references: [webhooks.id]
-  })
+  webhook: one(webhooks, { fields: [webhookDeliveries.webhookId], references: [webhooks.id] })
+}))
+export const finopsRecommendationStatesRelations = relations(finopsRecommendationStates, ({ one }) => ({
+  org: one(organizations, { fields: [finopsRecommendationStates.orgId], references: [organizations.id] }),
+  updatedByUser: one(users, { fields: [finopsRecommendationStates.updatedBy], references: [users.id] })
 }))
