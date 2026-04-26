@@ -3,7 +3,6 @@ import { db } from '../db/client.js'
 import { anomalies, budgets, organizations } from '../db/schema.js'
 import { eq, and } from 'drizzle-orm'
 import { logger } from './logger.js'
-import { sendAnomalyAlertEmail, sendBudgetAlertEmail } from './email.js'
 import { dispatchWebhook } from './webhooks.js'
 
 /**
