@@ -31,3 +31,58 @@ body {
   .font-serif { font-family: var(--font-pp-fragment); }
   .font-mono  { font-family: var(--font-aeonik-fono); }
 }
+
+/* ── MOBILE OPTIMIZATION PASS ──────────────────────────────────── */
+
+html, body { max-width: 100%; overflow-x: hidden; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+
+/* Prevent iOS zoom on input focus */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Reduce heavy page padding on mobile */
+  .p-6 { padding: 16px !important; }
+  .p-8 { padding: 20px !important; }
+  .px-6 { padding-left: 16px !important; padding-right: 16px !important; }
+  .py-6 { padding-top: 16px !important; padding-bottom: 16px !important; }
+
+  /* Hardcoded widths break on phones */
+  .w-52, .w-64, .w-72 { width: 100% !important; }
+
+  /* 4-column stat grids on phones become 2 columns max */
+  .grid.grid-cols-2.md\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  /* Filter rows / toolbars: stack on phones */
+  .flex.gap-3.items-center,
+  .flex.gap-4.items-center {
+    flex-wrap: wrap;
+  }
+
+  /* Tables / horizontal data rows allow scroll */
+  .overflow-x-mobile { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Touch targets: ensure buttons in dashboard are tappable */
+  button, [role="button"], a.btn, .clickable {
+    min-height: 40px;
+  }
+
+  /* Mobile header menu button */
+  header button, .lg\:hidden button { min-height: 40px; min-width: 40px; }
+
+  /* Modals: full width with side margins */
+  .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
+/* Tablet collapse for very narrow grids */
+@media (max-width: 480px) {
+  .grid.grid-cols-2 { grid-template-columns: 1fr !important; }
+  .gap-6 { gap: 14px !important; }
+  .gap-8 { gap: 16px !important; }
+}
