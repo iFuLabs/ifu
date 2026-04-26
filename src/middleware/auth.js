@@ -76,13 +76,24 @@ async function verifyToken(request, reply) {
   }
 }
 
-// Require user to have a fully onboarded account + org
+// Require user to have a fully onboarded account + org.
+// Auditor role is read-only — blocked on any write method.
 async function requireUser(request, reply) {
   if (!request.user) {
     return reply.status(403).send({
       error: 'Forbidden',
       message: 'Complete onboarding first',
       code: 'ONBOARDING_REQUIRED'
+    })
+  }
+  if (
+    request.user.role === 'auditor' &&
+    ['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method)
+  ) {
+    return reply.status(403).send({
+      error: 'Forbidden',
+      message: 'Auditor accounts are read-only',
+      code: 'AUDITOR_READONLY'
     })
   }
 }
@@ -104,6 +115,39 @@ async function requireOwner(request, reply) {
   }
 }
 
+// Require user to have one of the given roles. Roles: owner | admin | member | auditor
+function requireRole(roles) {
+  if (!Array.isArray(roles) || roles.length === 0) {
+    throw new Error('requireRole: must pass a non-empty array of roles')
+  }
+  return async function (request, reply) {
+    if (!request.user) {
+      return reply.status(403).send({ error: 'Forbidden', message: 'Authentication required' })
+    }
+    if (!roles.includes(request.user.role)) {
+      return reply.status(403).send({
+        error: 'Forbidden',
+        message: `This action requires one of: ${roles.join(', ')}`,
+        code: 'ROLE_FORBIDDEN'
+      })
+    }
+  }
+}
+
+// Block auditor (read-only) from any write action. Allows owner | admin | member.
+async function requireWrite(request, reply) {
+  if (!request.user) {
+    return reply.status(403).send({ error: 'Forbidden', message: 'Authentication required' })
+  }
+  if (request.user.role === 'auditor') {
+    return reply.status(403).send({
+      error: 'Forbidden',
+      message: 'Auditor accounts are read-only',
+      code: 'AUDITOR_READONLY'
+    })
+  }
+}
+
 // Plugin that decorates fastify with auth hooks
 async function authPlugin(fastify) {
   // Decorate request with auth properties
@@ -118,6 +162,8 @@ async function authPlugin(fastify) {
   fastify.decorate('requireUser', requireUser)
   fastify.decorate('requireAdmin', requireAdmin)
   fastify.decorate('requireOwner', requireOwner)
+  fastify.decorate('requireRole', requireRole)
+  fastify.decorate('requireWrite', requireWrite)
 }
 
-export { authPlugin, verifyToken, requireUser, requireAdmin, requireOwner }
+export { authPlugin, verifyToken, requireUser, requireAdmin, requireOwner, requireRole, requireWrite }

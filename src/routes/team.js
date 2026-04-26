@@ -10,7 +10,7 @@ import { getMaxTeamMembers } from '../middleware/plan.js'
 
 const inviteSchema = z.object({
   email: z.string().email(),
-  role: z.enum(['admin', 'member']),
+  role: z.enum(['admin', 'member', 'auditor']),
   product: z.enum(['comply', 'finops']).optional().default('comply')
 })
 
@@ -68,7 +68,7 @@ export default async function teamRoutes(fastify) {
         required: ['email', 'role'],
         properties: {
           email: { type: 'string' },
-          role: { type: 'string', enum: ['admin', 'member'] }
+          role: { type: 'string', enum: ['admin', 'member', 'auditor'] }
         }
       }
     }

@@ -26,7 +26,7 @@ export default function TeamPage() {
 
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member')
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'auditor'>('member')
   const [inviting, setInviting] = useState(false)
   const [error, setError] = useState('')
   const [inviteUrl, setInviteUrl] = useState('')
@@ -254,11 +254,12 @@ export default function TeamPage() {
                     <label className="block text-sm font-medium text-ink mb-2">Role</label>
                     <select
                       value={inviteRole}
-                      onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+                      onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member' | 'auditor')}
                       className="w-full px-3 py-2 bg-bg border border-border rounded-lg text-sm text-ink focus:outline-none focus:border-accent"
                     >
                       <option value="member">Member — Can view and manage controls</option>
                       <option value="admin">Admin — Can manage team and settings</option>
+                      <option value="auditor">Auditor — Read-only access to all data</option>
                     </select>
                   </div>
 
