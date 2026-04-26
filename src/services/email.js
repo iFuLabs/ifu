@@ -262,3 +262,58 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
     return { success: false, error: err.message }
   }
 }
+
+
+/**
+ * Send control drift alert email (controls that flipped pass → fail)
+ */
+export async function sendControlDriftEmail({ to, orgName, drifted, scanId }) {
+  try {
+    const emailConfig = getEmailConfig('alerts')
+    const controlList = drifted.slice(0, 10).map(c =>
+      `<li><strong>${c.controlId}</strong> — ${c.title} <span style="color: #B42318;">(${c.framework})</span></li>`
+    ).join('')
+    const moreText = drifted.length > 10 ? `<p style="color: #6b7280; font-size: 13px;">+${drifted.length - 10} more controls affected</p>` : ''
+
+    const recipients = Array.isArray(to) ? to : [to]
+
+    const { data, error } = await resend.emails.send({
+      ...emailConfig,
+      to: recipients,
+      subject: `⚠️ ${drifted.length} control(s) drifted — ${orgName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head><meta charset="utf-8"></head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: #33063D; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                <img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 36px; width: auto;" />
+              </div>
+              <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+                <div style="background: #FEF3F2; border-left: 4px solid #B42318; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #B42318; font-weight: 600;">${drifted.length} control(s) flipped from pass to fail</p>
+                </div>
+                <p>Hi team,</p>
+                <p>A compliance scan for <strong>${orgName}</strong> detected controls that were previously passing but are now failing:</p>
+                <ul style="padding-left: 20px;">${controlList}</ul>
+                ${moreText}
+                <a href="${PORTAL_URL}" style="display: inline-block; background: #33063D; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0; font-weight: 500;">View in Dashboard</a>
+                <p style="color: #6b7280; font-size: 13px; margin-top: 20px;">Scan ID: ${scanId}</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `
+    })
+
+    if (error) {
+      console.error('Failed to send drift email:', error)
+      return { success: false, error }
+    }
+    return { success: true, data }
+  } catch (err) {
+    console.error('Drift email error:', err)
+    return { success: false, error: err.message }
+  }
+}
