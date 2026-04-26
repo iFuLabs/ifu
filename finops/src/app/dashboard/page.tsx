@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { TrendingDown, AlertTriangle, Zap, BarChart2, RefreshCw, ChevronDown, ChevronUp, DollarSign, ArrowRight, Check, Clock, X } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { TrendingDown, AlertTriangle, Zap, BarChart2, RefreshCw, ChevronDown, ChevronUp, DollarSign, ArrowRight, Check, Clock, X, Copy, MapPin } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts'
 import clsx from 'clsx'
 
 interface Finding {
@@ -62,7 +62,7 @@ interface Summary {
   checkedAt: string
 }
 
-type RecommendationState = 'open' | 'snoozed' | 'done'
+type RecommendationState = 'open' | 'snoozed' | 'done' | 'dismissed'
 
 interface RecommendationStateData {
   id: string
@@ -71,6 +71,8 @@ interface RecommendationStateData {
   state: RecommendationState
   notes?: string
   snoozedUntil?: string
+  dismissalReason?: string
+  dismissalNote?: string
 }
 
 export default function FinOpsPage() {
@@ -79,10 +81,43 @@ export default function FinOpsPage() {
   const [progress, setProgress] = useState(0)
   const [statusMsg, setStatusMsg] = useState('')
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'waste' | 'rightsizing' | 'coverage'>('waste')
+  const [activeTab, setActiveTab] = useState<'waste' | 'rightsizing' | 'commitments' | 'alerts'>('waste')
   const [states, setStates] = useState<Map<string, RecommendationStateData>>(new Map())
   const [stateFilter, setStateFilter] = useState<RecommendationState | 'all'>('all')
   const esRef = useRef<EventSource | null>(null)
+
+  // F-A3: Anomalies and budgets state
+  const [alertAnomalies, setAlertAnomalies] = useState<any[]>([])
+  const [alertBudgets, setAlertBudgets] = useState<any[]>([])
+
+  // F-A8: Purchase recommendations
+  const [purchaseRecs, setPurchaseRecs] = useState<any>(null)
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/v1/budgets/anomalies?status=open').then(r => r.ok ? r.json() : []),
+      fetch('/api/v1/budgets').then(r => r.ok ? r.json() : []),
+      fetch('/api/v1/finops/purchase-recommendations').then(r => r.ok ? r.json() : null)
+    ]).then(([anomalyData, budgetData, purchaseData]) => {
+      setAlertAnomalies(Array.isArray(anomalyData) ? anomalyData : [])
+      setAlertBudgets(Array.isArray(budgetData) ? budgetData : [])
+      if (purchaseData) setPurchaseRecs(purchaseData)
+    }).catch(() => {})
+  }, [])
+
+  // F-A2: Trend chart state
+  const [trend, setTrend] = useState<any>(null)
+  const [trendDays, setTrendDays] = useState<30 | 90 | 180>(90)
+  const [trendLoading, setTrendLoading] = useState(false)
+
+  // Load trend data
+  useEffect(() => {
+    setTrendLoading(true)
+    fetch(`/api/v1/finops/trend?days=${trendDays}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setTrend(data) })
+      .catch(() => {})
+      .finally(() => setTrendLoading(false))
+  }, [trendDays])
 
   // Load cached findings and states on mount
   useEffect(() => {
@@ -141,12 +176,12 @@ export default function FinOpsPage() {
     setScanning(false)
   }
 
-  const updateState = async (resourceId: string, category: 'waste' | 'rightsizing', newState: RecommendationState) => {
+  const updateState = async (resourceId: string, category: 'waste' | 'rightsizing', newState: RecommendationState, extra?: { snoozedUntil?: string; dismissalReason?: string; dismissalNote?: string }) => {
     try {
       const response = await fetch(`/api/v1/finops/recommendations/${encodeURIComponent(resourceId)}/state`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, state: newState })
+        body: JSON.stringify({ category, state: newState, ...extra })
       })
       
       if (response.ok) {
@@ -297,6 +332,87 @@ export default function FinOpsPage() {
             />
           </div>
 
+          {/* F-A2: Cost trend chart */}
+          {trend && trend.series?.length > 0 && (
+            <div className="bg-card border border-border rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-sm font-medium text-ink">Cost trend</h2>
+                  {trend.previousTotal > 0 && (() => {
+                    const delta = trend.total - trend.previousTotal
+                    const pct = ((delta / trend.previousTotal) * 100).toFixed(1)
+                    const isUp = delta > 0
+                    return (
+                      <p className="text-xs mt-1" style={{ color: isUp ? '#B42318' : '#067647' }}>
+                        {isUp ? '↑' : '↓'} ${Math.abs(Math.round(delta)).toLocaleString()} ({isUp ? '+' : ''}{pct}%) vs prior period
+                      </p>
+                    )
+                  })()}
+                </div>
+                <div className="flex gap-1 bg-surface border border-border rounded-lg p-0.5">
+                  {([30, 90, 180] as const).map(d => (
+                    <button
+                      key={d}
+                      onClick={() => setTrendDays(d)}
+                      className={clsx(
+                        'px-3 py-1 text-xs font-medium rounded transition-all',
+                        trendDays === d ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink'
+                      )}
+                    >
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {trendLoading ? (
+                <div className="h-[200px] flex items-center justify-center">
+                  <RefreshCw size={16} className="animate-spin text-muted" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={trend.series} margin={{ left: 0, right: 0, top: 4, bottom: 0 }}>
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10 }}
+                      tickFormatter={d => new Date(d).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+                      interval={Math.floor(trend.series.length / 6)}
+                    />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `$${v}`} width={50} />
+                    <Tooltip
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid rgba(51,6,61,0.12)' }}
+                      formatter={(v: number, name: string) => [`$${v.toFixed(2)}`, name.replace('Amazon ', '').replace('AWS ', '')]}
+                      labelFormatter={d => new Date(d).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    />
+                    {(trend.topServices || []).map((svc: string, i: number) => {
+                      const colors = ['#8A63E6', '#DAC0FD', '#C8F6C0', '#FEDF89', '#FCA5A5']
+                      return (
+                        <Area
+                          key={svc}
+                          type="monotone"
+                          dataKey={`byService.${svc}`}
+                          name={svc}
+                          stackId="1"
+                          fill={colors[i] || '#D1D5DB'}
+                          stroke={colors[i] || '#D1D5DB'}
+                          fillOpacity={0.6}
+                        />
+                      )
+                    })}
+                    <Area
+                      type="monotone"
+                      dataKey="byService.Other"
+                      name="Other"
+                      stackId="1"
+                      fill="#D1D5DB"
+                      stroke="#D1D5DB"
+                      fillOpacity={0.4}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          )}
+
           {/* Top services chart */}
           {findings.topServices?.length > 0 && (
             <div className="bg-card border border-border rounded-xl p-5">
@@ -325,7 +441,7 @@ export default function FinOpsPage() {
           {/* Tabs and filter */}
           <div className="flex items-center justify-between">
             <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
-              {(['waste', 'rightsizing', 'coverage'] as const).map(tab => (
+              {(['waste', 'rightsizing', 'commitments', 'alerts'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -338,14 +454,15 @@ export default function FinOpsPage() {
                 >
                   {tab === 'waste' && `Waste (${filterItems(findings.waste, 'waste').length})`}
                   {tab === 'rightsizing' && `Rightsizing (${filterItems(findings.rightsizing, 'rightsizing').length})`}
-                  {tab === 'coverage' && `Coverage gaps (${findings.summary.coverageGaps})`}
+                  {tab === 'commitments' && `Commitments`}
+                  {tab === 'alerts' && `Alerts (${alertAnomalies.length})`}
                 </button>
               ))}
             </div>
 
             {(activeTab === 'waste' || activeTab === 'rightsizing') && (
               <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
-                {(['all', 'open', 'snoozed', 'done'] as const).map(filter => (
+                {(['all', 'open', 'snoozed', 'done', 'dismissed'] as const).map(filter => (
                   <button
                     key={filter}
                     onClick={() => setStateFilter(filter)}
@@ -356,7 +473,10 @@ export default function FinOpsPage() {
                         : 'text-muted hover:text-ink'
                     )}
                   >
-                    {filter}
+                    {filter}{filter === 'done' ? (() => {
+                      const doneItems = [...states.values()].filter(s => s.state === 'done')
+                      return doneItems.length > 0 ? ` (${doneItems.length})` : ''
+                    })() : ''}
                   </button>
                 ))}
               </div>
@@ -380,7 +500,7 @@ export default function FinOpsPage() {
                       key={i} 
                       item={item} 
                       state={getState(item.resourceId, 'waste')}
-                      onStateChange={(newState) => updateState(item.resourceId, 'waste', newState)}
+                      onStateChange={(newState, extra) => updateState(item.resourceId, 'waste', newState, extra)}
                     />
                   ))
               )}
@@ -404,23 +524,199 @@ export default function FinOpsPage() {
                       key={i} 
                       item={item}
                       state={getState(item.resourceId, 'rightsizing')}
-                      onStateChange={(newState) => updateState(item.resourceId, 'rightsizing', newState)}
+                      onStateChange={(newState, extra) => updateState(item.resourceId, 'rightsizing', newState, extra)}
                     />
                   ))
               )}
             </div>
           )}
 
-          {/* Coverage tab */}
-          {activeTab === 'coverage' && (
-            <div className="space-y-2">
-              {[...findings.reservations, ...findings.savingsPlans].length === 0 ? (
-                <EmptyState icon="—" title="No coverage data" desc="Coverage data requires sufficient spend history in Cost Explorer." />
-              ) : (
-                [...findings.reservations, ...findings.savingsPlans]
-                  .sort((a, b) => a.coveragePercentage - b.coveragePercentage)
-                  .map((item, i) => <CoverageCard key={i} item={item} />)
+          {/* Commitments tab (F-A8) — replaces old coverage tab */}
+          {activeTab === 'commitments' && (
+            <div className="space-y-4">
+              {/* Current coverage from existing findings */}
+              {[...findings.reservations, ...findings.savingsPlans].length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-ink mb-2">Current coverage</h3>
+                  <div className="space-y-2">
+                    {[...findings.reservations, ...findings.savingsPlans]
+                      .sort((a, b) => a.coveragePercentage - b.coveragePercentage)
+                      .map((item, i) => <CoverageCard key={i} item={item} />)}
+                  </div>
+                </div>
               )}
+
+              {/* Purchase recommendations */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-ink">Purchase recommendations</h3>
+                  {purchaseRecs?.totalAnnualSavings > 0 && (
+                    <span className="font-mono text-sm font-semibold text-green">
+                      ${purchaseRecs.totalAnnualSavings.toLocaleString()}/yr potential savings
+                    </span>
+                  )}
+                </div>
+
+                {!purchaseRecs ? (
+                  <div className="bg-card border border-border rounded-xl px-6 py-8 text-center">
+                    <RefreshCw size={20} className="animate-spin text-muted mx-auto mb-2" />
+                    <p className="text-sm text-muted">Loading recommendations...</p>
+                  </div>
+                ) : (purchaseRecs.savingsPlans.length === 0 && purchaseRecs.reservations.length === 0) ? (
+                  <div className="bg-card border border-border rounded-xl px-6 py-8 text-center">
+                    <p className="text-sm font-medium text-ink">No purchase recommendations</p>
+                    <p className="text-xs text-muted mt-1">Requires sufficient spend history in Cost Explorer</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {purchaseRecs.savingsPlans.map((sp: any, i: number) => (
+                      <div key={`sp-${i}`} className="bg-card border border-border rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-ink">{sp.savingsPlansType} Savings Plan</span>
+                            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-accent-light text-accent">{sp.term} · {sp.paymentOption}</span>
+                          </div>
+                          <span className="font-mono text-sm font-semibold text-green">${sp.estimatedMonthlySavings}/mo</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4 text-xs mt-3">
+                          <div>
+                            <span className="text-muted block">Hourly commitment</span>
+                            <span className="font-mono text-ink">${sp.hourlyCommitment}/hr</span>
+                          </div>
+                          <div>
+                            <span className="text-muted block">Upfront cost</span>
+                            <span className="font-mono text-ink">${sp.upfrontCost.toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted block">Break-even</span>
+                            <span className="font-mono text-ink">{sp.breakEvenMonths} months</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {purchaseRecs.reservations.map((ri: any, i: number) => (
+                      <div key={`ri-${i}`} className="bg-card border border-border rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-ink">RI: {ri.instanceType}</span>
+                            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface text-muted">{ri.term} · {ri.platform} · {ri.region}</span>
+                          </div>
+                          <span className="font-mono text-sm font-semibold text-green">${ri.estimatedMonthlySavings}/mo</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-4 text-xs mt-3">
+                          <div>
+                            <span className="text-muted block">Quantity</span>
+                            <span className="font-mono text-ink">{ri.recommendedCount}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted block">Upfront</span>
+                            <span className="font-mono text-ink">${ri.upfrontCost.toLocaleString()}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted block">Monthly</span>
+                            <span className="font-mono text-ink">${ri.recurringMonthlyCost}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted block">Break-even</span>
+                            <span className="font-mono text-ink">{ri.breakEvenMonths}mo</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Alerts tab (F-A3) */}
+          {activeTab === 'alerts' && (
+            <div className="space-y-4">
+              {/* Open anomalies */}
+              <div>
+                <h3 className="text-sm font-medium text-ink mb-2">Cost anomalies</h3>
+                {alertAnomalies.length === 0 ? (
+                  <div className="bg-card border border-border rounded-xl px-6 py-8 text-center">
+                    <CheckIcon />
+                    <p className="text-sm font-medium text-ink mt-2">No anomalies detected</p>
+                    <p className="text-xs text-muted mt-1">We check daily for unusual spend spikes</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {alertAnomalies.map((a: any) => (
+                      <div key={a.id} className="bg-card border border-border rounded-xl p-4 flex items-center gap-4">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
+                          background: a.severity === 'critical' ? '#FEF3F2' : a.severity === 'high' ? '#FEF3F2' : '#FFFAEB'
+                        }}>
+                          <AlertTriangle size={16} style={{
+                            color: a.severity === 'critical' ? '#B42318' : a.severity === 'high' ? '#B42318' : '#B54708'
+                          }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-ink">{(a.scopeValue || '').replace('Amazon ', '').replace('AWS ', '')}</p>
+                          <p className="text-xs text-muted">
+                            ${parseFloat(a.observedCost).toFixed(0)} yesterday vs ${parseFloat(a.baselineCost).toFixed(0)} baseline (+{parseFloat(a.deltaPct).toFixed(0)}%)
+                          </p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            await fetch(`/api/v1/budgets/anomalies/${a.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: 'acknowledged' })
+                            })
+                            setAlertAnomalies(prev => prev.filter(x => x.id !== a.id))
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium rounded bg-surface hover:bg-border text-muted hover:text-ink transition-all"
+                        >
+                          Acknowledge
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Budgets */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-ink">Budgets</h3>
+                </div>
+                {alertBudgets.length === 0 ? (
+                  <div className="bg-card border border-border rounded-xl px-6 py-8 text-center">
+                    <p className="text-sm text-muted">No budgets configured</p>
+                    <p className="text-xs text-muted mt-1">Set up budgets to get alerted when spend exceeds thresholds</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {alertBudgets.map((b: any) => {
+                      const pct = b.lastNotifiedThreshold || 0
+                      return (
+                        <div key={b.id} className="bg-card border border-border rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-ink">{b.name}</span>
+                            <span className="font-mono text-xs text-muted">${parseFloat(b.monthlyAmount).toLocaleString()}/mo</span>
+                          </div>
+                          <div className="h-2 rounded-full overflow-hidden mb-1" style={{ background: 'rgba(51, 6, 61, 0.08)' }}>
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{
+                                width: `${Math.min(pct, 100)}%`,
+                                background: pct >= 100 ? '#B42318' : pct >= 80 ? '#B54708' : '#8A63E6'
+                              }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-muted">
+                            <span>{b.scope === 'org' ? 'All services' : b.scopeValue}</span>
+                            <span>{pct > 0 ? `${pct}% used` : 'Under threshold'}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </>
@@ -449,10 +745,31 @@ function SummaryCard({ label, value, sub, icon, highlight }: {
 function WasteCard({ item, state, onStateChange }: { 
   item: WasteItem
   state: RecommendationState
-  onStateChange: (state: RecommendationState) => void
+  onStateChange: (state: RecommendationState, extra?: { snoozedUntil?: string; dismissalReason?: string; dismissalNote?: string }) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [copied, setCopied] = useState(false)
   const severityColor = { high: 'text-danger bg-danger/10', medium: 'text-warn bg-warn/10', low: 'text-muted bg-border' }
+
+  // Extract region from metadata or resourceId (e.g., arn:aws:ec2:us-east-1:...)
+  const region = item.metadata?.region || item.resourceId?.match(/arn:aws:[^:]+:([^:]+)/)?.[1] || null
+
+  // Calculate age from metadata.createTime or firstDetectedAt
+  const detectedDate = item.metadata?.createTime || item.metadata?.startTime
+  const ageInDays = detectedDate ? Math.floor((Date.now() - new Date(detectedDate).getTime()) / (1000 * 60 * 60 * 24)) : item.metadata?.ageInDays || null
+
+  // Extract CLI command from recommendation text
+  const cliMatch = item.recommendation?.match(/(aws\s+\S+\s+\S+.*?)$/m)
+  const cliCommand = cliMatch?.[1]
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (cliCommand) {
+      await navigator.clipboard.writeText(cliCommand)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   return (
     <div className={clsx(
@@ -470,6 +787,15 @@ function WasteCard({ item, state, onStateChange }: {
               {item.severity}
             </span>
             <StateIndicator state={state} />
+            {region && (
+              <span className="flex items-center gap-1 font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface text-muted">
+                <MapPin size={9} />
+                {region}
+              </span>
+            )}
+            {ageInDays !== null && (
+              <span className="font-mono text-[10px] text-muted">{ageInDays}d ago</span>
+            )}
           </div>
           <p className="text-sm text-muted truncate">{item.description}</p>
         </div>
@@ -491,7 +817,19 @@ function WasteCard({ item, state, onStateChange }: {
             <div className="flex items-center gap-1.5 text-xs font-medium text-ink mb-1">
               <ArrowRight size={12} className="text-green" /> Recommended action
             </div>
-            <p className="text-xs text-muted leading-relaxed">{item.recommendation}</p>
+            <div className="flex items-start gap-2">
+              <p className="text-xs text-muted leading-relaxed flex-1">{item.recommendation}</p>
+              {cliCommand && (
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded bg-surface hover:bg-border text-muted hover:text-ink transition-all flex-shrink-0"
+                  title="Copy CLI command"
+                >
+                  <Copy size={10} />
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+              )}
+            </div>
           </div>
           <StateButtons currentState={state} onChange={onStateChange} />
         </div>
@@ -503,9 +841,22 @@ function WasteCard({ item, state, onStateChange }: {
 function RightsizingCard({ item, state, onStateChange }: { 
   item: RightsizingItem
   state: RecommendationState
-  onStateChange: (state: RecommendationState) => void
+  onStateChange: (state: RecommendationState, extra?: { snoozedUntil?: string; dismissalReason?: string; dismissalNote?: string }) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const cliMatch = item.recommendation?.match(/(aws\s+\S+\s+\S+.*?)$/m)
+  const cliCommand = cliMatch?.[1]
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (cliCommand) {
+      await navigator.clipboard.writeText(cliCommand)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   return (
     <div className={clsx(
@@ -547,7 +898,19 @@ function RightsizingCard({ item, state, onStateChange }: {
           <div className="flex items-center gap-1.5 text-xs font-medium text-ink mb-1">
             <ArrowRight size={12} className="text-green" /> Recommendation
           </div>
-          <p className="text-xs text-muted leading-relaxed">{item.recommendation}</p>
+          <div className="flex items-start gap-2">
+            <p className="text-xs text-muted leading-relaxed flex-1">{item.recommendation}</p>
+            {cliCommand && (
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded bg-surface hover:bg-border text-muted hover:text-ink transition-all flex-shrink-0"
+                title="Copy CLI command"
+              >
+                <Copy size={10} />
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            )}
+          </div>
           <StateButtons currentState={state} onChange={onStateChange} />
         </div>
       )}
@@ -585,11 +948,20 @@ function EmptyState({ icon, title, desc }: { icon: string; title: string; desc: 
   )
 }
 
+function CheckIcon() {
+  return (
+    <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto" style={{ background: '#ECFDF3' }}>
+      <Check size={18} style={{ color: '#067647' }} />
+    </div>
+  )
+}
+
 function StateIndicator({ state }: { state: RecommendationState }) {
   const config = {
     open: { icon: null, color: '' },
     snoozed: { icon: Clock, color: 'text-warn bg-warn/10' },
-    done: { icon: Check, color: 'text-green bg-green/10' }
+    done: { icon: Check, color: 'text-green bg-green/10' },
+    dismissed: { icon: X, color: 'text-muted bg-border' }
   }
   
   const { icon: Icon, color } = config[state]
@@ -605,48 +977,123 @@ function StateIndicator({ state }: { state: RecommendationState }) {
 
 function StateButtons({ currentState, onChange }: { 
   currentState: RecommendationState
-  onChange: (state: RecommendationState) => void
+  onChange: (state: RecommendationState, extra?: { snoozedUntil?: string; dismissalReason?: string; dismissalNote?: string }) => void
 }) {
+  const [showSnooze, setShowSnooze] = useState(false)
+  const [showDismiss, setShowDismiss] = useState(false)
+  const [dismissReason, setDismissReason] = useState<string>('cost_acceptable')
+
+  const snoozePresets = [
+    { label: '7 days', days: 7 },
+    { label: '30 days', days: 30 },
+    { label: '90 days', days: 90 },
+  ]
+
+  const dismissReasons = [
+    { value: 'business_critical', label: 'Business critical' },
+    { value: 'cost_acceptable', label: 'Cost acceptable' },
+    { value: 'pending_approval', label: 'Pending approval' },
+    { value: 'wont_fix', label: "Won't fix" },
+    { value: 'other', label: 'Other' },
+  ]
+
   return (
-    <div className="flex items-center gap-2 pt-2 border-t border-border">
-      <span className="text-[10px] font-mono uppercase tracking-wider text-muted">Status:</span>
-      <div className="flex gap-1">
-        <button
-          onClick={(e) => { e.stopPropagation(); onChange('open') }}
-          className={clsx(
-            'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
-            currentState === 'open'
-              ? 'bg-brand text-white'
-              : 'bg-surface text-muted hover:text-ink hover:bg-border'
-          )}
-        >
-          Open
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onChange('snoozed') }}
-          className={clsx(
-            'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
-            currentState === 'snoozed'
-              ? 'bg-warn text-white'
-              : 'bg-surface text-muted hover:text-ink hover:bg-border'
-          )}
-        >
-          <Clock size={10} />
-          Snooze
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onChange('done') }}
-          className={clsx(
-            'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
-            currentState === 'done'
-              ? 'bg-green text-white'
-              : 'bg-surface text-muted hover:text-ink hover:bg-border'
-          )}
-        >
-          <Check size={10} />
-          Done
-        </button>
+    <div className="pt-2 border-t border-border space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-muted">Status:</span>
+        <div className="flex gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); onChange('open') }}
+            className={clsx(
+              'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
+              currentState === 'open'
+                ? 'bg-brand text-white'
+                : 'bg-surface text-muted hover:text-ink hover:bg-border'
+            )}
+          >
+            Open
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowSnooze(!showSnooze); setShowDismiss(false) }}
+            className={clsx(
+              'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
+              currentState === 'snoozed'
+                ? 'bg-warn text-white'
+                : 'bg-surface text-muted hover:text-ink hover:bg-border'
+            )}
+          >
+            <Clock size={10} />
+            Snooze
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onChange('done') }}
+            className={clsx(
+              'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
+              currentState === 'done'
+                ? 'bg-green text-white'
+                : 'bg-surface text-muted hover:text-ink hover:bg-border'
+            )}
+          >
+            <Check size={10} />
+            Done
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowDismiss(!showDismiss); setShowSnooze(false) }}
+            className={clsx(
+              'flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all',
+              currentState === 'dismissed'
+                ? 'bg-muted text-white'
+                : 'bg-surface text-muted hover:text-ink hover:bg-border'
+            )}
+          >
+            <X size={10} />
+            Dismiss
+          </button>
+        </div>
       </div>
+
+      {showSnooze && (
+        <div className="flex items-center gap-2 pl-12" onClick={(e) => e.stopPropagation()}>
+          <span className="text-[10px] text-muted">Snooze for:</span>
+          {snoozePresets.map(p => (
+            <button
+              key={p.days}
+              onClick={() => {
+                const until = new Date(Date.now() + p.days * 24 * 60 * 60 * 1000).toISOString()
+                onChange('snoozed', { snoozedUntil: until })
+                setShowSnooze(false)
+              }}
+              className="px-2 py-1 text-[10px] font-medium rounded bg-warn/10 text-warn hover:bg-warn/20 transition-all"
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {showDismiss && (
+        <div className="flex items-center gap-2 pl-12 flex-wrap" onClick={(e) => e.stopPropagation()}>
+          <span className="text-[10px] text-muted">Reason:</span>
+          <select
+            value={dismissReason}
+            onChange={(e) => setDismissReason(e.target.value)}
+            className="text-[10px] px-2 py-1 rounded border border-border bg-card text-ink"
+          >
+            {dismissReasons.map(r => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => {
+              onChange('dismissed', { dismissalReason: dismissReason })
+              setShowDismiss(false)
+            }}
+            className="px-2 py-1 text-[10px] font-medium rounded bg-muted/10 text-muted hover:bg-muted/20 transition-all"
+          >
+            Confirm
+          </button>
+        </div>
+      )}
     </div>
   )
 }

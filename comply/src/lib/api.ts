@@ -40,10 +40,16 @@ export const api = {
       return apiFetch<any[]>(`/api/v1/controls${queryString ? `?${queryString}` : ''}`)
     },
     get: (id: string) => apiFetch<any>(`/api/v1/controls/${id}`),
-    updateNotes: (id: string, notes: string) => apiFetch<any>(`/api/v1/controls/${id}/notes`, { 
-      method: 'PATCH', 
-      body: JSON.stringify({ notes }) 
+    updateNotes: (id: string, notes: string) => apiFetch<any>(`/api/v1/controls/${id}/notes`, {
+      method: 'PATCH',
+      body: JSON.stringify({ notes })
     }),
+    updateRemediation: (id: string, body: { ownerId?: string | null; dueDate?: string | null; status?: string | null; note?: string | null }) =>
+      apiFetch<any>(`/api/v1/controls/${id}/remediation`, {
+        method: 'PATCH',
+        body: JSON.stringify(body)
+      }),
+    myRemediation: () => apiFetch<any[]>(`/api/v1/controls/remediation/mine`),
   },
   scans: {
     list: () => apiFetch<any[]>('/api/v1/scans'),

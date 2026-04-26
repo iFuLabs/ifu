@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const { data: scans, mutate: mutateScans } = useSWR<any[]>('scans', api.scans.list, { refreshInterval: 3000 })
   const { data: planFeatures } = useSWR<any>('plan-features', api.plan.features)
   const { data: integrations } = useSWR<any[]>('integrations', api.integrations.list)
+  const { data: myRemediation } = useSWR<any[]>('my-remediation', api.controls.myRemediation, { refreshInterval: 60000 })
   const [isScanning, setIsScanning] = React.useState(false)
   const [lastScanTime, setLastScanTime] = React.useState<number>(0)
 
@@ -224,6 +225,52 @@ export default function DashboardPage() {
           color="text-ink"
         />
       </div>
+
+      {/* My open remediation */}
+      {myRemediation && myRemediation.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-medium text-ink">My open remediation</h2>
+              <p className="text-xs text-muted mt-0.5">{myRemediation.length} control{myRemediation.length !== 1 ? 's' : ''} assigned to you</p>
+            </div>
+            <Link href="/dashboard/controls?status=fail" className="text-xs text-accent hover:underline">View all</Link>
+          </div>
+          <div className="space-y-2">
+            {myRemediation.slice(0, 5).map((r: any) => {
+              const isOverdue = r.remediationDueDate && new Date(r.remediationDueDate) < new Date()
+              return (
+                <Link
+                  key={r.resultId}
+                  href={`/dashboard/controls/${r.controlId}`}
+                  className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg hover:bg-bg transition-colors border border-border"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-mono text-[10px] text-muted">{r.controlId}</span>
+                      <span className={clsx(
+                        'font-mono text-[10px] px-1.5 py-0.5 rounded uppercase',
+                        r.remediationStatus === 'blocked' ? 'bg-danger/10 text-danger' :
+                        r.remediationStatus === 'in_progress' ? 'bg-warn/10 text-warn' : 'bg-border/50 text-muted'
+                      )}>
+                        {r.remediationStatus?.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="text-sm text-ink truncate">{r.title}</div>
+                  </div>
+                  {r.remediationDueDate && (
+                    <div className={clsx('text-xs whitespace-nowrap', isOverdue ? 'text-danger font-medium' : 'text-muted')}>
+                      {isOverdue ? 'Overdue ' : 'Due '}
+                      {formatDistanceToNow(new Date(r.remediationDueDate), { addSuffix: true })}
+                    </div>
+                  )}
+                  <ChevronRight size={14} className="text-muted flex-shrink-0" />
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* AI Insight - only show if user has Growth plan */}
       {planFeatures?.features?.aiInsights && <AiInsightCard framework="soc2" />}

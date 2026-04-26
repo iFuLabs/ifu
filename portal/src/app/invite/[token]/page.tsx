@@ -156,7 +156,8 @@ export default function AcceptInvitationPage() {
         ? (process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002')
         : (process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001')
 
-      router.push(productUrl)
+      // Use window.location.href for cross-origin redirect (router.push only works for same-origin)
+      window.location.href = productUrl + '/dashboard'
     } catch (err: any) {
       setError(err.message || 'Failed to accept invitation')
       setAccepting(false)

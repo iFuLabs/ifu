@@ -3,11 +3,22 @@ import useSWR from 'swr'
 import { api } from '@/lib/api'
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, CheckCircle, XCircle, Clock, Minus, ChevronDown, ChevronUp, Save } from 'lucide-react'
+import { ArrowLeft, CheckCircle, XCircle, Clock, Minus, ChevronDown, ChevronUp, Save, UserCircle2, CalendarDays, PlayCircle, AlertOctagon, CheckCheck } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import clsx from 'clsx'
 import { AiGapExplainer } from '@/components/AiGapExplainer'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+
+const REMEDIATION_STATUSES = [
+  { value: 'open', label: 'Open' },
+  { value: 'in_progress', label: 'In progress' },
+  { value: 'blocked', label: 'Blocked' },
+  { value: 'completed', label: 'Completed' },
+] as const
+
+type RemediationStatus = typeof REMEDIATION_STATUSES[number]['value']
 
 export default function ControlDetailPage() {
   const params = useParams()
@@ -19,6 +30,22 @@ export default function ControlDetailPage() {
   const [notes, setNotes] = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
   const [showEvidence, setShowEvidence] = useState(false)
+  const [savingRem, setSavingRem] = useState(false)
+
+  const { data: members } = useSWR('team-members', async () => {
+    const res = await fetch(`${API_URL}/api/v1/team/members`, { credentials: 'include' })
+    return res.ok ? res.json() : []
+  })
+
+  const updateRemediation = async (patch: { ownerId?: string | null; dueDate?: string | null; status?: RemediationStatus | null }) => {
+    setSavingRem(true)
+    try {
+      await api.controls.updateRemediation(controlId, patch)
+      mutate()
+    } finally {
+      setSavingRem(false)
+    }
+  }
 
   const handleSaveNotes = async () => {
     setSavingNotes(true)
@@ -177,6 +204,79 @@ export default function ControlDetailPage() {
           )}
         </div>
       )}
+
+      {/* Remediation */}
+      <div className="bg-card border border-border rounded-xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-medium text-ink">Remediation</h2>
+          {control.remediationStatus && (
+            <span className={clsx(
+              'font-mono text-[10px] px-2 py-0.5 rounded',
+              control.remediationStatus === 'completed' && 'bg-accent-light text-accent',
+              control.remediationStatus === 'blocked' && 'bg-danger/10 text-danger',
+              control.remediationStatus === 'in_progress' && 'bg-warn/10 text-warn',
+              (!control.remediationStatus || control.remediationStatus === 'open') && 'bg-border/50 text-muted'
+            )}>
+              {REMEDIATION_STATUSES.find(s => s.value === control.remediationStatus)?.label || control.remediationStatus}
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="block text-[10px] uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
+              <UserCircle2 size={11} /> Owner
+            </label>
+            <select
+              value={control.remediationOwnerId || ''}
+              onChange={e => updateRemediation({ ownerId: e.target.value || null })}
+              disabled={savingRem}
+              className="w-full px-3 py-2 bg-bg border border-border rounded-lg text-sm text-ink focus:outline-none focus:border-accent disabled:opacity-50"
+            >
+              <option value="">— Unassigned —</option>
+              {members?.map((m: any) => (
+                <option key={m.id} value={m.id}>{m.name || m.email}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1">
+              <CalendarDays size={11} /> Due date
+            </label>
+            <input
+              type="date"
+              value={control.remediationDueDate ? new Date(control.remediationDueDate).toISOString().slice(0, 10) : ''}
+              onChange={e => updateRemediation({ dueDate: e.target.value || null })}
+              disabled={savingRem}
+              className="w-full px-3 py-2 bg-bg border border-border rounded-lg text-sm text-ink focus:outline-none focus:border-accent disabled:opacity-50"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => updateRemediation({ status: 'in_progress' })}
+            disabled={savingRem || control.remediationStatus === 'in_progress'}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded hover:bg-bg disabled:opacity-50"
+          >
+            <PlayCircle size={12} /> Mark started
+          </button>
+          <button
+            onClick={() => updateRemediation({ status: 'blocked' })}
+            disabled={savingRem || control.remediationStatus === 'blocked'}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded hover:bg-bg disabled:opacity-50"
+          >
+            <AlertOctagon size={12} /> Mark blocked
+          </button>
+          <button
+            onClick={() => updateRemediation({ status: 'completed' })}
+            disabled={savingRem || control.remediationStatus === 'completed'}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent text-white rounded hover:bg-accent/90 disabled:opacity-50"
+          >
+            <CheckCheck size={12} /> Mark complete
+          </button>
+        </div>
+      </div>
 
       {/* Notes */}
       <div className="bg-card border border-border rounded-xl p-5">

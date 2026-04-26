@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq'
 import { redis } from '../services/redis.js'
 import { db } from '../db/client.js'
-import { integrations } from '../db/schema.js'
+import { integrations, finopsRecommendationStates } from '../db/schema.js'
 import { eq, and } from 'drizzle-orm'
 import { decrypt } from '../services/encryption.js'
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts'
@@ -67,6 +67,88 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
     rightsizingItems: findings.summary?.rightsizingItems,
     scannedAt: new Date().toISOString()
   }).catch(err => logger.warn({ err: err.message }, 'webhook dispatch failed'))
+
+  // F-A4: Verify applied recommendations
+  try {
+    const doneStates = await db.query.finopsRecommendationStates.findMany({
+      where: and(
+        eq(finopsRecommendationStates.orgId, orgId),
+        eq(finopsRecommendationStates.state, 'done')
+      )
+    })
+
+    // Build a set of currently-detected wasteful resource IDs
+    const currentWasteIds = new Set(findings.waste.map(w => w.resourceId))
+    const currentRightsizingIds = new Set(findings.rightsizing.map(r => r.resourceId))
+
+    for (const rec of doneStates) {
+      const stillWasteful = rec.category === 'waste'
+        ? currentWasteIds.has(rec.resourceId)
+        : currentRightsizingIds.has(rec.resourceId)
+
+      if (stillWasteful) {
+        // Resource still exists and is still wasteful — flip back to open
+        await db.update(finopsRecommendationStates)
+          .set({
+            state: 'open',
+            appliedVerifiedAt: null,
+            lastVerifiedStatus: 'still_wasteful',
+            updatedAt: new Date()
+          })
+          .where(eq(finopsRecommendationStates.id, rec.id))
+
+        await auditAction({
+          orgId,
+          action: 'finops.recommendation.verification_failed',
+          metadata: { resourceId: rec.resourceId, category: rec.category }
+        })
+      } else {
+        // Resource gone or no longer wasteful — mark as verified
+        const originalItem = rec.category === 'waste'
+          ? findings.waste.find(w => w.resourceId === rec.resourceId)
+          : findings.rightsizing.find(r => r.resourceId === rec.resourceId)
+
+        await db.update(finopsRecommendationStates)
+          .set({
+            appliedVerifiedAt: new Date(),
+            lastVerifiedStatus: 'applied',
+            verifiedSavingsMonthly: originalItem?.estimatedMonthlySavings?.toString() || rec.verifiedSavingsMonthly,
+            updatedAt: new Date()
+          })
+          .where(eq(finopsRecommendationStates.id, rec.id))
+
+        await dispatchWebhook(orgId, 'finops.recommendation_verified', {
+          resourceId: rec.resourceId,
+          category: rec.category,
+          status: 'applied'
+        }).catch(() => {})
+      }
+    }
+
+    // Also re-open snoozed items where snoozedUntil has passed
+    const snoozedStates = await db.query.finopsRecommendationStates.findMany({
+      where: and(
+        eq(finopsRecommendationStates.orgId, orgId),
+        eq(finopsRecommendationStates.state, 'snoozed')
+      )
+    })
+
+    for (const rec of snoozedStates) {
+      if (rec.snoozedUntil && new Date(rec.snoozedUntil) < new Date()) {
+        await db.update(finopsRecommendationStates)
+          .set({ state: 'open', snoozedUntil: null, updatedAt: new Date() })
+          .where(eq(finopsRecommendationStates.id, rec.id))
+
+        await auditAction({
+          orgId,
+          action: 'finops.recommendation.snooze_expired',
+          metadata: { resourceId: rec.resourceId, category: rec.category }
+        })
+      }
+    }
+  } catch (err) {
+    logger.warn({ err: err.message, orgId }, 'Recommendation verification failed — non-fatal')
+  }
 
   return {
     orgId,

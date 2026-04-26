@@ -2500,7 +2500,7 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
   max-width: 920px;
   width: 100%;
   background: rgba(15, 17, 24, 0.96);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   padding: 16px 20px;
   display: grid;
@@ -2512,11 +2512,11 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
 }
 .cookie-banner-text {
   font-size: 13px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1.55;
 }
-.cookie-banner-text strong { color: var(--ink); font-weight: 600; }
-.cookie-banner-text a { color: var(--accent); text-decoration: none; }
+.cookie-banner-text strong { color: #FFFFFF; font-weight: 600; }
+.cookie-banner-text a { color: #DAC0FD; text-decoration: none; }
 .cookie-banner-text a:hover { text-decoration: underline; }
 .cookie-banner-actions { display: flex; gap: 10px; }
 .cookie-btn {
@@ -2526,17 +2526,17 @@ div[class*="flex"][class*="justify-center"] a[href*="cal.com"] {
   padding: 9px 16px;
   border-radius: 6px;
   cursor: pointer;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   background: transparent;
-  color: var(--ink);
+  color: #FFFFFF;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
-.cookie-btn--ghost:hover { background: var(--surface2); border-color: var(--border2); }
+.cookie-btn--ghost:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.3); }
 .cookie-btn--primary {
-  background: var(--plum);
-  border-color: var(--plum);
-  color: var(--white);
+  background: #8A63E6;
+  border-color: #8A63E6;
+  color: #FFFFFF;
   font-weight: 600;
 }
 .cookie-btn--primary:hover { filter: brightness(1.1); }

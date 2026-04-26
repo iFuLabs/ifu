@@ -2,7 +2,7 @@ import cron from 'node-cron'
 import { db } from '../db/client.js'
 import { integrations, subscriptions } from '../db/schema.js'
 import { eq, and, inArray } from 'drizzle-orm'
-import { scanQueue, finopsScanQueue } from '../jobs/queues.js'
+import { scanQueue, finopsScanQueue, anomalyQueue } from '../jobs/queues.js'
 import { logger } from '../services/logger.js'
 
 /**
@@ -78,5 +78,104 @@ export function startScheduler() {
     }
   }, { timezone: 'UTC' })
 
-  logger.info('Scan scheduler started (compliance 02:00 UTC, FinOps 03:00 UTC)')
+  // Daily anomaly detection — 03:30 UTC, 30 min after FinOps scans
+  cron.schedule('30 3 * * *', async () => {
+    logger.info('Daily anomaly detection triggered')
+
+    try {
+      const finopsSubs = await db.query.subscriptions.findMany({
+        where: and(
+          eq(subscriptions.product, 'finops'),
+          inArray(subscriptions.status, ['active', 'trialing'])
+        )
+      })
+
+      const orgIds = [...new Set(finopsSubs.map(s => s.orgId))]
+      if (orgIds.length === 0) return
+
+      for (const orgId of orgIds) {
+        await anomalyQueue.add('anomaly', { orgId }, {
+          delay: Math.random() * 30 * 60 * 1000 // spread over 30 min
+        })
+      }
+
+      logger.info({ count: orgIds.length }, 'Queued anomaly detection jobs')
+    } catch (err) {
+      logger.error({ err }, 'Anomaly scheduler error')
+    }
+  }, { timezone: 'UTC' })
+
+  logger.info('Scan scheduler started (compliance 02:00 UTC, FinOps 03:00 UTC, anomaly 03:30 UTC)')
+
+  // Daily score snapshot — 04:00 UTC (C-A2)
+  cron.schedule('0 4 * * *', async () => {
+    logger.info('Daily score snapshot triggered')
+    try {
+      const { captureScoreSnapshots } = await import('./scoreSnapshotWorker.js')
+      await captureScoreSnapshots()
+    } catch (err) {
+      logger.error({ err }, 'Score snapshot error')
+    }
+  }, { timezone: 'UTC' })
+
+  // Daily remediation overdue check — 08:00 UTC (C-A1)
+  cron.schedule('0 8 * * *', async () => {
+    logger.info('Remediation overdue check triggered')
+    try {
+      const { controlResults, controlDefinitions, users: usersTable, organizations: orgsTable } = await import('../db/schema.js')
+      const { lt, isNotNull } = await import('drizzle-orm')
+
+      const overdue = await db
+        .select({
+          resultId: controlResults.id,
+          orgId: controlResults.orgId,
+          controlId: controlDefinitions.controlId,
+          title: controlDefinitions.title,
+          framework: controlDefinitions.framework,
+          ownerId: controlResults.remediationOwnerId,
+          ownerEmail: usersTable.email,
+          dueDate: controlResults.remediationDueDate,
+          status: controlResults.remediationStatus,
+          overdueAlertedAt: controlResults.remediationOverdueAlertedAt
+        })
+        .from(controlResults)
+        .innerJoin(controlDefinitions, eq(controlResults.controlDefId, controlDefinitions.id))
+        .leftJoin(usersTable, eq(controlResults.remediationOwnerId, usersTable.id))
+        .where(and(
+          isNotNull(controlResults.remediationDueDate),
+          lt(controlResults.remediationDueDate, new Date()),
+          inArray(controlResults.remediationStatus, ['open', 'in_progress', 'blocked'])
+        ))
+
+      for (const item of overdue) {
+        // Skip if already alerted today
+        if (item.overdueAlertedAt) {
+          const alertedDate = new Date(item.overdueAlertedAt).toISOString().slice(0, 10)
+          const today = new Date().toISOString().slice(0, 10)
+          if (alertedDate === today) continue
+        }
+
+        // Mark as alerted
+        await db.update(controlResults)
+          .set({ remediationOverdueAlertedAt: new Date() })
+          .where(eq(controlResults.id, item.resultId))
+
+        // Dispatch webhook
+        const { dispatchWebhook } = await import('../services/webhooks.js')
+        await dispatchWebhook(item.orgId, 'control.remediation_overdue', {
+          controlId: item.controlId,
+          title: item.title,
+          framework: item.framework,
+          ownerEmail: item.ownerEmail,
+          dueDate: item.dueDate
+        }).catch(() => null)
+
+        logger.info({ orgId: item.orgId, controlId: item.controlId, owner: item.ownerEmail }, 'Remediation overdue alert sent')
+      }
+
+      logger.info({ count: overdue.length }, 'Remediation overdue check complete')
+    } catch (err) {
+      logger.error({ err }, 'Remediation overdue check error')
+    }
+  }, { timezone: 'UTC' })
 }

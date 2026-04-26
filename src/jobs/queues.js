@@ -43,3 +43,14 @@ export const webhookQueue = new Queue('webhooks', {
     removeOnFail: { count: 200 }
   }
 })
+
+// Anomaly detection queue — daily cost anomaly + budget evaluation
+export const anomalyQueue = new Queue('anomaly-detection', {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: 'exponential', delay: 10000 },
+    removeOnComplete: { count: 100 },
+    removeOnFail: { count: 50 }
+  }
+})

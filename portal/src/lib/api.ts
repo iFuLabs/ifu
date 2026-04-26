@@ -77,7 +77,7 @@ export interface Organization {
   id: string
   name: string
   slug: string
-  plan: 'starter' | 'growth' | 'enterprise'
+  plan: 'starter' | 'growth' | 'enterprise' | 'finops'
 }
 
 export interface Integration {

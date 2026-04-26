@@ -17,6 +17,7 @@ import './jobs/scanWorker.js'
 import './jobs/finopsWorker.js'
 import './jobs/notificationWorker.js'
 import './jobs/webhookWorker.js'
+import './jobs/anomalyWorker.js'
 
 // Routes
 import authRoutes from './routes/auth.js'
@@ -33,6 +34,9 @@ import teamRoutes from './routes/team.js'
 import planRoutes from './routes/plan.js'
 import webhookRoutes from './routes/webhooks.js'
 import slackRoutes from './routes/slack.js'
+import budgetRoutes from './routes/budgets.js'
+import auditLogRoutes from './routes/audit-log.js'
+import exemptionRoutes from './routes/exemptions.js'
 
 const app = Fastify({
   logger: {
@@ -104,6 +108,9 @@ await app.register(teamRoutes,         { prefix: '/api/v1/team' })
 await app.register(planRoutes,         { prefix: '/api/v1/plan' })
 await app.register(webhookRoutes,      { prefix: '/api/v1/webhooks' })
 await app.register(slackRoutes,        { prefix: '/api/v1/slack' })
+await app.register(budgetRoutes,       { prefix: '/api/v1/budgets' })
+await app.register(auditLogRoutes,     { prefix: '/api/v1/audit-log' })
+await app.register(exemptionRoutes,    { prefix: '/api/v1/exemptions' })
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', async () => ({

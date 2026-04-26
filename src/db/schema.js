@@ -9,7 +9,7 @@ export const integrationTypeEnum = pgEnum('integration_type', ['aws', 'github', 
 export const integrationStatusEnum = pgEnum('integration_status', ['connected', 'disconnected', 'error'])
 export const severityEnum = pgEnum('severity', ['critical', 'high', 'medium', 'low'])
 export const invitationStatusEnum = pgEnum('invitation_status', ['pending', 'accepted', 'expired'])
-export const recommendationStateEnum = pgEnum('recommendation_state', ['open', 'snoozed', 'done'])
+export const recommendationStateEnum = pgEnum('recommendation_state', ['open', 'snoozed', 'done', 'dismissed'])
 
 // ── Organizations (tenants) ────────────────────────────────────────────────
 export const organizations = pgTable('organizations', {
@@ -22,6 +22,7 @@ export const organizations = pgTable('organizations', {
   paystackSubscriptionCode: text('paystack_subscription_code').unique(),
   paystackAuthCode: text('paystack_auth_code'),
   trialEndsAt:     timestamp('trial_ends_at'),
+  finopsSettings:  jsonb('finops_settings').default({ tagKeys: ['Environment', 'Team', 'Project', 'CostCenter'] }),
   createdAt:       timestamp('created_at').notNull().defaultNow(),
   updatedAt:       timestamp('updated_at').notNull().defaultNow()
 })
@@ -110,12 +111,20 @@ export const controlResults = pgTable('control_results', {
   evidence:       jsonb('evidence'),                        // Raw evidence data
   notes:          text('notes'),                            // Manual notes
   remediationUrl: text('remediation_url'),
+  // C-A1 remediation task tracking
+  remediationOwnerId:        uuid('remediation_owner_id').references(() => users.id, { onDelete: 'set null' }),
+  remediationDueDate:        timestamp('remediation_due_date'),
+  remediationStatus:         text('remediation_status'),    // open | in_progress | blocked | completed | exempted
+  remediationStartedAt:      timestamp('remediation_started_at'),
+  remediationCompletedAt:    timestamp('remediation_completed_at'),
+  remediationOverdueAlertedAt: timestamp('remediation_overdue_alerted_at'),
   checkedAt:      timestamp('checked_at').notNull().defaultNow(),
   nextCheckAt:    timestamp('next_check_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow()
 }, (table) => [
   index('idx_control_results_org_id').on(table.orgId),
-  uniqueIndex('idx_control_results_org_control').on(table.orgId, table.controlDefId)
+  uniqueIndex('idx_control_results_org_control').on(table.orgId, table.controlDefId),
+  index('idx_control_results_remediation_owner').on(table.remediationOwnerId)
 ])
 
 // ── Scans ──────────────────────────────────────────────────────────────────
@@ -380,12 +389,106 @@ export const finopsRecommendationStates = pgTable('finops_recommendation_states'
   state:        recommendationStateEnum('state').notNull().default('open'),
   snoozedUntil: timestamp('snoozed_until'),
   notes:        text('notes'),
+  dismissalReason: text('dismissal_reason'),
+  dismissalNote:   text('dismissal_note'),
+  firstDetectedAt: timestamp('first_detected_at').defaultNow(),
+  appliedVerifiedAt: timestamp('applied_verified_at'),
+  lastVerifiedStatus: text('last_verified_status'),
+  verifiedSavingsMonthly: text('verified_savings_monthly'),
   updatedBy:    uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
   createdAt:    timestamp('created_at').notNull().defaultNow(),
   updatedAt:    timestamp('updated_at').notNull().defaultNow()
 }, (table) => [
   uniqueIndex('idx_finops_states_org_resource').on(table.orgId, table.resourceId, table.category),
   index('idx_finops_states_org_state').on(table.orgId, table.state)
+])
+
+// ── Control Comments (C-A5) ────────────────────────────────────────────────
+export const controlComments = pgTable('control_comments', {
+  id:              uuid('id').primaryKey().defaultRandom(),
+  orgId:           uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  controlDefId:    uuid('control_def_id').notNull().references(() => controlDefinitions.id),
+  authorId:        uuid('author_id').notNull().references(() => users.id, { onDelete: 'set null' }),
+  body:            text('body').notNull(),
+  parentCommentId: uuid('parent_comment_id'),
+  createdAt:       timestamp('created_at').notNull().defaultNow(),
+  editedAt:        timestamp('edited_at'),
+  deletedAt:       timestamp('deleted_at')
+}, (table) => [
+  index('idx_comments_org_control').on(table.orgId, table.controlDefId),
+  index('idx_comments_author').on(table.authorId)
+])
+
+// ── Control Exemptions (C-A3) ──────────────────────────────────────────────
+export const controlExemptions = pgTable('control_exemptions', {
+  id:            uuid('id').primaryKey().defaultRandom(),
+  orgId:         uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  controlDefId:  uuid('control_def_id').notNull().references(() => controlDefinitions.id),
+  requestedBy:   uuid('requested_by').notNull().references(() => users.id, { onDelete: 'set null' }),
+  approvedBy:    uuid('approved_by').references(() => users.id, { onDelete: 'set null' }),
+  reason:        text('reason').notNull(),
+  justification: text('justification'),
+  expiresAt:     timestamp('expires_at'),
+  status:        text('status').notNull().default('pending'),
+  decidedAt:     timestamp('decided_at'),
+  createdAt:     timestamp('created_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_exemptions_org_id').on(table.orgId)
+])
+
+// ── Compliance Score Snapshots (C-A2) ──────────────────────────────────────
+export const complianceScoreSnapshots = pgTable('compliance_score_snapshots', {
+  id:            uuid('id').primaryKey().defaultRandom(),
+  orgId:         uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  framework:     text('framework').notNull(),
+  scoreOverall:  integer('score_overall').notNull().default(0),
+  scorePass:     integer('score_pass').notNull().default(0),
+  scoreFail:     integer('score_fail').notNull().default(0),
+  scoreReview:   integer('score_review').notNull().default(0),
+  scoreTotal:    integer('score_total').notNull().default(0),
+  capturedAt:    timestamp('captured_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_score_snapshots_org_framework').on(table.orgId, table.framework),
+  index('idx_score_snapshots_captured_at').on(table.capturedAt)
+])
+
+// ── Budgets (F-A3) ─────────────────────────────────────────────────────────
+export const budgets = pgTable('budgets', {
+  id:              uuid('id').primaryKey().defaultRandom(),
+  orgId:           uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  name:            text('name').notNull(),
+  scope:           text('scope').notNull().default('org'),
+  scopeValue:      text('scope_value'),
+  monthlyAmount:   text('monthly_amount').notNull(),
+  currency:        text('currency').notNull().default('USD'),
+  notifyAt:        jsonb('notify_at').notNull().default([50, 80, 100]),
+  channels:        jsonb('channels').notNull().default(['email']),
+  lastNotifiedThreshold: integer('last_notified_threshold'),
+  createdBy:       uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt:       timestamp('created_at').notNull().defaultNow(),
+  updatedAt:       timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_budgets_org_id').on(table.orgId)
+])
+
+// ── Anomalies (F-A3) ──────────────────────────────────────────────────────
+export const anomalies = pgTable('anomalies', {
+  id:              uuid('id').primaryKey().defaultRandom(),
+  orgId:           uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  detectedAt:      timestamp('detected_at').notNull().defaultNow(),
+  scope:           text('scope').notNull().default('service'),
+  scopeValue:      text('scope_value').notNull(),
+  baselineCost:    text('baseline_cost').notNull(),
+  observedCost:    text('observed_cost').notNull(),
+  deltaPct:        text('delta_pct').notNull(),
+  severity:        text('severity').notNull().default('medium'),
+  status:          text('status').notNull().default('open'),
+  acknowledgedBy:  uuid('acknowledged_by').references(() => users.id, { onDelete: 'set null' }),
+  acknowledgedAt:  timestamp('acknowledged_at'),
+  createdAt:       timestamp('created_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_anomalies_org_id').on(table.orgId),
+  index('idx_anomalies_org_status').on(table.orgId, table.status)
 ])
 
 // ── Slack workspaces (per-org Slack OAuth installs) ────────────────────────

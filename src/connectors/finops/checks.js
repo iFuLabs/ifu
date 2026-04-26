@@ -781,3 +781,432 @@ async function getSavingsPlansCoverage(cfg) {
 
   return results
 }
+
+/**
+ * F-A2: Get daily cost series for trend chart.
+ * Returns daily spend broken down by top services over the requested period.
+ * @param {{ credentials, region }} cfg - AWS config
+ * @param {number} days - Number of days to look back (30, 90, or 180)
+ * @returns {{ days, total, previousTotal, series: [{ date, total, byService }] }}
+ */
+export async function getDailyCostSeries(cfg, days = 90) {
+  const ce = new CostExplorerClient(cfg)
+
+  const end = new Date()
+  const start = new Date(end)
+  start.setDate(start.getDate() - days)
+
+  // Also fetch the prior period for MoM comparison
+  const prevEnd = new Date(start)
+  const prevStart = new Date(prevEnd)
+  prevStart.setDate(prevStart.getDate() - days)
+
+  const [currentData, prevData] = await Promise.all([
+    ce.send(new GetCostAndUsageCommand({
+      TimePeriod: { Start: start.toISOString().slice(0, 10), End: end.toISOString().slice(0, 10) },
+      Granularity: 'DAILY',
+      Metrics: ['UnblendedCost'],
+      GroupBy: [{ Type: 'DIMENSION', Key: 'SERVICE' }]
+    })),
+    ce.send(new GetCostAndUsageCommand({
+      TimePeriod: { Start: prevStart.toISOString().slice(0, 10), End: prevEnd.toISOString().slice(0, 10) },
+      Granularity: 'MONTHLY',
+      Metrics: ['UnblendedCost']
+    }))
+  ])
+
+  // Build daily series
+  const serviceTotals = new Map()
+  const series = []
+
+  for (const period of currentData.ResultsByTime || []) {
+    const date = period.TimePeriod.Start
+    const byService = {}
+    let dayTotal = 0
+
+    for (const g of period.Groups || []) {
+      const svc = g.Keys[0]
+      const amt = parseFloat(g.Metrics.UnblendedCost.Amount || '0')
+      if (amt > 0) {
+        byService[svc] = Math.round(amt * 100) / 100
+        serviceTotals.set(svc, (serviceTotals.get(svc) || 0) + amt)
+        dayTotal += amt
+      }
+    }
+
+    series.push({
+      date,
+      total: Math.round(dayTotal * 100) / 100,
+      byService
+    })
+  }
+
+  // Identify top 5 services by total spend
+  const topServices = [...serviceTotals.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name]) => name)
+
+  // Simplify byService to only top 5 + "Other"
+  for (const day of series) {
+    const simplified = {}
+    let otherTotal = 0
+    for (const [svc, amt] of Object.entries(day.byService)) {
+      if (topServices.includes(svc)) {
+        simplified[svc] = amt
+      } else {
+        otherTotal += amt
+      }
+    }
+    if (otherTotal > 0) {
+      simplified['Other'] = Math.round(otherTotal * 100) / 100
+    }
+    day.byService = simplified
+  }
+
+  const total = series.reduce((sum, d) => sum + d.total, 0)
+  const previousTotal = (prevData.ResultsByTime || []).reduce((sum, p) => {
+    return sum + parseFloat(p.Total?.UnblendedCost?.Amount || '0')
+  }, 0)
+
+  return {
+    days,
+    total: Math.round(total * 100) / 100,
+    previousTotal: Math.round(previousTotal * 100) / 100,
+    topServices,
+    series
+  }
+}
+
+/**
+ * F-A1: Get cost allocation by tag key.
+ * Groups spend by a specific tag key for the given date range.
+ * @param {{ credentials, region }} cfg
+ * @param {string} tagKey - e.g. 'Environment', 'Team', 'Project'
+ * @param {string} [startDate] - YYYY-MM-DD
+ * @param {string} [endDate] - YYYY-MM-DD
+ * @returns {{ tagKey, startDate, endDate, total, byValue: [{ value, cost, percentage, monthOverMonthDelta }] }}
+ */
+export async function getCostByTag(cfg, tagKey, startDate, endDate) {
+  const ce = new CostExplorerClient(cfg)
+
+  // Default to current month
+  const now = new Date()
+  const end = endDate || now.toISOString().slice(0, 10)
+  const start = startDate || new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+
+  // Also fetch prior month for MoM delta
+  const startD = new Date(start)
+  const endD = new Date(end)
+  const rangeDays = Math.ceil((endD - startD) / (1000 * 60 * 60 * 24))
+  const prevEnd = new Date(startD)
+  const prevStart = new Date(prevEnd)
+  prevStart.setDate(prevStart.getDate() - rangeDays)
+
+  const [currentData, prevData] = await Promise.all([
+    ce.send(new GetCostAndUsageCommand({
+      TimePeriod: { Start: start, End: end },
+      Granularity: 'MONTHLY',
+      Metrics: ['UnblendedCost'],
+      GroupBy: [{ Type: 'TAG', Key: tagKey }]
+    })),
+    ce.send(new GetCostAndUsageCommand({
+      TimePeriod: { Start: prevStart.toISOString().slice(0, 10), End: prevEnd.toISOString().slice(0, 10) },
+      Granularity: 'MONTHLY',
+      Metrics: ['UnblendedCost'],
+      GroupBy: [{ Type: 'TAG', Key: tagKey }]
+    }))
+  ])
+
+  // Aggregate current period
+  const currentTotals = new Map()
+  for (const period of currentData.ResultsByTime || []) {
+    for (const g of period.Groups || []) {
+      const rawKey = g.Keys[0] || ''
+      // Tag key format from CE: "tagKey$value" or just "$" for untagged
+      const value = rawKey.includes('$') ? rawKey.split('$')[1] || '(untagged)' : rawKey || '(untagged)'
+      const amt = parseFloat(g.Metrics.UnblendedCost.Amount || '0')
+      currentTotals.set(value, (currentTotals.get(value) || 0) + amt)
+    }
+  }
+
+  // Aggregate prior period
+  const prevTotals = new Map()
+  for (const period of prevData.ResultsByTime || []) {
+    for (const g of period.Groups || []) {
+      const rawKey = g.Keys[0] || ''
+      const value = rawKey.includes('$') ? rawKey.split('$')[1] || '(untagged)' : rawKey || '(untagged)'
+      const amt = parseFloat(g.Metrics.UnblendedCost.Amount || '0')
+      prevTotals.set(value, (prevTotals.get(value) || 0) + amt)
+    }
+  }
+
+  const total = [...currentTotals.values()].reduce((sum, v) => sum + v, 0)
+
+  const byValue = [...currentTotals.entries()]
+    .map(([value, cost]) => {
+      const prevCost = prevTotals.get(value) || 0
+      const delta = prevCost > 0 ? ((cost - prevCost) / prevCost) * 100 : (cost > 0 ? 100 : 0)
+      return {
+        value,
+        cost: Math.round(cost * 100) / 100,
+        percentage: total > 0 ? Math.round((cost / total) * 1000) / 10 : 0,
+        monthOverMonthDelta: Math.round(delta * 10) / 10
+      }
+    })
+    .sort((a, b) => b.cost - a.cost)
+
+  // Move (untagged) to the top if > 5% of total
+  const untaggedIdx = byValue.findIndex(v => v.value === '(untagged)')
+  if (untaggedIdx > 0 && byValue[untaggedIdx].percentage > 5) {
+    const [untagged] = byValue.splice(untaggedIdx, 1)
+    byValue.unshift(untagged)
+  }
+
+  return {
+    tagKey,
+    startDate: start,
+    endDate: end,
+    total: Math.round(total * 100) / 100,
+    byValue
+  }
+}
+
+/**
+ * F-A8: Get Savings Plans and Reserved Instance purchase recommendations.
+ * Uses Cost Explorer recommendation APIs.
+ * @param {{ credentials, region }} cfg
+ * @returns {{ savingsPlans: [...], reservations: [...], totalAnnualSavings: number }}
+ */
+export async function getPurchaseRecommendations(cfg) {
+  const ce = new CostExplorerClient(cfg)
+  const results = { savingsPlans: [], reservations: [], totalAnnualSavings: 0 }
+
+  // Savings Plans recommendations
+  try {
+    for (const term of ['ONE_YEAR', 'THREE_YEARS']) {
+      for (const payment of ['NO_UPFRONT', 'PARTIAL_UPFRONT', 'ALL_UPFRONT']) {
+        try {
+          const { SavingsPlansPurchaseRecommendation } = await ce.send(
+            new (await import('@aws-sdk/client-cost-explorer')).GetSavingsPlansPurchaseRecommendationCommand({
+              SavingsPlansType: 'COMPUTE_SP',
+              TermInYears: term,
+              PaymentOption: payment,
+              LookbackPeriodInDays: 'THIRTY_DAYS',
+              AccountScope: 'LINKED'
+            })
+          )
+
+          const details = SavingsPlansPurchaseRecommendation?.SavingsPlansPurchaseRecommendationDetails || []
+          for (const d of details) {
+            const monthlySavings = parseFloat(d.EstimatedMonthlySavingsAmount || '0')
+            const hourlyCommitment = parseFloat(d.HourlyCommitmentToPurchase || '0')
+            const upfrontCost = parseFloat(d.UpfrontCost || '0')
+            const annualSavings = monthlySavings * 12
+
+            if (monthlySavings > 5) {
+              const termYears = term === 'ONE_YEAR' ? 1 : 3
+              const totalCommitment = upfrontCost + (hourlyCommitment * 730 * 12 * termYears)
+              const breakEvenMonths = annualSavings > 0 ? Math.ceil(totalCommitment / (annualSavings / 12)) : 0
+
+              results.savingsPlans.push({
+                type: 'savings_plan',
+                savingsPlansType: 'Compute',
+                term: `${termYears}y`,
+                paymentOption: payment.replace(/_/g, ' ').toLowerCase(),
+                hourlyCommitment: Math.round(hourlyCommitment * 1000) / 1000,
+                upfrontCost: Math.round(upfrontCost * 100) / 100,
+                estimatedMonthlySavings: Math.round(monthlySavings * 100) / 100,
+                estimatedAnnualSavings: Math.round(annualSavings * 100) / 100,
+                breakEvenMonths,
+                currentOnDemandSpend: parseFloat(d.CurrentAverageHourlyOnDemandSpend || '0') * 730,
+                estimatedROI: parseFloat(d.EstimatedROI || '0')
+              })
+              results.totalAnnualSavings += annualSavings
+            }
+          }
+        } catch { /* specific combo may not have data */ }
+      }
+    }
+  } catch (err) {
+    console.warn('Savings Plans recommendations failed:', err.message)
+  }
+
+  // RI recommendations (EC2)
+  try {
+    for (const term of ['ONE_YEAR', 'THREE_YEARS']) {
+      try {
+        const { Recommendations } = await ce.send(
+          new (await import('@aws-sdk/client-cost-explorer')).GetReservationPurchaseRecommendationCommand({
+            Service: 'Amazon Elastic Compute Cloud - Compute',
+            TermInYears: term,
+            PaymentOption: 'NO_UPFRONT',
+            LookbackPeriodInDays: 'THIRTY_DAYS',
+            AccountScope: 'LINKED'
+          })
+        )
+
+        for (const rec of Recommendations || []) {
+          for (const detail of rec.RecommendationDetails || []) {
+            const monthlySavings = parseFloat(detail.EstimatedMonthlySavingsAmount || '0')
+            if (monthlySavings > 5) {
+              const termYears = term === 'ONE_YEAR' ? 1 : 3
+              const upfront = parseFloat(detail.UpfrontCost || '0')
+              const recurringMonthly = parseFloat(detail.RecurringStandardMonthlyCost || '0')
+              const annualSavings = monthlySavings * 12
+
+              results.reservations.push({
+                type: 'reserved_instance',
+                instanceType: detail.InstanceDetails?.EC2InstanceDetails?.InstanceType || 'unknown',
+                region: detail.InstanceDetails?.EC2InstanceDetails?.Region || cfg.region,
+                platform: detail.InstanceDetails?.EC2InstanceDetails?.Platform || 'Linux',
+                term: `${termYears}y`,
+                paymentOption: 'no upfront',
+                recommendedCount: parseInt(detail.RecommendedNumberOfInstancesToPurchase || '1'),
+                upfrontCost: Math.round(upfront * 100) / 100,
+                recurringMonthlyCost: Math.round(recurringMonthly * 100) / 100,
+                estimatedMonthlySavings: Math.round(monthlySavings * 100) / 100,
+                estimatedAnnualSavings: Math.round(annualSavings * 100) / 100,
+                breakEvenMonths: annualSavings > 0 ? Math.ceil((upfront + recurringMonthly * 12 * termYears) / (annualSavings / 12)) : 0,
+                averageUtilization: parseFloat(detail.AverageUtilization || '0')
+              })
+              results.totalAnnualSavings += annualSavings
+            }
+          }
+        }
+      } catch { /* term may not have data */ }
+    }
+  } catch (err) {
+    console.warn('RI recommendations failed:', err.message)
+  }
+
+  // Sort by savings
+  results.savingsPlans.sort((a, b) => b.estimatedAnnualSavings - a.estimatedAnnualSavings)
+  results.reservations.sort((a, b) => b.estimatedAnnualSavings - a.estimatedAnnualSavings)
+  results.totalAnnualSavings = Math.round(results.totalAnnualSavings * 100) / 100
+
+  return results
+}
+
+/**
+ * F-A11: AI/GPU spend analysis.
+ * Detects Bedrock, SageMaker, and GPU EC2 instance spend + idle GPU instances.
+ * @param {{ credentials, region }} cfg
+ * @returns {{ totalAiSpend, monthOverMonthDelta, services: [...], idleGpuInstances: [...] }}
+ */
+export async function getAiGpuSpend(cfg) {
+  const ce = new CostExplorerClient(cfg)
+  const ec2 = new EC2Client(cfg)
+  const cw = new CloudWatchClient(cfg)
+
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
+
+  // AI service names to look for
+  const aiServices = ['Amazon Bedrock', 'Amazon SageMaker', 'Amazon Comprehend', 'Amazon Rekognition', 'Amazon Textract', 'Amazon Transcribe', 'Amazon Translate', 'Amazon Polly']
+
+  // GPU instance families
+  const gpuFamilies = ['g4dn', 'g4ad', 'g5', 'g5g', 'g6', 'p3', 'p4d', 'p4de', 'p5', 'inf1', 'inf2', 'trn1', 'trn1n', 'dl1', 'dl2q']
+
+  const [currentData, prevData] = await Promise.all([
+    ce.send(new GetCostAndUsageCommand({
+      TimePeriod: { Start: monthStart.toISOString().slice(0, 10), End: now.toISOString().slice(0, 10) },
+      Granularity: 'MONTHLY',
+      Metrics: ['UnblendedCost'],
+      GroupBy: [{ Type: 'DIMENSION', Key: 'SERVICE' }]
+    })),
+    ce.send(new GetCostAndUsageCommand({
+      TimePeriod: { Start: prevMonthStart.toISOString().slice(0, 10), End: prevMonthEnd.toISOString().slice(0, 10) },
+      Granularity: 'MONTHLY',
+      Metrics: ['UnblendedCost'],
+      GroupBy: [{ Type: 'DIMENSION', Key: 'SERVICE' }]
+    }))
+  ])
+
+  // Extract AI service costs
+  const currentCosts = new Map()
+  for (const period of currentData.ResultsByTime || []) {
+    for (const g of period.Groups || []) {
+      const svc = g.Keys[0]
+      if (aiServices.some(ai => svc.includes(ai.replace('Amazon ', '')))) {
+        currentCosts.set(svc, parseFloat(g.Metrics.UnblendedCost.Amount || '0'))
+      }
+    }
+  }
+
+  const prevCosts = new Map()
+  for (const period of prevData.ResultsByTime || []) {
+    for (const g of period.Groups || []) {
+      const svc = g.Keys[0]
+      if (aiServices.some(ai => svc.includes(ai.replace('Amazon ', '')))) {
+        prevCosts.set(svc, parseFloat(g.Metrics.UnblendedCost.Amount || '0'))
+      }
+    }
+  }
+
+  const services = [...currentCosts.entries()].map(([name, cost]) => {
+    const prev = prevCosts.get(name) || 0
+    return {
+      name: name.replace('Amazon ', '').replace('AWS ', ''),
+      cost: Math.round(cost * 100) / 100,
+      previousCost: Math.round(prev * 100) / 100,
+      delta: prev > 0 ? Math.round(((cost - prev) / prev) * 1000) / 10 : (cost > 0 ? 100 : 0)
+    }
+  }).sort((a, b) => b.cost - a.cost)
+
+  const totalAiSpend = services.reduce((sum, s) => sum + s.cost, 0)
+  const prevTotal = services.reduce((sum, s) => sum + s.previousCost, 0)
+  const monthOverMonthDelta = prevTotal > 0 ? Math.round(((totalAiSpend - prevTotal) / prevTotal) * 1000) / 10 : 0
+
+  // Check for idle GPU instances
+  const idleGpuInstances = []
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const { Reservations = [] } = await ec2.send(new DescribeInstancesCommand({
+      Filters: [{ Name: 'instance-state-name', Values: ['running'] }]
+    }))
+
+    for (const reservation of Reservations) {
+      for (const instance of reservation.Instances || []) {
+        const type = instance.InstanceType || ''
+        const family = type.split('.')[0]
+        if (!gpuFamilies.includes(family)) continue
+
+        try {
+          const cpuData = await cw.send(new GetMetricStatisticsCommand({
+            Namespace: 'AWS/EC2',
+            MetricName: 'CPUUtilization',
+            Dimensions: [{ Name: 'InstanceId', Value: instance.InstanceId }],
+            StartTime: sevenDaysAgo,
+            EndTime: new Date(),
+            Period: 604800,
+            Statistics: ['Average']
+          }))
+
+          const avgCpu = cpuData.Datapoints?.[0]?.Average || 0
+
+          if (avgCpu < 5) {
+            idleGpuInstances.push({
+              instanceId: instance.InstanceId,
+              instanceType: type,
+              avgCpuLast7Days: Math.round(avgCpu * 10) / 10,
+              launchTime: instance.LaunchTime,
+              note: 'Low CPU — check GPU utilization via CloudWatch agent'
+            })
+          }
+        } catch { /* CloudWatch may not have data */ }
+      }
+    }
+  } catch (err) {
+    console.warn('GPU instance check failed:', err.message)
+  }
+
+  return {
+    totalAiSpend: Math.round(totalAiSpend * 100) / 100,
+    monthOverMonthDelta,
+    services,
+    idleGpuInstances
+  }
+}

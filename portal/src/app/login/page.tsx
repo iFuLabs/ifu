@@ -32,7 +32,14 @@ function LoginForm() {
 
     try {
       const response = await api.auth.login({ email, password })
-      router.push('/')
+      
+      // Redirect to the appropriate product dashboard based on org plan
+      const plan = response.organization?.plan
+      if (plan === 'finops') {
+        window.location.href = (process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002') + '/dashboard'
+      } else {
+        window.location.href = (process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001') + '/dashboard'
+      }
     } catch (err: any) {
       setError(err.message || 'Login failed')
     } finally {

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   LayoutDashboard, Shield, GitBranch, FileText,
   Building2, Users, CreditCard, LogOut, Menu, X,
-  ChevronRight
+  ChevronRight, ScrollText
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -18,8 +18,9 @@ const NAV = [
 ]
 
 const BOTTOM_NAV = [
-  { href: '/dashboard/team',    label: 'Team',    icon: Users },
-  { href: '/dashboard/billing', label: 'Billing', icon: CreditCard },
+  { href: '/dashboard/audit-log', label: 'Audit Log', icon: ScrollText },
+  { href: '/dashboard/team',      label: 'Team',      icon: Users },
+  { href: '/dashboard/billing',   label: 'Billing',   icon: CreditCard },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

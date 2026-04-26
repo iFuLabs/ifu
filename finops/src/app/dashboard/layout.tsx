@@ -2,13 +2,14 @@
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, TrendingDown, Settings, LogOut, Menu, GitBranch, Users, CreditCard
+  LayoutDashboard, TrendingDown, Settings, LogOut, Menu, GitBranch, Users, CreditCard, PieChart
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
 const NAV = [
-  { href: '/dashboard',          label: 'Overview',     icon: LayoutDashboard },
+  { href: '/dashboard',              label: 'Overview',     icon: LayoutDashboard },
+  { href: '/dashboard/allocation',   label: 'Allocation',   icon: PieChart },
   { href: '/dashboard/integrations', label: 'Integrations', icon: GitBranch },
 ]
 
