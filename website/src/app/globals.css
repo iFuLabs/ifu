@@ -3841,3 +3841,91 @@ body.nav-mobile-locked { overflow: hidden; }
     height: 24px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE OPTIMIZATION PASS — fills tablet/phone breakpoint gaps
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Prevent any element from forcing horizontal scroll */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+
+/* Tablet (≤900px): reflow multi-column grids */
+@media (max-width: 900px) {
+  .services-grid,
+  .testimonials-grid,
+  .pricing-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .methodology-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .footer-columns { grid-template-columns: repeat(2, 1fr) !important; gap: 32px; }
+
+  /* Mobile nav drawer items: ensure 44px touch targets */
+  .nav-mobile-drawer a,
+  .nav-mobile-drawer button {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Phones (≤768px): single column, hide non-essentials */
+@media (max-width: 768px) {
+  /* Hide info-bar entirely — saves 36px and dodges padding issues */
+  .info-bar { display: none !important; }
+  body { padding-top: 0 !important; }
+
+  /* Single-column grids */
+  .services-grid,
+  .testimonials-grid,
+  .pricing-grid,
+  .methodology-grid,
+  .footer-columns { grid-template-columns: 1fr !important; gap: 16px; }
+
+  /* Footer co-branding stacks */
+  .co-branding-container {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+  .footer-cert-badges { justify-content: center; gap: 14px; }
+  .footer-cert-badges img,
+  .about-cert-item img { width: 56px !important; height: 56px !important; }
+
+  /* Hero card stack: full width */
+  .hero-card-stack { grid-template-columns: 1fr !important; gap: 16px; }
+  .hero-card { padding: 18px 20px; }
+
+  /* Section title scales down further */
+  .section-title,
+  .svc-hero h1,
+  .startup-hero h1 { font-size: clamp(24px, 6.5vw, 32px); line-height: 1.15; }
+
+  /* Tables: horizontal scroll wrapper */
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Pricing tabs full-width row */
+  .pricing-tabs { flex-wrap: wrap; }
+
+  /* Reduce all heavy section padding to a sane phone default */
+  section, .section { padding-left: 18px !important; padding-right: 18px !important; }
+}
+
+/* Small phones (≤480px) */
+@media (max-width: 480px) {
+  /* Tighter hero buttons stack vertically */
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn-cta,
+  .hero-actions .btn-outline,
+  .hero-actions .btn-solid { width: 100%; justify-content: center; }
+
+  /* CTA / footer typography */
+  .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  .footer-legal { flex-wrap: wrap; justify-content: center; }
+  .footer-cert-badges img,
+  .about-cert-item img { width: 48px !important; height: 48px !important; }
+
+  /* Form inputs are 16px to prevent iOS zoom (already set at 900px but reaffirm) */
+  input, textarea, select { font-size: 16px !important; }
+
+  /* Card padding compresses */
+  .card-mint, .hero-card { padding: 16px !important; }
+}
