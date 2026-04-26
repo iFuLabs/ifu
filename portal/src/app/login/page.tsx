@@ -33,7 +33,21 @@ function LoginForm() {
     try {
       const response = await api.auth.login({ email, password })
       
-      // Redirect to the appropriate product dashboard based on org plan
+      // If there's a redirect param (e.g. from GitHub App install flow), use it
+      const redirect = searchParams.get('redirect')
+      if (redirect && redirect.startsWith('/')) {
+        // Redirect is a relative path — figure out which app it belongs to
+        if (redirect.includes('/dashboard')) {
+          const plan = response.organization?.plan
+          const baseUrl = plan === 'finops'
+            ? (process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002')
+            : (process.env.NEXT_PUBLIC_COMPLY_URL || 'http://localhost:3001')
+          window.location.href = baseUrl + redirect
+          return
+        }
+      }
+
+      // Default: redirect to the appropriate product dashboard based on org plan
       const plan = response.organization?.plan
       if (plan === 'finops') {
         window.location.href = (process.env.NEXT_PUBLIC_FINOPS_URL || 'http://localhost:3002') + '/dashboard'

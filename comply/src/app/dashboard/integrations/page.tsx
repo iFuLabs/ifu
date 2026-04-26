@@ -4,7 +4,8 @@ import { api } from '@/lib/api'
 
 // Type definition
 type Integration = any
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Plus, CheckCircle, XCircle, AlertCircle, RefreshCw, Trash2, Cloud, GitBranch } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
@@ -14,9 +15,44 @@ export default function IntegrationsPage() {
   const [showAwsForm,    setShowAwsForm]    = useState(false)
   const [showGithubForm, setShowGithubForm] = useState(false)
   const [syncing, setSyncing] = useState<string | null>(null)
+  const [autoConnecting, setAutoConnecting] = useState(false)
+  const [autoConnectError, setAutoConnectError] = useState('')
+  const searchParams = useSearchParams()
 
   const awsIntegration    = integrations?.find(i => i.type === 'aws')
   const githubIntegration = integrations?.find(i => i.type === 'github')
+
+  // Auto-connect GitHub when redirected from GitHub App install
+  useEffect(() => {
+    const installationId = searchParams.get('installation_id')
+    if (installationId && !githubIntegration && !autoConnecting) {
+      // First check if user is authenticated
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/me`, { credentials: 'include' })
+        .then(r => {
+          if (!r.ok) {
+            // Not authenticated — redirect to login with return URL
+            const returnUrl = encodeURIComponent(`/dashboard/integrations?installation_id=${installationId}`)
+            window.location.href = `${process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'}/login?redirect=${returnUrl}`
+            return
+          }
+          // Authenticated — proceed with auto-connect
+          setAutoConnecting(true)
+          api.integrations.connectGithub({ installationId: parseInt(installationId, 10) })
+            .then(() => {
+              mutate()
+              window.history.replaceState({}, '', '/dashboard/integrations')
+            })
+            .catch((err: any) => {
+              setAutoConnectError(err.message || 'Failed to connect GitHub')
+            })
+            .finally(() => setAutoConnecting(false))
+        })
+        .catch(() => {
+          const returnUrl = encodeURIComponent(`/dashboard/integrations?installation_id=${installationId}`)
+          window.location.href = `${process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'}/login?redirect=${returnUrl}`
+        })
+    }
+  }, [searchParams, githubIntegration])
 
   const handleSync = async (id: string) => {
     setSyncing(id)
@@ -36,6 +72,20 @@ export default function IntegrationsPage() {
         <h1 className="font-serif text-2xl font-normal text-ink">Integrations</h1>
         <p className="text-sm text-muted mt-0.5">Connect your cloud accounts to start automated compliance scanning.</p>
       </div>
+
+      {/* Auto-connect status */}
+      {autoConnecting && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-accent/5 border border-accent/20 rounded-xl text-sm">
+          <RefreshCw size={14} className="animate-spin text-accent" />
+          <span className="text-ink">Connecting your GitHub organisation...</span>
+        </div>
+      )}
+      {autoConnectError && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm" style={{ background: '#FEF3F2', border: '1px solid rgba(180, 35, 24, 0.2)' }}>
+          <AlertCircle size={14} style={{ color: '#B42318' }} />
+          <span style={{ color: '#B42318' }}>{autoConnectError}</span>
+        </div>
+      )}
 
       {/* AWS */}
       <IntegrationCard
@@ -72,8 +122,8 @@ export default function IntegrationsPage() {
         name="GitHub"
         desc="Branch protection, 2FA enforcement, secret scanning, Dependabot, PR reviews — 6 controls"
         integration={githubIntegration}
-        onConnect={() => setShowGithubForm(true)}
-        onReconnect={githubIntegration?.status === 'error' ? () => setShowGithubForm(true) : undefined}
+        onConnect={() => window.location.href = 'https://github.com/apps/ifu-labs/installations/new'}
+        onReconnect={githubIntegration?.status === 'error' ? () => window.location.href = 'https://github.com/apps/ifu-labs/installations/new' : undefined}
         onSync={() => githubIntegration && handleSync(githubIntegration.id)}
         onDisconnect={() => githubIntegration && handleDisconnect(githubIntegration.id)}
         syncing={syncing === githubIntegration?.id}
@@ -346,11 +396,11 @@ function GitHubConnectForm({ onSuccess, onCancel }: { onSuccess: () => void; onC
     <div className="space-y-4">
       <h3 className="text-sm font-medium text-ink">Connect GitHub Organisation</h3>
 
-      <div className="bg-border/40 border border-border rounded p-4 text-xs space-y-1.5">
-        <p className="font-medium text-ink">Install the iFu Labs Comply GitHub App:</p>
-        <ol className="list-decimal list-inside space-y-1 text-muted">
+      <div className="bg-surface border border-border rounded p-4 text-xs space-y-1.5">
+        <p className="font-medium text-ink">Install the iFu Labs GitHub App:</p>
+        <ol className="list-decimal list-inside space-y-1" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>
           <li>
-            <a href="https://github.com/apps/ifu-labs-comply" target="_blank" rel="noopener noreferrer"
+            <a href="https://github.com/apps/ifu-labs" target="_blank" rel="noopener noreferrer"
               className="text-accent underline">
               Click here to install the GitHub App
             </a>

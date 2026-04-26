@@ -14,7 +14,12 @@
     { "key": "scanId",        "value": "",                "type": "string" },
     { "key": "evidenceId",    "value": "",                "type": "string" },
     { "key": "vendorId",      "value": "",                "type": "string" },
-    { "key": "userId",        "value": "",                "type": "string" }
+    { "key": "userId",        "value": "",                "type": "string" },
+    { "key": "budgetId",      "value": "",                "type": "string" },
+    { "key": "auditId",       "value": "",                "type": "string" },
+    { "key": "exemptionId",   "value": "",                "type": "string" },
+    { "key": "commentId",     "value": "",                "type": "string" },
+    { "key": "resourceId",    "value": "",                "type": "string" }
   ],
   "auth": {
     "type": "bearer",
@@ -161,6 +166,23 @@
           }
         },
         {
+          "name": "Get score history",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/controls/score/history?days=90&framework=overall",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "controls", "score", "history"],
+              "query": [
+                { "key": "days", "value": "90", "description": "Number of days of history to return (default 90)" },
+                { "key": "framework", "value": "overall", "description": "Framework to get history for: overall | soc2 | iso27001 | gdpr | hipaa | pci_dss" }
+              ]
+            },
+            "description": "Returns historical compliance score data points over the specified number of days. Used for trend charts on the dashboard."
+          }
+        },
+        {
           "name": "Get control detail",
           "request": {
             "method": "GET",
@@ -183,6 +205,72 @@
               "raw": "{\n  \"notes\": \"Exempted — this control does not apply because we use SSO exclusively. No IAM console users exist.\"\n}"
             },
             "description": "Adds or updates manual notes on a control result. Used to document exemptions, remediation context, or audit notes."
+          }
+        },
+        {
+          "name": "List control comments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/controls/{{controlId}}/comments",
+            "description": "Returns all comments on a specific control, ordered by creation time. Used for team discussion threads on controls."
+          }
+        },
+        {
+          "name": "Create control comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/controls/{{controlId}}/comments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Working on this\"\n}"
+            },
+            "description": "Adds a comment to a control. Used for team collaboration and audit trail on control remediation."
+          }
+        },
+        {
+          "name": "Edit comment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/controls/comments/{{commentId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Updated text\"\n}"
+            },
+            "description": "Edits an existing comment. Only the comment author or an admin can edit."
+          }
+        },
+        {
+          "name": "Delete comment",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/controls/comments/{{commentId}}",
+            "description": "Deletes a comment. Only the comment author or an admin can delete."
+          }
+        },
+        {
+          "name": "Bulk update controls",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/controls/bulk",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\"CC6.1-MFA\", \"CC6.2\"],\n  \"remediationOwnerId\": \"uuid\",\n  \"remediationStatus\": \"in_progress\"\n}"
+            },
+            "description": "Bulk update multiple controls at once. Assign remediation owners and update statuses in batch.\n\n**remediationStatus:** not_started | in_progress | resolved | accepted"
           }
         }
       ]
@@ -479,7 +567,7 @@
 
     {
       "name": "FinOps",
-      "description": "AWS cost optimisation — waste detection, rightsizing, Reserved Instance and Savings Plan coverage.",
+      "description": "AWS cost optimisation — waste detection, rightsizing, Reserved Instance and Savings Plan coverage, cost trends, tag-based allocation, and AI/GPU spend analysis.",
       "item": [
         {
           "name": "Get FinOps findings",
@@ -513,6 +601,326 @@
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/v1/finops/summary",
             "description": "Lightweight summary for the dashboard card. Returns `available: false` if no FinOps scan has been run yet.\n\nWhen available, returns: monthlyCost, totalMonthlySavings, totalAnnualSavings, wasteItems, rightsizingItems, coverageGaps, checkedAt."
+          }
+        },
+        {
+          "name": "Get cost trend",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/finops/trend?days=90",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "finops", "trend"],
+              "query": [
+                { "key": "days", "value": "90", "description": "Number of days of cost history to return (default 90)" }
+              ]
+            },
+            "description": "Returns historical daily cost data points for the specified number of days. Used for cost trend charts on the FinOps dashboard."
+          }
+        },
+        {
+          "name": "Get cost allocation",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/finops/allocation?tagKey=Environment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "finops", "allocation"],
+              "query": [
+                { "key": "tagKey", "value": "Environment", "description": "AWS tag key to group costs by (e.g. Environment, Team, Project)" }
+              ]
+            },
+            "description": "Returns cost allocation broken down by the specified AWS tag key. Useful for understanding spend by environment, team, or project."
+          }
+        },
+        {
+          "name": "Get purchase recommendations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/finops/purchase-recommendations",
+            "description": "Returns Savings Plans and Reserved Instance purchase recommendations based on historical usage patterns. Includes estimated monthly savings for each recommendation."
+          }
+        },
+        {
+          "name": "Get AI and GPU spend",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/finops/ai-gpu",
+            "description": "Returns AI and GPU spend analysis including SageMaker, Bedrock, EC2 GPU instances, and other ML/AI service costs. Highlights underutilised GPU instances and optimisation opportunities."
+          }
+        },
+        {
+          "name": "Export findings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/finops/export?format=csv",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "finops", "export"],
+              "query": [
+                { "key": "format", "value": "csv", "description": "Export format: csv | json | focus" }
+              ]
+            },
+            "description": "Exports FinOps findings in the specified format. Supports CSV, JSON, and FOCUS (FinOps Open Cost and Usage Specification) formats.\n\nResponse is a file download with appropriate Content-Type and Content-Disposition headers."
+          }
+        },
+        {
+          "name": "Get recommendation states",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/finops/recommendations/states",
+            "description": "Returns the current state of all FinOps recommendations (e.g. active, snoozed, dismissed). Used to track which recommendations have been acted on."
+          }
+        },
+        {
+          "name": "Update recommendation state",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/finops/recommendations/{{resourceId}}/state",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"waste\",\n  \"state\": \"snoozed\",\n  \"snoozedUntil\": \"2026-05-26T00:00:00Z\"\n}"
+            },
+            "description": "Updates the state of a specific FinOps recommendation.\n\n**States:** active | snoozed | dismissed\n**Categories:** waste | rightsizing | coverage\n\nWhen snoozed, provide `snoozedUntil` as an ISO 8601 timestamp. The recommendation will reappear after that date."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Budgets",
+      "description": "Budget management with anomaly detection. Set monthly spend limits, configure alert thresholds, and track cost anomalies.",
+      "item": [
+        {
+          "name": "List budgets",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/budgets",
+            "description": "Returns all budgets for this org with current spend, percentage used, and alert status."
+          }
+        },
+        {
+          "name": "Create budget",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/budgets",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Monthly AWS\",\n  \"monthlyAmount\": 5000,\n  \"scope\": \"org\",\n  \"notifyAt\": [50, 80, 100]\n}"
+            },
+            "description": "Creates a new budget.\n\n**scope:** org | account | tag\n**notifyAt:** Array of percentage thresholds that trigger email alerts (e.g. [50, 80, 100] sends alerts at 50%, 80%, and 100% of budget)."
+          }
+        },
+        {
+          "name": "Update budget",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/budgets/{{budgetId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monthlyAmount\": 7500,\n  \"notifyAt\": [50, 75, 90, 100]\n}"
+            },
+            "description": "Updates an existing budget. All fields are optional — only include what you want to change."
+          }
+        },
+        {
+          "name": "Delete budget",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/budgets/{{budgetId}}",
+            "description": "Permanently deletes a budget and its alert history. Requires admin role."
+          }
+        },
+        {
+          "name": "List anomalies",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/budgets/anomalies",
+            "description": "Returns all detected cost anomalies for this org. Anomalies are flagged when daily spend deviates significantly from the rolling average."
+          }
+        },
+        {
+          "name": "Acknowledge anomaly",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/budgets/anomalies/{{budgetId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"acknowledged\"\n}"
+            },
+            "description": "Acknowledges or dismisses a cost anomaly.\n\n**status:** acknowledged | dismissed"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Exemptions",
+      "description": "Control exemption requests and approvals. Request temporary exemptions from specific compliance controls with an approval workflow.",
+      "item": [
+        {
+          "name": "List exemptions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/exemptions",
+            "description": "Returns all exemption requests for this org with their current approval status."
+          }
+        },
+        {
+          "name": "Request exemption",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/exemptions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"controlId\": \"CC6.1-MFA\",\n  \"reason\": \"Not applicable\",\n  \"expiresAt\": \"2026-12-31\"\n}"
+            },
+            "description": "Submits a new exemption request for a specific control.\n\n**controlId:** The control to exempt (e.g. CC6.1-MFA)\n**reason:** Justification for the exemption\n**expiresAt:** YYYY-MM-DD when the exemption should expire\n\nThe request enters a pending state until approved by an admin."
+          }
+        },
+        {
+          "name": "Approve or reject exemption",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/exemptions/{{exemptionId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            },
+            "description": "Approves or rejects an exemption request. Requires admin role.\n\n**status:** approved | rejected"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Audits",
+      "description": "Audit management — track compliance audits, assign auditor firms, and export audit calendars.",
+      "item": [
+        {
+          "name": "List audits",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/audits",
+            "description": "Returns all audits for this org with status, framework, type, and auditor details."
+          }
+        },
+        {
+          "name": "Create audit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/audits",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"framework\": \"soc2\",\n  \"type\": \"type2\",\n  \"expectedCloseAt\": \"2026-07-15\",\n  \"auditorFirm\": \"Deloitte\"\n}"
+            },
+            "description": "Creates a new audit record.\n\n**framework:** soc2 | iso27001 | gdpr | hipaa | pci_dss\n**type:** type1 | type2 | surveillance | recertification\n**expectedCloseAt:** Target completion date (YYYY-MM-DD)\n**auditorFirm:** Name of the auditing firm"
+          }
+        },
+        {
+          "name": "Update audit",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/v1/audits/{{auditId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expectedCloseAt\": \"2026-08-01\",\n  \"auditorFirm\": \"EY\"\n}"
+            },
+            "description": "Updates an existing audit. All fields are optional — only include what you want to change."
+          }
+        },
+        {
+          "name": "Delete audit",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/audits/{{auditId}}",
+            "description": "Permanently deletes an audit record. Requires admin role."
+          }
+        },
+        {
+          "name": "Export audit calendar (iCal)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/audits/calendar.ics",
+            "description": "Exports all audit dates as an iCal (.ics) file. Subscribe to this URL in Google Calendar, Outlook, or Apple Calendar to keep audit deadlines synced.\n\nResponse Content-Type: text/calendar"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Audit Log",
+      "description": "Immutable audit log of all actions performed in the platform. Used for compliance evidence and security investigations.",
+      "item": [
+        {
+          "name": "Query audit log",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit-log?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "audit-log"],
+              "query": [
+                { "key": "limit", "value": "50", "description": "Number of entries to return (default 50, max 200)" },
+                { "key": "offset", "value": "0", "description": "Offset for pagination (default 0)" }
+              ]
+            },
+            "description": "Returns paginated audit log entries ordered by timestamp descending. Each entry includes actor, action, resource, timestamp, and metadata.\n\nSupports pagination via `limit` and `offset` query parameters."
+          }
+        },
+        {
+          "name": "Export audit log (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/audit-log/export",
+            "description": "Exports the full audit log as a CSV file. Response is a CSV binary with Content-Disposition: attachment.\n\nUseful for compliance evidence packs and external SIEM ingestion."
           }
         }
       ]

@@ -12,9 +12,9 @@ export const metadata: Metadata = {
   title: 'iFu Labs — Product Portal',
   description: 'Access your iFu Labs products',
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/logomark.png',
+    shortcut: '/logomark.png',
+    apple: '/logomark.png',
   },
   robots: {
     index: false,

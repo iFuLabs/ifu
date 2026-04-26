@@ -5,9 +5,9 @@ export const metadata: Metadata = {
   title: 'iFu Costless — AWS Cost Optimization',
   description: 'AWS cost optimization and waste detection by iFu Labs',
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/logomark.png',
+    shortcut: '/logomark.png',
+    apple: '/logomark.png',
   },
 }
 

@@ -5,9 +5,9 @@ export const metadata: Metadata = {
   title: 'iFu Comply — Compliance Automation',
   description: 'Compliance automation by iFu Labs — SOC 2, ISO 27001, GDPR for engineering teams',
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/logomark.png',
+    shortcut: '/logomark.png',
+    apple: '/logomark.png',
   },
 }
 
