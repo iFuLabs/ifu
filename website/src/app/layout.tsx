@@ -61,7 +61,7 @@ const organizationSchema = {
   name: 'iFu Labs',
   legalName: 'iFu Labs Ltd.',
   url: SITE_URL,
-  logo: `${SITE_URL}/favicon.svg`,
+  logo: `${SITE_URL}/logomark.png`,
   description: 'AWS cloud consultancy and SaaS products for engineering teams. Expert-led services across compliance, cost optimisation, migration, EKS, and DevOps.',
   email: 'info@ifulabs.com',
   sameAs: [
