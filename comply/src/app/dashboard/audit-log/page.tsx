@@ -1,6 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { Download, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Download, ChevronLeft, ChevronRight, Search, Filter, RefreshCw } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
 
@@ -23,15 +23,30 @@ export default function AuditLogPage() {
   const [entries, setEntries] = useState<AuditEntry[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [offset, setOffset] = useState(0)
   const [actionFilter, setActionFilter] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [autoRefresh, setAutoRefresh] = useState(true)
   const limit = 50
+  // Bumps every time we want loadEntries to re-fire (manual refresh + auto-poll).
+  const [refreshTick, setRefreshTick] = useState(0)
 
-  useEffect(() => { loadEntries() }, [offset, actionFilter])
+  useEffect(() => { loadEntries() }, [offset, actionFilter, refreshTick])
+
+  // Poll every 30s, but only on the first page (offset 0) — paging through
+  // history shouldn't reset under the user.
+  useEffect(() => {
+    if (!autoRefresh || offset !== 0) return
+    const id = setInterval(() => setRefreshTick(t => t + 1), 30000)
+    return () => clearInterval(id)
+  }, [autoRefresh, offset])
 
   async function loadEntries() {
-    setLoading(true)
+    const isFirstLoad = entries.length === 0
+    if (isFirstLoad) setLoading(true)
+    else setRefreshing(true)
     try {
       const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
       if (actionFilter) params.set('action', actionFilter)
@@ -40,11 +55,13 @@ export default function AuditLogPage() {
         const data = await res.json()
         setEntries(data.rows || [])
         setTotal(data.total || 0)
+        setLastUpdated(new Date())
       }
     } catch (err) {
       console.error('Failed to load audit log:', err)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -74,15 +91,38 @@ export default function AuditLogPage() {
           <h1 className="font-serif text-2xl font-normal text-ink">Audit Log</h1>
           <p className="text-sm mt-0.5" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>
             {total} event{total !== 1 ? 's' : ''} recorded
+            {lastUpdated && (
+              <span> · updated {formatDistanceToNow(lastUpdated, { addSuffix: true })}</span>
+            )}
           </p>
         </div>
-        <button
-          onClick={exportCSV}
-          className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg bg-card hover:bg-surface-hover transition-all text-muted hover:text-ink"
-        >
-          <Download size={14} />
-          Export CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1.5 text-xs cursor-pointer select-none" style={{ color: 'rgba(51, 6, 61, 0.65)' }}>
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={e => setAutoRefresh(e.target.checked)}
+              className="cursor-pointer"
+            />
+            Auto-refresh
+          </label>
+          <button
+            onClick={() => setRefreshTick(t => t + 1)}
+            disabled={refreshing || loading}
+            title="Refresh"
+            className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg bg-card hover:bg-surface-hover transition-all text-muted hover:text-ink disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+          <button
+            onClick={exportCSV}
+            className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg bg-card hover:bg-surface-hover transition-all text-muted hover:text-ink"
+          >
+            <Download size={14} />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Filter */}

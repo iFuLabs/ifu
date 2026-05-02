@@ -301,6 +301,14 @@ export default async function controlRoutes(fastify) {
       .where(eq(controlResults.id, latest.id))
       .returning()
 
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user.id,
+      action: 'control.notes_updated',
+      resource: 'control',
+      resourceId: request.params.controlId
+    })
+
     return reply.send(updated)
   })
 

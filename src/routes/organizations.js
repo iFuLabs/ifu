@@ -53,6 +53,68 @@ export default async function organizationRoutes(fastify) {
     return reply.send(updated)
   })
 
+  // GET /api/v1/organizations/scan-settings
+  // Returns the org's per-product scan schedule (admin-controlled refresh timing).
+  fastify.get('/scan-settings', {
+    preHandler: [verifyToken, requireUser],
+    schema: { tags: ['Organizations'], security: [{ bearerAuth: [] }] }
+  }, async (request, reply) => {
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, request.orgId)
+    })
+    const defaults = {
+      comply:  { enabled: true, hourUtc: 2 },
+      finops:  { enabled: true, hourUtc: 3 },
+      anomaly: { enabled: true, hourUtc: 3 }
+    }
+    return reply.send({
+      comply:  { ...defaults.comply,  ...(org?.scanSettings?.comply  || {}) },
+      finops:  { ...defaults.finops,  ...(org?.scanSettings?.finops  || {}) },
+      anomaly: { ...defaults.anomaly, ...(org?.scanSettings?.anomaly || {}) }
+    })
+  })
+
+  // PATCH /api/v1/organizations/scan-settings
+  // Update the per-product scan schedule. Admins only.
+  fastify.patch('/scan-settings', {
+    preHandler: [verifyToken, requireUser, requireAdmin],
+    schema: {
+      tags: ['Organizations'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        properties: {
+          comply:  { type: 'object', properties: { enabled: { type: 'boolean' }, hourUtc: { type: 'integer', minimum: 0, maximum: 23 } } },
+          finops:  { type: 'object', properties: { enabled: { type: 'boolean' }, hourUtc: { type: 'integer', minimum: 0, maximum: 23 } } },
+          anomaly: { type: 'object', properties: { enabled: { type: 'boolean' }, hourUtc: { type: 'integer', minimum: 0, maximum: 23 } } }
+        },
+        additionalProperties: false
+      }
+    }
+  }, async (request, reply) => {
+    const current = await db.query.organizations.findFirst({
+      where: eq(organizations.id, request.orgId)
+    })
+    const merged = {
+      comply:  { enabled: true, hourUtc: 2, ...(current?.scanSettings?.comply  || {}), ...(request.body.comply  || {}) },
+      finops:  { enabled: true, hourUtc: 3, ...(current?.scanSettings?.finops  || {}), ...(request.body.finops  || {}) },
+      anomaly: { enabled: true, hourUtc: 3, ...(current?.scanSettings?.anomaly || {}), ...(request.body.anomaly || {}) }
+    }
+
+    await db.update(organizations)
+      .set({ scanSettings: merged, updatedAt: new Date() })
+      .where(eq(organizations.id, request.orgId))
+
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user.id,
+      action: 'organization.scan_settings_updated',
+      metadata: request.body
+    })
+
+    return reply.send(merged)
+  })
+
   // GET /api/v1/organizations/members
   fastify.get('/members', {
     preHandler: [verifyToken, requireUser],

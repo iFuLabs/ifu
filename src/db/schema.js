@@ -23,6 +23,11 @@ export const organizations = pgTable('organizations', {
   paystackAuthCode: text('paystack_auth_code'),
   trialEndsAt:     timestamp('trial_ends_at'),
   finopsSettings:  jsonb('finops_settings').default({ tagKeys: ['Environment', 'Team', 'Project', 'CostCenter'] }),
+  scanSettings:    jsonb('scan_settings').default({
+    comply:  { enabled: true, hourUtc: 2 },
+    finops:  { enabled: true, hourUtc: 3 },
+    anomaly: { enabled: true, hourUtc: 3 }
+  }),
   createdAt:       timestamp('created_at').notNull().defaultNow(),
   updatedAt:       timestamp('updated_at').notNull().defaultNow()
 })
@@ -40,6 +45,7 @@ export const users = pgTable('users', {
   avatarUrl:      text('avatar_url'),
   orgId:          uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
   role:           text('role').notNull().default('member'), // owner | admin | member
+  tokensInvalidatedAt: timestamp('tokens_invalidated_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow(),
   updatedAt:      timestamp('updated_at').notNull().defaultNow()
 }, (table) => [

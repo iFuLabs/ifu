@@ -408,6 +408,13 @@ export default async function authRoutes(fastify) {
       .where(eq(users.id, request.user.id))
       .returning()
 
+    await auditAction({
+      orgId: request.user.orgId,
+      userId: request.user.id,
+      action: 'auth.profile_updated',
+      metadata: { fields: Object.keys(updates).filter(k => k !== 'updatedAt') }
+    })
+
     return reply.send({
       id: updated.id,
       email: updated.email,
@@ -418,10 +425,41 @@ export default async function authRoutes(fastify) {
   })
 
   // POST /api/v1/auth/logout
-  // Clear the auth cookie
+  // Invalidate all outstanding tokens for this user, then clear the cookie.
+  // Soft-decode so an already-expired token still triggers cleanup.
   fastify.post('/logout', {
     schema: { tags: ['Auth'] }
   }, async (request, reply) => {
+    const authHeader = request.headers.authorization
+    const cookieToken = request.cookies?.auth_token
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : cookieToken
+
+    let userId = null
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true })
+        userId = decoded.userId
+      } catch {
+        try {
+          const decoded = jwt.decode(token)
+          if (decoded?.sub) {
+            const user = await db.query.users.findFirst({ where: eq(users.auth0Id, decoded.sub) })
+            if (user) userId = user.id
+          }
+        } catch {}
+      }
+    }
+
+    if (userId) {
+      const now = new Date()
+      const [updated] = await db
+        .update(users)
+        .set({ tokensInvalidatedAt: now, updatedAt: now })
+        .where(eq(users.id, userId))
+        .returning({ orgId: users.orgId })
+      await auditAction({ orgId: updated?.orgId, userId, action: 'auth.logout' }).catch(() => {})
+    }
+
     reply.clearCookie('auth_token', { path: '/' })
     return reply.send({ message: 'Logged out' })
   })

@@ -10,6 +10,13 @@ const JWKS = createRemoteJWKSet(
   new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`)
 )
 
+// True if the token was issued before the user's most recent forced sign-out.
+// Both jsonwebtoken and jose return `iat` in seconds since epoch.
+function isTokenRevoked(decoded, user) {
+  if (!user?.tokensInvalidatedAt || !decoded?.iat) return false
+  return decoded.iat * 1000 < new Date(user.tokensInvalidatedAt).getTime()
+}
+
 // Verify JWT token (our own or Auth0) and attach user + org to request
 async function verifyToken(request, reply) {
   // Accept token from Authorization header or httpOnly cookie
@@ -33,6 +40,10 @@ async function verifyToken(request, reply) {
 
     if (!user) {
       return reply.status(401).send({ error: 'Unauthorized', message: 'User not found' })
+    }
+
+    if (isTokenRevoked(decoded, user)) {
+      return reply.status(401).send({ error: 'Unauthorized', message: 'Session ended. Please sign in again.' })
     }
 
     request.user = user
@@ -65,6 +76,10 @@ async function verifyToken(request, reply) {
       request.auth0Sub = payload.sub
       request.auth0Email = payload.email
       return
+    }
+
+    if (isTokenRevoked(payload, user)) {
+      return reply.status(401).send({ error: 'Unauthorized', message: 'Session ended. Please sign in again.' })
     }
 
     request.user = user

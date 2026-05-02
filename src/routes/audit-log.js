@@ -1,6 +1,6 @@
 import { db } from '../db/client.js'
 import { auditLog, users } from '../db/schema.js'
-import { eq, and, gte, lte, desc } from 'drizzle-orm'
+import { eq, and, gte, gt, lte, desc } from 'drizzle-orm'
 import { verifyToken, requireUser } from '../middleware/auth.js'
 
 export default async function auditLogRoutes(fastify) {
@@ -19,6 +19,7 @@ export default async function auditLogRoutes(fastify) {
           action: { type: 'string' },
           start: { type: 'string' },
           end: { type: 'string' },
+          since: { type: 'string', description: 'ISO timestamp — return only entries strictly newer than this' },
           limit: { type: 'integer', default: 50, maximum: 200 },
           offset: { type: 'integer', default: 0 }
         }
@@ -30,13 +31,14 @@ export default async function auditLogRoutes(fastify) {
       return reply.status(403).send({ error: 'Forbidden', message: 'Admin or auditor access required' })
     }
 
-    const { actor, action, start, end, limit = 50, offset = 0 } = request.query
+    const { actor, action, start, end, since, limit = 50, offset = 0 } = request.query
     const conditions = [eq(auditLog.orgId, request.orgId)]
 
     if (actor) conditions.push(eq(auditLog.userId, actor))
     if (action) conditions.push(eq(auditLog.action, action))
     if (start) conditions.push(gte(auditLog.createdAt, new Date(start)))
     if (end) conditions.push(lte(auditLog.createdAt, new Date(end)))
+    if (since) conditions.push(gt(auditLog.createdAt, new Date(since)))
 
     const rows = await db
       .select({
@@ -65,7 +67,7 @@ export default async function auditLogRoutes(fastify) {
       .where(and(...conditions))
       .catch(() => [{ count: 0 }])
 
-    return reply.send({ rows, total: count, limit, offset })
+    return reply.send({ rows, total: count, limit, offset, serverTime: new Date().toISOString() })
   })
 
   // GET /api/v1/audit-log/export

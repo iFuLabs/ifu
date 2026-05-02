@@ -10,6 +10,29 @@ import { validateInstallation } from '../connectors/github/client.js'
 import { handleGithubWebhook } from '../connectors/github/webhook.js'
 import { validateOktaCredentials } from '../connectors/okta/checks.js'
 import { validateGoogleWorkspaceCredentials } from '../connectors/google-workspace/checks.js'
+import { redis } from '../services/redis.js'
+
+// Drop every cached FinOps response keyed by this org so the dashboard
+// can't keep serving findings from a now-disconnected AWS account.
+async function clearFinopsCacheForOrg(orgId, log) {
+  const patterns = [
+    `finops:findings:${orgId}*`,
+    `finops:trend:${orgId}:*`,
+    `finops:allocation:${orgId}:*`,
+    `finops:purchase-recs:${orgId}`,
+    `finops:ai-gpu:${orgId}`
+  ]
+  try {
+    for (const match of patterns) {
+      const stream = redis.scanStream({ match, count: 200 })
+      for await (const keys of stream) {
+        if (keys.length) await redis.del(...keys)
+      }
+    }
+  } catch (err) {
+    log?.warn({ err, orgId }, 'Failed to clear FinOps cache after integration disconnect')
+  }
+}
 
 export default async function integrationRoutes(fastify) {
 
@@ -88,6 +111,33 @@ export default async function integrationRoutes(fastify) {
         error: 'Integration Error',
         message: validation.error,
         hint: 'Ensure the IAM role trust policy allows assumption from the iFu Labs Comply account'
+      })
+    }
+
+    // Multi-tenant isolation: prevent another org from claiming the same AWS account.
+    // Allowed cases: this org reconnecting (existing row, same account) and orgs that
+    // previously connected this account but have since disconnected.
+    const allConnected = await db.query.integrations.findMany({
+      where: and(
+        eq(integrations.type, 'aws'),
+        eq(integrations.status, 'connected')
+      ),
+      columns: { id: true, orgId: true, metadata: true }
+    })
+    const collision = allConnected.find(row =>
+      row.orgId !== request.orgId &&
+      row.metadata?.accountId === validation.accountId
+    )
+    if (collision) {
+      fastify.log.warn({
+        attemptingOrgId: request.orgId,
+        existingOrgId: collision.orgId,
+        awsAccountId: validation.accountId
+      }, 'Blocked duplicate AWS account registration across orgs')
+      return reply.status(409).send({
+        error: 'Conflict',
+        message: `AWS account ${validation.accountId} is already connected to another organization. Disconnect it from the existing organization first.`,
+        code: 'AWS_ACCOUNT_ALREADY_CONNECTED'
       })
     }
 
@@ -173,6 +223,10 @@ export default async function integrationRoutes(fastify) {
 
     await db.delete(integrations).where(eq(integrations.id, integration.id))
 
+    if (integration.type === 'aws') {
+      await clearFinopsCacheForOrg(request.orgId, fastify.log)
+    }
+
     await auditAction({
       orgId: request.orgId,
       userId: request.user.id,
@@ -216,6 +270,15 @@ export default async function integrationRoutes(fastify) {
       integrationType: integration.type,
       triggeredBy: 'manual'
     }, { priority: 1 })
+
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user.id,
+      action: 'integration.sync_triggered',
+      resource: integration.type,
+      resourceId: integration.id,
+      metadata: { jobId: job.id }
+    })
 
     return reply.send({ message: 'Scan queued', jobId: job.id })
   })

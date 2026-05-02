@@ -190,11 +190,26 @@ export default async function teamRoutes(fastify) {
   }, async (request, reply) => {
     const { id } = request.params
 
+    const existing = await db.query.invitations.findFirst({
+      where: and(eq(invitations.id, id), eq(invitations.orgId, request.orgId))
+    })
+
     await db.delete(invitations)
       .where(and(
         eq(invitations.id, id),
         eq(invitations.orgId, request.orgId)
       ))
+
+    if (existing) {
+      await auditAction({
+        orgId: request.orgId,
+        userId: request.user.id,
+        action: 'team.invitation_revoked',
+        resource: 'invitation',
+        resourceId: id,
+        metadata: { email: existing.email, role: existing.role, product: existing.product }
+      })
+    }
 
     return reply.status(204).send()
   })

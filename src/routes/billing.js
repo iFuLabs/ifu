@@ -350,6 +350,13 @@ export default async function billingRoutes(fastify) {
       updatedAt: new Date()
     }).where(eq(organizations.id, request.orgId))
 
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user.id,
+      action: 'billing.subscription_cancelled',
+      metadata: { subscriptionCode: sub.subscription_code }
+    })
+
     logger.info({ orgId: request.orgId }, 'Subscription cancelled')
 
     return reply.send({ status: 'cancelled', message: 'Subscription has been cancelled' })

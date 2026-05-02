@@ -157,6 +157,21 @@ export default async function finopsRoutes(fastify) {
     preHandler: [verifyToken, requireUser],
     schema: { tags: ['FinOps'], security: [{ bearerAuth: [] }] }
   }, async (request, reply) => {
+    const awsIntegration = await db.query.integrations.findFirst({
+      where: and(
+        eq(integrations.orgId, request.orgId),
+        eq(integrations.type, 'aws'),
+        eq(integrations.status, 'connected')
+      )
+    })
+
+    if (!awsIntegration) {
+      return reply.send({
+        available: false,
+        message: 'Connect an AWS account to see FinOps findings.'
+      })
+    }
+
     const cacheKey = `finops:findings:${request.orgId}`
     const cached = await redis.get(cacheKey).catch(() => null)
 
