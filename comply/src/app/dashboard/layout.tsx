@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   LayoutDashboard, Shield, GitBranch, FileText,
   Building2, Users, CreditCard, LogOut, Menu, X,
-  ChevronRight, ScrollText, Calendar
+  ChevronRight, ScrollText, Calendar, Settings
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -20,6 +20,7 @@ const NAV = [
 
 const BOTTOM_NAV = [
   { href: '/dashboard/audit-log', label: 'Audit Log', icon: ScrollText },
+  { href: '/dashboard/settings',  label: 'Settings',  icon: Settings },
   { href: '/dashboard/team',      label: 'Team',      icon: Users },
   { href: '/dashboard/billing',   label: 'Billing',   icon: CreditCard },
 ]

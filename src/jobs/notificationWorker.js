@@ -6,6 +6,7 @@ import { eq, and, inArray, or } from 'drizzle-orm'
 import { sendControlDriftEmail } from '../services/email.js'
 import { dispatchWebhook } from '../services/webhooks.js'
 import { postMessage, buildDriftBlocks } from '../services/slack.js'
+import { auditAction } from '../services/audit.js'
 import { logger } from '../services/logger.js'
 
 export const notificationWorker = new Worker('notifications', async (job) => {
@@ -65,6 +66,20 @@ export const notificationWorker = new Worker('notifications', async (job) => {
   }).catch(err => logger.warn({ err: err.message }, 'slack post failed'))
 
   logger.info({ orgId, scanId, recipients: recipients.length, drifted: drifted.length }, 'Drift email sent')
+
+  await auditAction({
+    orgId,
+    userId: null,
+    action: 'notification.drift_sent',
+    metadata: {
+      outcome: 'success',
+      scanId,
+      recipients: recipients.length,
+      driftedControls: drifted.length,
+      channels: ['email', 'webhook', 'slack']
+    }
+  }).catch(err => logger.warn({ err: err.message }, 'audit log for notification failed'))
+
   return { recipients: recipients.length, drifted: drifted.length }
 }, {
   connection: redis,
@@ -73,4 +88,15 @@ export const notificationWorker = new Worker('notifications', async (job) => {
 
 notificationWorker.on('failed', (job, err) => {
   logger.error({ orgId: job?.data?.orgId, err: err.message }, 'Notification job failed')
+
+  auditAction({
+    orgId: job?.data?.orgId || null,
+    userId: null,
+    action: 'notification.drift_failed',
+    metadata: {
+      outcome: 'failure',
+      scanId: job?.data?.scanId,
+      error: err.message
+    }
+  }).catch(() => {})
 })

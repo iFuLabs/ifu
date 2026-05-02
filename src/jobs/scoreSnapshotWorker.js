@@ -1,6 +1,7 @@
 import { db } from '../db/client.js'
 import { organizations, controlResults, controlDefinitions, complianceScoreSnapshots } from '../db/schema.js'
 import { eq, and, sql } from 'drizzle-orm'
+import { auditAction } from '../services/audit.js'
 import { logger } from '../services/logger.js'
 
 /**
@@ -72,8 +73,31 @@ export async function captureScoreSnapshots() {
       }
 
       logger.info({ orgId: org.id, frameworks: byFramework.size }, 'Score snapshot captured')
+
+      await auditAction({
+        orgId: org.id,
+        userId: null,
+        action: 'score.snapshot_captured',
+        metadata: {
+          outcome: 'success',
+          frameworks: byFramework.size,
+          overallScore: totalAll > 0 ? Math.round((totalPass / totalAll) * 100) : 0,
+          totalControls: totalAll
+        }
+      }).catch(err => logger.warn({ err: err.message, orgId: org.id }, 'audit log for score snapshot failed'))
+
     } catch (err) {
       logger.error({ orgId: org.id, err: err.message }, 'Score snapshot failed for org')
+
+      await auditAction({
+        orgId: org.id,
+        userId: null,
+        action: 'score.snapshot_failed',
+        metadata: {
+          outcome: 'failure',
+          error: err.message
+        }
+      }).catch(auditErr => logger.warn({ err: auditErr.message, orgId: org.id }, 'audit log for score snapshot failure failed'))
     }
   }
 

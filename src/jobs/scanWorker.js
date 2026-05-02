@@ -11,6 +11,7 @@ import { runGithubChecks } from '../connectors/github/checks.js'
 import { getInstallationClient } from '../connectors/github/client.js'
 import { notificationQueue } from './queues.js'
 import { dispatchWebhook } from '../services/webhooks.js'
+import { auditAction } from '../services/audit.js'
 
 export const scanWorker = new Worker('scans', async (job) => {
   const { orgId, integrationId, integrationType, triggeredBy } = job.data
@@ -154,6 +155,23 @@ export const scanWorker = new Worker('scans', async (job) => {
       completedAt: new Date().toISOString()
     }).catch(err => logger.warn({ err: err.message }, 'webhook dispatch failed'))
 
+    await auditAction({
+      orgId,
+      userId: null,
+      action: 'scan.completed',
+      metadata: {
+        outcome: 'success',
+        scanId: scan.id,
+        integrationType,
+        totalControls: results.length,
+        passCount,
+        failCount,
+        reviewCount,
+        driftedCount: drifted.length,
+        triggeredBy
+      }
+    })
+
     return { scanId: scan.id, passCount, failCount, reviewCount }
 
   } catch (err) {
@@ -180,6 +198,20 @@ export const scanWorker = new Worker('scans', async (job) => {
     }
 
     logger.error({ orgId, integrationId, error: err.message }, 'Scan failed')
+    
+    await auditAction({
+      orgId,
+      userId: null,
+      action: 'scan.failed',
+      metadata: {
+        outcome: 'failure',
+        scanId: scan.id,
+        integrationType,
+        error: err.message,
+        triggeredBy
+      }
+    }).catch(auditErr => logger.warn({ err: auditErr.message }, 'audit log for scan failure failed'))
+
     throw err // BullMQ will retry
   }
 }, {

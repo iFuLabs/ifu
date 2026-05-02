@@ -2,6 +2,7 @@
 import { Worker } from 'bullmq'
 import { redis } from '../services/redis.js'
 import { deliverWebhook } from '../services/webhooks.js'
+import { auditAction } from '../services/audit.js'
 import { logger } from '../services/logger.js'
 
 export const webhookWorker = new Worker('webhooks', async (job) => {
@@ -15,6 +16,19 @@ export const webhookWorker = new Worker('webhooks', async (job) => {
     // Throw error to trigger retry
     throw new Error(result.error || `HTTP ${result.statusCode}`)
   }
+
+  await auditAction({
+    orgId: payload?.orgId || null,
+    userId: null,
+    action: 'webhook.delivered',
+    metadata: {
+      outcome: 'success',
+      webhookId,
+      event,
+      attempt,
+      statusCode: result.statusCode
+    }
+  }).catch(err => logger.warn({ err: err.message }, 'audit log for webhook delivery failed'))
 
   return result
 }, {
@@ -37,6 +51,19 @@ webhookWorker.on('failed', (job, err) => {
     attempt: job?.attemptsMade,
     error: err.message 
   }, 'Webhook delivery failed')
+
+  auditAction({
+    orgId: job?.data?.payload?.orgId || null,
+    userId: null,
+    action: 'webhook.failed',
+    metadata: {
+      outcome: 'failure',
+      webhookId: job?.data?.webhookId,
+      event: job?.data?.event,
+      attempt: job?.attemptsMade,
+      error: err.message
+    }
+  }).catch(() => {})
 })
 
 // Graceful shutdown
