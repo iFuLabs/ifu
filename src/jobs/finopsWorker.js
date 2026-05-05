@@ -10,6 +10,7 @@ import { generateFinOpsSummary } from '../services/finops-ai.js'
 import { auditAction } from '../services/audit.js'
 import { dispatchWebhook } from '../services/webhooks.js'
 import { logger } from '../services/logger.js'
+import { notifyIntegrationFailure } from '../services/integration-failure-notify.js'
 
 const CACHE_TTL = 60 * 60 * 6
 
@@ -41,7 +42,7 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
     onProgress: async (pct) => job.updateProgress(pct)
   })
 
-  findings.aiSummary = await generateFinOpsSummary(findings)
+  findings.aiSummary = await generateFinOpsSummary(findings, { orgId })
 
   const cacheKey = `finops:findings:${orgId}:current-month`
   await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
@@ -166,8 +167,34 @@ finopsWorker.on('completed', (job, result) => {
   logger.info({ ...result }, 'FinOps scan complete')
 })
 
-finopsWorker.on('failed', (job, err) => {
-  logger.error({ orgId: job?.data?.orgId, err: err.message }, 'FinOps scan failed')
+finopsWorker.on('failed', async (job, err) => {
+  const { orgId, integrationId } = job?.data || {}
+  logger.error({ orgId, err: err.message }, 'FinOps scan failed')
+
+  // Only mark the integration as errored on connection/auth issues — those are
+  // the ones the customer needs to fix. Transient AWS API blips shouldn't
+  // trigger a banner.
+  const isConnectionError = err.message?.includes('not found') ||
+                            err.message?.includes('disconnected') ||
+                            err.message?.includes('credential') ||
+                            err.message?.includes('AssumeRole') ||
+                            err.message?.includes('AccessDenied')
+
+  if (isConnectionError && integrationId) {
+    try {
+      await db.update(integrations)
+        .set({
+          status: 'error',
+          lastError: err.message,
+          lastErrorAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(integrations.id, integrationId))
+      await notifyIntegrationFailure({ orgId, integrationId, errorMessage: err.message })
+    } catch (writeErr) {
+      logger.warn({ err: writeErr.message, integrationId }, 'Could not record FinOps integration error')
+    }
+  }
 })
 
 async function assumeRole(roleArn, externalId) {

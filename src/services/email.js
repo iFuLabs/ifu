@@ -63,8 +63,8 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
                   <li>Explore your compliance dashboard</li>
                 </ul>
                 
-                <p>You're on a 3-day free trial with full access to all features. No credit card required.</p>
-                
+                <p>You're on a 3-day free trial with full access to all features. Your card on file will be charged automatically when the trial ends — we'll email you a reminder the day before so there are no surprises. You can cancel any time from the billing dashboard.</p>
+
                 <a href="${PORTAL_URL}" class="button">Go to Dashboard</a>
                 
                 <p>If you have any questions, just reply to this email. We're here to help!</p>
@@ -317,3 +317,191 @@ export async function sendControlDriftEmail({ to, orgName, drifted, scanId }) {
     return { success: false, error: err.message }
   }
 }
+
+// ── Trial-lifecycle emails ────────────────────────────────────────────────
+//
+// Card-on-file is mandatory at signup (onboarding step 3 gates progression),
+// so every trial converts via Paystack auto-charge:
+//
+//     - sendTrialChargeReminderEmail  → T-24h, before auto-charge (cron)
+//     - sendChargeReceiptEmail        → on charge.success webhook
+//     - sendPaymentFailedEmail        → on invoice.payment_failed webhook
+
+const TRIAL_EMAIL_STYLES = `
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #33063D; margin: 0; padding: 0; background-color: #F4F4F4; }
+  .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  .header { background: #33063D; color: #FFFFFF; padding: 32px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+  .header h1 { margin: 0; font-size: 22px; font-weight: 600; }
+  .content { background: #FFFFFF; padding: 32px 30px; border: 1px solid #E5E5E5; border-top: none; border-radius: 0 0 8px 8px; }
+  .button { display: inline-block; background: #33063D; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0; font-weight: 500; }
+  .button-secondary { display: inline-block; background: #FFFFFF; color: #33063D; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 8px 8px 16px 0; font-weight: 500; border: 1px solid #33063D; }
+  .summary { background: #DAC0FD; padding: 16px; border-radius: 6px; margin: 20px 0; }
+  .summary-row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .footer { text-align: center; margin-top: 24px; color: #6b7280; font-size: 13px; }
+  .meta { color: #6b7280; font-size: 13px; }
+`
+
+function formatCurrency(amount, currency = 'ZAR') {
+  // Paystack returns amounts in subunits (cents/kobo). South African ZAR has 100 cents per rand.
+  const major = (amount || 0) / 100
+  try {
+    return new Intl.NumberFormat('en-ZA', { style: 'currency', currency }).format(major)
+  } catch {
+    return `${currency} ${major.toFixed(2)}`
+  }
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+/**
+ * Flow A T-24h: heads-up before the auto-charge fires.
+ * Required by good consumer-protection practice and reduces chargebacks.
+ */
+export async function sendTrialChargeReminderEmail({ to, name, orgName, planName, amount, currency, chargeDate, last4 }) {
+  try {
+    const emailConfig = getEmailConfig('billing')
+    const cancelUrl = `${PORTAL_URL}/dashboard/billing`
+    const { data, error } = await resend.emails.send({
+      ...emailConfig,
+      to,
+      subject: `Heads-up: your iFu Labs trial ends tomorrow`,
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${TRIAL_EMAIL_STYLES}</style></head><body>
+        <div class="container">
+          <div class="header"><h1>Your trial ends tomorrow</h1></div>
+          <div class="content">
+            <p>Hi ${name || 'there'},</p>
+            <p>This is a friendly reminder that <strong>${orgName}</strong>'s 3-day free trial of ${planName} ends tomorrow. Your payment method on file will be charged automatically — no action needed if you'd like to continue.</p>
+
+            <div class="summary">
+              <div class="summary-row"><span>Plan</span><strong>${planName}</strong></div>
+              <div class="summary-row"><span>Amount</span><strong>${formatCurrency(amount, currency)}</strong></div>
+              <div class="summary-row"><span>Charge date</span><strong>${formatDate(chargeDate)}</strong></div>
+              ${last4 ? `<div class="summary-row"><span>Card</span><strong>•••• ${last4}</strong></div>` : ''}
+            </div>
+
+            <p>If you'd like to cancel before the charge, you can do so from the billing dashboard.</p>
+            <a href="${cancelUrl}" class="button">Manage subscription</a>
+
+            <p class="meta">This is a billing notification you cannot opt out of while you have an active subscription. Reply to this email if you need help.</p>
+          </div>
+          <div class="footer"><p><strong>iFu Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
+        </div>
+      </body></html>`
+    })
+    if (error) { console.error('trial reminder email failed:', error); return { success: false, error } }
+    return { success: true, data }
+  } catch (err) { console.error('trial reminder error:', err); return { success: false, error: err.message } }
+}
+
+/**
+ * T+0 receipt: the customer's card was just charged. First paid invoice and
+ * subsequent renewals share this template.
+ */
+export async function sendChargeReceiptEmail({ to, name, orgName, planName, amount, currency, reference, nextPaymentDate, last4 }) {
+  try {
+    const emailConfig = getEmailConfig('billing')
+    const billingUrl = `${PORTAL_URL}/dashboard/billing`
+    const { data, error } = await resend.emails.send({
+      ...emailConfig,
+      to,
+      subject: `Receipt — ${formatCurrency(amount, currency)} for ${planName}`,
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${TRIAL_EMAIL_STYLES}</style></head><body>
+        <div class="container">
+          <div class="header"><h1>Payment received — thank you</h1></div>
+          <div class="content">
+            <p>Hi ${name || 'there'},</p>
+            <p>We've received payment for <strong>${orgName}</strong>'s ${planName} subscription.</p>
+
+            <div class="summary">
+              <div class="summary-row"><span>Plan</span><strong>${planName}</strong></div>
+              <div class="summary-row"><span>Amount</span><strong>${formatCurrency(amount, currency)}</strong></div>
+              ${reference ? `<div class="summary-row"><span>Reference</span><strong>${reference}</strong></div>` : ''}
+              ${last4 ? `<div class="summary-row"><span>Card</span><strong>•••• ${last4}</strong></div>` : ''}
+              ${nextPaymentDate ? `<div class="summary-row"><span>Next payment</span><strong>${formatDate(nextPaymentDate)}</strong></div>` : ''}
+            </div>
+
+            <a href="${billingUrl}" class="button">View billing</a>
+            <p class="meta">Need a tax invoice? Reply and we'll send one over.</p>
+          </div>
+          <div class="footer"><p><strong>iFu Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
+        </div>
+      </body></html>`
+    })
+    if (error) { console.error('charge receipt email failed:', error); return { success: false, error } }
+    return { success: true, data }
+  } catch (err) { console.error('charge receipt error:', err); return { success: false, error: err.message } }
+}
+
+/**
+ * Flow A payment failure: card declined / insufficient funds / etc. Sent on
+ * invoice.payment_failed webhook. Paystack will retry automatically; we ask
+ * the customer to update their card so the retry succeeds.
+ */
+export async function sendPaymentFailedEmail({ to, name, orgName, planName, amount, currency, last4 }) {
+  try {
+    const emailConfig = getEmailConfig('billing')
+    const billingUrl = `${PORTAL_URL}/dashboard/billing`
+    const { data, error } = await resend.emails.send({
+      ...emailConfig,
+      to,
+      subject: `Action needed — payment for ${orgName} failed`,
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${TRIAL_EMAIL_STYLES}</style></head><body>
+        <div class="container">
+          <div class="header" style="background: #B42318;"><h1>Payment failed</h1></div>
+          <div class="content">
+            <p>Hi ${name || 'there'},</p>
+            <p>We weren't able to process the latest payment of <strong>${formatCurrency(amount, currency)}</strong> for <strong>${orgName}</strong>'s ${planName} subscription${last4 ? ` on card •••• ${last4}` : ''}.</p>
+            <p>Paystack will automatically retry the charge over the next few days. To avoid interruption to your scans and dashboards, please update your payment method now.</p>
+            <a href="${billingUrl}" class="button">Update payment method</a>
+            <p class="meta">If your card is fine and this looks like a mistake, reply to this email and we'll investigate.</p>
+          </div>
+          <div class="footer"><p><strong>iFu Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
+        </div>
+      </body></html>`
+    })
+    if (error) { console.error('payment failed email failed:', error); return { success: false, error } }
+    return { success: true, data }
+  } catch (err) { console.error('payment failed email error:', err); return { success: false, error: err.message } }
+}
+
+/**
+ * Sent when a scheduled scan against an integration starts failing on what
+ * looks like an auth/connection issue (AccessDenied, AssumeRole failure,
+ * credential rotation). Debounced to once per 24h per integration.
+ */
+export async function sendIntegrationFailureEmail({ to, name, orgName, integrationType, errorMessage, dashboardUrl }) {
+  try {
+    const emailConfig = getEmailConfig('alerts')
+    const url = dashboardUrl || `${PORTAL_URL}/dashboard/integrations`
+    const typeLabel = integrationType === 'aws' ? 'AWS' : (integrationType || 'integration').toUpperCase()
+    const { data, error } = await resend.emails.send({
+      ...emailConfig,
+      to,
+      subject: `Action needed — ${orgName}'s ${typeLabel} integration is failing`,
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${TRIAL_EMAIL_STYLES}</style></head><body>
+        <div class="container">
+          <div class="header" style="background: #B42318;"><h1>Your ${typeLabel} scan is failing</h1></div>
+          <div class="content">
+            <p>Hi ${name || 'there'},</p>
+            <p>Our latest scheduled scan against <strong>${orgName}</strong>'s ${typeLabel} account couldn't complete. The most common causes are an IAM role being modified, removed, or having its trust policy changed.</p>
+
+            <div class="summary">
+              <div style="font-family: monospace; font-size: 12px; color: #B42318; word-break: break-word;">${(errorMessage || 'Unknown error').replace(/</g, '&lt;')}</div>
+            </div>
+
+            <p>Until this is resolved, your dashboards will show stale data and scheduled scans will keep failing.</p>
+            <a href="${url}" class="button">Reconnect ${typeLabel}</a>
+
+            <p class="meta">You'll receive at most one of these per day. If the next scan succeeds, you won't hear from us again.</p>
+          </div>
+          <div class="footer"><p><strong>iFu Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
+        </div>
+      </body></html>`
+    })
+    if (error) { console.error('integration failure email failed:', error); return { success: false, error } }
+    return { success: true, data }
+  } catch (err) { console.error('integration failure email error:', err); return { success: false, error: err.message } }
+}
+

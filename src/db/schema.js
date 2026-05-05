@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index, uniqueIndex } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, numeric, pgEnum, index, uniqueIndex } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
 // ── Enums ──────────────────────────────────────────────────────────────────
@@ -27,6 +27,12 @@ export const organizations = pgTable('organizations', {
     comply:  { enabled: true, hourUtc: 2 },
     finops:  { enabled: true, hourUtc: 3 },
     anomaly: { enabled: true, hourUtc: 3 }
+  }),
+  // Idempotency keys for the trial-lifecycle email cron. Each value is null
+  // until the corresponding email goes out, then becomes an ISO timestamp.
+  // Card is required at signup, so only T-24h reminder is tracked here.
+  trialEmailsSent: jsonb('trial_emails_sent').default({
+    ending_tomorrow: null
   }),
   createdAt:       timestamp('created_at').notNull().defaultNow(),
   updatedAt:       timestamp('updated_at').notNull().defaultNow()
@@ -88,6 +94,8 @@ export const integrations = pgTable('integrations', {
   lastSyncAt:     timestamp('last_sync_at'),
   lastErrorAt:    timestamp('last_error_at'),
   lastError:      text('last_error'),
+  // Debounce key — owner gets at most one failure email per 24h per integration.
+  lastFailureEmailAt: timestamp('last_failure_email_at'),
   disconnectedAt: timestamp('disconnected_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow(),
   updatedAt:      timestamp('updated_at').notNull().defaultNow()
@@ -204,6 +212,26 @@ export const auditLog = pgTable('audit_log', {
   createdAt:      timestamp('created_at').notNull().defaultNow()
 }, (table) => [
   index('idx_audit_log_org_id').on(table.orgId)
+])
+
+
+// ── AI usage log ───────────────────────────────────────────────────────────
+// Token + cost accounting for every Bedrock/Claude call. Read by the
+// /api/v1/ai-usage endpoints and the per-org plan-limit middleware.
+export const aiUsageLog = pgTable('ai_usage_log', {
+  id:                uuid('id').primaryKey().defaultRandom(),
+  orgId:             uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  userId:            uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  service:           text('service').notNull(),    // 'comply' | 'finops'
+  operation:         text('operation').notNull(),  // e.g. 'control.explain'
+  model:             text('model').notNull(),
+  inputTokens:       integer('input_tokens').notNull().default(0),
+  outputTokens:      integer('output_tokens').notNull().default(0),
+  estimatedCostUsd:  numeric('estimated_cost_usd', { precision: 10, scale: 6 }).notNull().default('0'),
+  createdAt:         timestamp('created_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_ai_usage_log_org_id_created_at').on(table.orgId, table.createdAt),
+  index('idx_ai_usage_log_created_at').on(table.createdAt)
 ])
 
 

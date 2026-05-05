@@ -5,6 +5,7 @@ import { verifyToken, requireUser } from '../middleware/auth.js'
 import { requireAiFeatures } from '../middleware/plan.js'
 import { explainControlGap, explainControlGapStream, generateComplianceSummary } from '../services/ai.js'
 import { redis } from '../services/redis.js'
+import { acquire as acquireRateLimit } from '../services/rate-limit.js'
 
 // Cache AI responses for 24 hours — they don't need to regenerate on every request
 const CACHE_TTL = 60 * 60 * 24
@@ -24,7 +25,7 @@ export default async function aiRoutes(fastify) {
     const { controlId } = request.params
     const cacheKey = `ai:explain:${request.orgId}:${controlId}`
 
-    // Check cache first
+    // Check cache first — cached responses bypass the rate limit
     const cached = await redis.get(cacheKey).catch(() => null)
     if (cached) {
       return reply.send({ ...JSON.parse(cached), cached: true })
@@ -48,14 +49,28 @@ export default async function aiRoutes(fastify) {
       return reply.status(400).send({ error: 'Bad Request', message: 'Control is not failing — no explanation needed' })
     }
 
+    // Cache miss — about to call Bedrock. Throttle to 10 fresh AI explanations
+    // per org per minute. Cached hits above are unaffected.
+    const limit = await acquireRateLimit(`ratelimit:ai-explain:${request.orgId}`, 6)
+    if (!limit.ok) {
+      reply.header('Retry-After', String(limit.retryAfter))
+      return reply.status(429).send({
+        error: 'Too Many Requests',
+        message: `AI explanations are rate-limited. Try again in ${limit.retryAfter}s.`,
+        code: 'RATE_LIMITED',
+        retryAfter: limit.retryAfter
+      })
+    }
+
     const control = { ...def, ...latest, evidence: latest.evidence }
-    const org = { 
-      name: request.user.org?.name || 'Your Organization', 
-      plan: request.user.org?.plan || 'starter' 
+    const org = {
+      id:   request.orgId,
+      name: request.user.org?.name || 'Your Organization',
+      plan: request.user.org?.plan || 'starter'
     }
 
     try {
-      const explanation = await explainControlGap(control, org)
+      const explanation = await explainControlGap(control, org, { orgId: request.orgId, userId: request.user.id })
 
       // Cache the result
       await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(explanation)).catch(() => null)
@@ -174,13 +189,14 @@ export default async function aiRoutes(fastify) {
     const total = controls.length
     const score = total > 0 ? Math.round((passing / total) * 100) : 0
 
-    const org = { 
-      name: request.user.org?.name || 'Your Organization', 
-      plan: request.user.org?.plan || 'starter' 
+    const org = {
+      id:   request.orgId,
+      name: request.user.org?.name || 'Your Organization',
+      plan: request.user.org?.plan || 'starter'
     }
 
     try {
-      const summary = await generateComplianceSummary({ controls, score, org, framework })
+      const summary = await generateComplianceSummary({ controls, score, org, framework, userId: request.user.id })
       await redis.setex(cacheKey, 60 * 60 * 6, JSON.stringify(summary)).catch(() => null)
       return reply.send({ ...summary, cached: false })
     } catch (err) {

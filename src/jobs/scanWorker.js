@@ -183,10 +183,11 @@ export const scanWorker = new Worker('scans', async (job) => {
     }).where(eq(scans.id, scan.id))
 
     // Only mark integration as errored if it's a connection/auth issue, not a scan execution issue
-    const isConnectionError = err.message?.includes('not found') || 
+    const isConnectionError = err.message?.includes('not found') ||
                              err.message?.includes('disconnected') ||
                              err.message?.includes('credential') ||
-                             err.message?.includes('AssumeRole')
+                             err.message?.includes('AssumeRole') ||
+                             err.message?.includes('AccessDenied')
     
     if (isConnectionError) {
       await db.update(integrations).set({
@@ -195,6 +196,8 @@ export const scanWorker = new Worker('scans', async (job) => {
         lastErrorAt: new Date(),
         updatedAt: new Date()
       }).where(eq(integrations.id, integrationId))
+      const { notifyIntegrationFailure } = await import('../services/integration-failure-notify.js')
+      await notifyIntegrationFailure({ orgId, integrationId, errorMessage: err.message })
     }
 
     logger.error({ orgId, integrationId, error: err.message }, 'Scan failed')

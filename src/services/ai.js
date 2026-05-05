@@ -1,4 +1,5 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
+import { recordUsage } from './ai-usage.js'
 
 const bedrock = new BedrockRuntimeClient({ region: process.env.BEDROCK_REGION || 'us-east-1' })
 
@@ -12,7 +13,7 @@ const MODEL_ID = 'anthropic.claude-3-5-sonnet-20241022-v2:0'
  * @param {object} org - Organization context
  * @returns {object} { summary, businessImpact, steps, priority, estimatedEffort }
  */
-export async function explainControlGap(control, org) {
+export async function explainControlGap(control, org, ctx = {}) {
   const prompt = buildPrompt(control, org)
 
   const response = await bedrock.send(new InvokeModelCommand({
@@ -30,6 +31,17 @@ export async function explainControlGap(control, org) {
   const raw = JSON.parse(Buffer.from(response.body).toString('utf-8'))
   const text = raw.content?.[0]?.text || ''
 
+  // Fire-and-forget usage logging — never block the response on it.
+  recordUsage({
+    orgId: org?.id || ctx.orgId,
+    userId: ctx.userId,
+    service: 'comply',
+    operation: 'control.explain',
+    model: MODEL_ID,
+    inputTokens: raw.usage?.input_tokens || 0,
+    outputTokens: raw.usage?.output_tokens || 0
+  }).catch(() => {})
+
   return parseAiResponse(text, control)
 }
 
@@ -37,7 +49,7 @@ export async function explainControlGap(control, org) {
  * Generates a high-level compliance summary for the whole org.
  * Used on the dashboard for the AI insight card.
  */
-export async function generateComplianceSummary({ controls, score, org, framework }) {
+export async function generateComplianceSummary({ controls, score, org, framework, userId }) {
   const failing = controls.filter(c => c.status === 'fail')
   const critical = failing.filter(c => c.severity === 'critical')
   const passing = controls.filter(c => c.status === 'pass').length
@@ -78,6 +90,16 @@ Return only valid JSON. No markdown, no preamble.`
 
   const raw = JSON.parse(Buffer.from(response.body).toString('utf-8'))
   const text = raw.content?.[0]?.text || '{}'
+
+  recordUsage({
+    orgId: org?.id,
+    userId,
+    service: 'comply',
+    operation: 'compliance.summary',
+    model: MODEL_ID,
+    inputTokens: raw.usage?.input_tokens || 0,
+    outputTokens: raw.usage?.output_tokens || 0
+  }).catch(() => {})
 
   try {
     return JSON.parse(text.replace(/```json|```/g, '').trim())

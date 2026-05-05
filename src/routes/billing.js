@@ -14,6 +14,8 @@ import { upsertSubscription } from '../services/subscriptions.js'
 import { logger } from '../services/logger.js'
 import { auditAction } from '../services/audit.js'
 import { TRIAL_DURATION_MS } from '../services/config.js'
+import { sendChargeReceiptEmail, sendPaymentFailedEmail } from '../services/email.js'
+import { users as usersTable } from '../db/schema.js'
 
 const PLAN_MAP = {
   'comply-starter': process.env.PAYSTACK_COMPLY_STARTER_PLAN,
@@ -419,6 +421,46 @@ export default async function billingRoutes(fastify) {
             .limit(1)
 
           if (org) {
+            // Flip the trialing subscription row to active. This is the moment
+            // a customer transitions from "trial" to "paying", and the row was
+            // previously stuck in 'trialing' forever.
+            const [updated] = await db.update(subscriptionsTable)
+              .set({ status: 'active', updatedAt: new Date() })
+              .where(and(
+                eq(subscriptionsTable.orgId, org.id),
+                eq(subscriptionsTable.status, 'trialing')
+              ))
+              .returning()
+            if (updated) {
+              logger.info({ orgId: org.id, subId: updated.id }, 'Subscription flipped to active on first charge')
+            }
+
+            // Send receipt to the org owner. Best-effort — don't fail webhook.
+            try {
+              const owner = await db.query.users.findFirst({
+                where: and(eq(usersTable.orgId, org.id), eq(usersTable.role, 'owner'))
+              })
+              if (owner?.email) {
+                let subDetails = null
+                if (org.paystackSubscriptionCode) {
+                  try { subDetails = await getSubscription(org.paystackSubscriptionCode) } catch {}
+                }
+                await sendChargeReceiptEmail({
+                  to: owner.email,
+                  name: owner.name,
+                  orgName: org.name,
+                  planName: subDetails?.plan?.name || org.plan || 'Subscription',
+                  amount: charge.amount,
+                  currency: charge.currency || subDetails?.plan?.currency || 'ZAR',
+                  reference: charge.reference,
+                  nextPaymentDate: subDetails?.next_payment_date,
+                  last4: charge.authorization?.last4
+                })
+              }
+            } catch (err) {
+              logger.warn({ err: err.message, orgId: org.id }, 'Failed to send charge receipt email')
+            }
+
             await auditAction({
               orgId: org.id,
               action: 'billing.webhook.charge_success',
@@ -484,6 +526,31 @@ export default async function billingRoutes(fastify) {
             .where(eq(organizations.paystackCustomerCode, customerCode))
             .limit(1)
           if (org) {
+            // Email the owner so they can fix the card before Paystack's retries
+            // run out and access stops.
+            try {
+              const owner = await db.query.users.findFirst({
+                where: and(eq(usersTable.orgId, org.id), eq(usersTable.role, 'owner'))
+              })
+              if (owner?.email) {
+                let subDetails = null
+                if (invoice.subscription?.subscription_code) {
+                  try { subDetails = await getSubscription(invoice.subscription.subscription_code) } catch {}
+                }
+                await sendPaymentFailedEmail({
+                  to: owner.email,
+                  name: owner.name,
+                  orgName: org.name,
+                  planName: subDetails?.plan?.name || org.plan || 'Subscription',
+                  amount: invoice.amount,
+                  currency: invoice.currency || subDetails?.plan?.currency || 'ZAR',
+                  last4: subDetails?.authorization?.last4
+                })
+              }
+            } catch (err) {
+              logger.warn({ err: err.message, orgId: org.id }, 'Failed to send payment-failed email')
+            }
+
             await auditAction({
               orgId: org.id,
               action: 'billing.webhook.payment_failed',

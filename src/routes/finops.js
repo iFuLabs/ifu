@@ -8,6 +8,7 @@ import { runFinOpsChecks, getDailyCostSeries, getCostByTag, getPurchaseRecommend
 import { generateFinOpsSummary } from '../services/finops-ai.js'
 import { redis } from '../services/redis.js'
 import { auditAction } from '../services/audit.js'
+import { acquire as acquireRateLimit, rateLimit } from '../services/rate-limit.js'
 
 const CACHE_TTL = 60 * 60 * 6 // 6 hours — cost data doesn't change minute to minute
 
@@ -31,6 +32,19 @@ export default async function finopsRoutes(fastify) {
     if (!request.query.refresh) {
       const cached = await redis.get(cacheKey).catch(() => null)
       if (cached) return reply.send({ ...JSON.parse(cached), cached: true })
+    }
+
+    // Refresh path triggers AWS API + Bedrock calls; one fresh scan per
+    // 5 min per org is enough for any sane UX.
+    const limit = await acquireRateLimit(`ratelimit:finops-scan:${request.orgId}`, 300)
+    if (!limit.ok) {
+      reply.header('Retry-After', String(limit.retryAfter))
+      return reply.status(429).send({
+        error: 'Too Many Requests',
+        message: `A FinOps scan is already running or just completed. Try again in ${limit.retryAfter}s.`,
+        code: 'RATE_LIMITED',
+        retryAfter: limit.retryAfter
+      })
     }
 
     // Find connected AWS integration
@@ -62,7 +76,7 @@ export default async function finopsRoutes(fastify) {
       })
 
       // Generate AI summary
-      const aiSummary = await generateFinOpsSummary(findings)
+      const aiSummary = await generateFinOpsSummary(findings, { orgId: request.orgId, userId: request.user?.id })
       findings.aiSummary = aiSummary
 
       await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
@@ -88,7 +102,7 @@ export default async function finopsRoutes(fastify) {
   // GET /api/v1/finops/stream
   // Server-sent events — streams FinOps scan progress in real time
   fastify.get('/stream', {
-    preHandler: [verifyToken, requireUser],
+    preHandler: [verifyToken, requireUser, rateLimit('finops-scan', 300)],
     schema: { tags: ['FinOps'], security: [{ bearerAuth: [] }] }
   }, async (request, reply) => {
     const awsIntegration = await db.query.integrations.findFirst({
@@ -140,7 +154,7 @@ export default async function finopsRoutes(fastify) {
       const cacheKey = `finops:findings:${request.orgId}`
       
       // Generate AI summary
-      const aiSummary = await generateFinOpsSummary(findings)
+      const aiSummary = await generateFinOpsSummary(findings, { orgId: request.orgId, userId: request.user?.id })
       findings.aiSummary = aiSummary
       
       await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)

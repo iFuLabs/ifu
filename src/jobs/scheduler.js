@@ -127,6 +127,18 @@ export function startScheduler() {
 
   logger.info('Scan scheduler started (per-org schedule from organizations.scan_settings)')
 
+  // Hourly trial-lifecycle email cron. Runs at :15 past every hour to avoid
+  // colliding with the on-the-hour scan tick. Idempotent via
+  // organizations.trial_emails_sent.
+  cron.schedule('15 * * * *', async () => {
+    try {
+      const { runTrialEmailsTick } = await import('./trialEmailsCron.js')
+      await runTrialEmailsTick()
+    } catch (err) {
+      logger.error({ err }, 'Trial-emails cron error')
+    }
+  }, { timezone: 'UTC' })
+
   // Daily score snapshot — 04:00 UTC (C-A2)
   cron.schedule('0 4 * * *', async () => {
     logger.info('Daily score snapshot triggered')

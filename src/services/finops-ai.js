@@ -1,11 +1,16 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
+import { recordUsage } from './ai-usage.js'
+
+const FINOPS_MODEL = 'anthropic.claude-3-haiku-20240307-v1:0'
 
 /**
  * Generate AI-powered natural language summaries for FinOps findings.
  * Uses AWS Bedrock with Claude to create actionable insights.
+ *
+ * @param {object} findings   FinOps scan output.
+ * @param {object} [ctx]      Optional { orgId, userId } for usage attribution.
  */
-
-export async function generateFinOpsSummary(findings) {
+export async function generateFinOpsSummary(findings, ctx = {}) {
   if (!findings || findings.summary.totalMonthlySavings === 0) {
     return null
   }
@@ -26,7 +31,7 @@ ${context}
 Provide a clear, actionable summary that prioritizes high-value, low-risk opportunities. Focus on the business impact, not technical details.`
 
     const response = await bedrock.send(new InvokeModelCommand({
-      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
+      modelId: FINOPS_MODEL,
       contentType: 'application/json',
       accept: 'application/json',
       body: JSON.stringify({
@@ -40,6 +45,17 @@ Provide a clear, actionable summary that prioritizes high-value, low-risk opport
     }))
 
     const result = JSON.parse(new TextDecoder().decode(response.body))
+
+    recordUsage({
+      orgId: ctx.orgId,
+      userId: ctx.userId,
+      service: 'finops',
+      operation: 'finops.summary',
+      model: FINOPS_MODEL,
+      inputTokens: result.usage?.input_tokens || 0,
+      outputTokens: result.usage?.output_tokens || 0
+    }).catch(() => {})
+
     return result.content[0].text
 
   } catch (err) {

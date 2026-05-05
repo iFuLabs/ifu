@@ -6,6 +6,8 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
+import TrialBanner from '@/components/TrialBanner'
+import IntegrationHealthBanner from '@/components/IntegrationHealthBanner'
 
 const NAV = [
   { href: '/dashboard',              label: 'Overview',     icon: LayoutDashboard },
@@ -135,6 +137,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <main className="flex-1 lg:ml-56 overflow-y-auto">
+        <IntegrationHealthBanner />
+        <TrialBanner />
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card">
           <button onClick={() => setMobileOpen(true)}>

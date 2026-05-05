@@ -11,6 +11,7 @@ import { handleGithubWebhook } from '../connectors/github/webhook.js'
 import { validateOktaCredentials } from '../connectors/okta/checks.js'
 import { validateGoogleWorkspaceCredentials } from '../connectors/google-workspace/checks.js'
 import { redis } from '../services/redis.js'
+import { rateLimit } from '../services/rate-limit.js'
 
 // Drop every cached FinOps response keyed by this org so the dashboard
 // can't keep serving findings from a now-disconnected AWS account.
@@ -267,9 +268,15 @@ export default async function integrationRoutes(fastify) {
   })
 
   // POST /api/v1/integrations/:id/sync
-  // Manually trigger a scan for a specific integration
+  // Manually trigger a scan for a specific integration. One sync per org
+  // per 5 min — schedules the underlying AWS / GitHub work.
   fastify.post('/:id/sync', {
-    preHandler: [verifyToken, requireUser, requireAdmin],
+    preHandler: [
+      verifyToken,
+      requireUser,
+      requireAdmin,
+      rateLimit('integration-sync', 300)
+    ],
     schema: {
       tags: ['Integrations'],
       security: [{ bearerAuth: [] }],
