@@ -38,6 +38,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
+        eq(integrations.product, 'finops'),
         eq(integrations.status, 'connected')
       )
     })
@@ -94,6 +95,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
+        eq(integrations.product, 'finops'),
         eq(integrations.status, 'connected')
       )
     })
@@ -161,6 +163,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
+        eq(integrations.product, 'finops'),
         eq(integrations.status, 'connected')
       )
     })
@@ -221,6 +224,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
+        eq(integrations.product, 'finops'),
         eq(integrations.status, 'connected')
       )
     })
@@ -274,6 +278,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
+        eq(integrations.product, 'finops'),
         eq(integrations.status, 'connected')
       )
     })
@@ -317,6 +322,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
+        eq(integrations.product, 'finops'),
         eq(integrations.status, 'connected')
       )
     })
@@ -357,6 +363,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
+        eq(integrations.product, 'finops'),
         eq(integrations.status, 'connected')
       )
     })

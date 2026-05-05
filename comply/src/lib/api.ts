@@ -64,8 +64,11 @@ export const api = {
       body: JSON.stringify({}) // Send empty JSON object instead of no body
     }),
     disconnect: (id: string) => apiFetch<any>(`/api/v1/integrations/${id}`, { method: 'DELETE' }),
-    connectAws: (body: { roleArn: string; externalId: string }) => 
-      apiFetch<any>('/api/v1/integrations/aws', { method: 'POST', body: JSON.stringify(body) }),
+    connectAws: (body: { roleArn: string; externalId: string }) =>
+      apiFetch<any>('/api/v1/integrations/aws', {
+        method: 'POST',
+        body: JSON.stringify({ ...body, product: 'comply' })
+      }),
     connectGithub: (body: { installationId: number }) => 
       apiFetch<any>('/api/v1/integrations/github', { method: 'POST', body: JSON.stringify(body) }),
   },

@@ -18,6 +18,7 @@ export const anomalyWorker = new Worker('anomaly-detection', async (job) => {
     where: and(
       eq(integrations.orgId, orgId),
       eq(integrations.type, 'aws'),
+      eq(integrations.product, 'finops'),
       eq(integrations.status, 'connected')
     )
   })

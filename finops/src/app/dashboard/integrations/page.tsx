@@ -72,7 +72,7 @@ export default function IntegrationsPage() {
       const res = await fetch('/api/v1/integrations/aws', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roleArn: roleArn.trim(), externalId })
+        body: JSON.stringify({ roleArn: roleArn.trim(), externalId, product: 'finops' })
       })
       
       if (res.ok) {

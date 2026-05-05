@@ -14,8 +14,9 @@ const NAV = [
 ]
 
 const BOTTOM_NAV = [
-  { href: '/dashboard/team',    label: 'Team',    icon: Users },
-  { href: '/dashboard/billing', label: 'Billing', icon: CreditCard },
+  { href: '/dashboard/team',     label: 'Team',     icon: Users },
+  { href: '/dashboard/billing',  label: 'Billing',  icon: CreditCard },
+  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

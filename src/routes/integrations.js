@@ -89,18 +89,27 @@ export default async function integrationRoutes(fastify) {
           externalId: {
             type: 'string',
             description: 'External ID for secure role assumption'
+          },
+          product: {
+            type: 'string',
+            enum: ['comply', 'finops'],
+            description: 'Which iFu product this AWS role is for. Defaults to comply for backward compatibility.',
+            default: 'comply'
           }
         }
       }
     }
   }, async (request, reply) => {
     const { roleArn, externalId } = request.body
+    const product = request.body.product || 'comply'
 
-    // Check for existing AWS integration
+    // Check for existing AWS integration for THIS product. Comply and FinOps
+    // each have their own row; we only update the row that matches this product.
     const existing = await db.query.integrations.findFirst({
       where: and(
         eq(integrations.orgId, request.orgId),
-        eq(integrations.type, 'aws')
+        eq(integrations.type, 'aws'),
+        eq(integrations.product, product)
       )
     })
 
@@ -114,12 +123,14 @@ export default async function integrationRoutes(fastify) {
       })
     }
 
-    // Multi-tenant isolation: prevent another org from claiming the same AWS account.
-    // Allowed cases: this org reconnecting (existing row, same account) and orgs that
-    // previously connected this account but have since disconnected.
+    // Multi-tenant isolation: prevent another org from claiming the same AWS account
+    // for the SAME product. Two different orgs each connecting account 123 for
+    // different products (one for Comply, one for FinOps) is allowed; both
+    // connecting it for the same product is the actual collision we block.
     const allConnected = await db.query.integrations.findMany({
       where: and(
         eq(integrations.type, 'aws'),
+        eq(integrations.product, product),
         eq(integrations.status, 'connected')
       ),
       columns: { id: true, orgId: true, metadata: true }
@@ -159,6 +170,7 @@ export default async function integrationRoutes(fastify) {
           metadata: { accountId: validation.accountId, alias: validation.accountAlias, externalId },
           lastError: null,
           lastErrorAt: null,
+          disconnectedAt: null,
           updatedAt: new Date()
         })
         .where(eq(integrations.id, existing.id))
@@ -170,6 +182,7 @@ export default async function integrationRoutes(fastify) {
         .values({
           orgId: request.orgId,
           type: 'aws',
+          product,
           status: 'connected',
           credentials: encryptedCredentials,
           metadata: { accountId: validation.accountId, alias: validation.accountAlias, externalId }
@@ -177,13 +190,16 @@ export default async function integrationRoutes(fastify) {
         .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
     }
 
-    // Kick off an immediate scan
-    await scanQueue.add('scan', {
-      orgId: request.orgId,
-      integrationId: integration.id,
-      integrationType: 'aws',
-      triggeredBy: 'manual'
-    }, { priority: 1 })
+    // Kick off an immediate scan — only Comply integrations queue compliance scans.
+    // FinOps connections are picked up by the FinOps scheduler / manual sync.
+    if (product === 'comply') {
+      await scanQueue.add('scan', {
+        orgId: request.orgId,
+        integrationId: integration.id,
+        integrationType: 'aws',
+        triggeredBy: 'manual'
+      }, { priority: 1 })
+    }
 
     await auditAction({
       orgId: request.orgId,
@@ -191,7 +207,7 @@ export default async function integrationRoutes(fastify) {
       action: 'integration.connected',
       resource: 'aws',
       resourceId: integration.id,
-      metadata: { accountId: validation.accountId }
+      metadata: { accountId: validation.accountId, product }
     })
 
     return reply.status(201).send({
@@ -221,9 +237,20 @@ export default async function integrationRoutes(fastify) {
       return reply.status(404).send({ error: 'Not Found', message: 'Integration not found' })
     }
 
-    await db.delete(integrations).where(eq(integrations.id, integration.id))
+    await db.update(integrations)
+      .set({
+        status: 'disconnected',
+        credentials: null,
+        lastError: null,
+        lastErrorAt: null,
+        disconnectedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(integrations.id, integration.id))
 
-    if (integration.type === 'aws') {
+    // Only the FinOps AWS row drives the FinOps cache; disconnecting the
+    // Comply AWS row must not blow away cost data the customer is still using.
+    if (integration.type === 'aws' && integration.product === 'finops') {
       await clearFinopsCacheForOrg(request.orgId, fastify.log)
     }
 
@@ -232,7 +259,8 @@ export default async function integrationRoutes(fastify) {
       userId: request.user.id,
       action: 'integration.disconnected',
       resource: integration.type,
-      resourceId: integration.id
+      resourceId: integration.id,
+      metadata: { product: integration.product }
     })
 
     return reply.status(204).send()
@@ -331,6 +359,7 @@ export default async function integrationRoutes(fastify) {
         status: 'connected',
         credentials: encryptedCredentials,
         metadata: { orgLogin: validation.orgLogin, orgType: validation.orgType, repoSelection: validation.repoSelection },
+        disconnectedAt: null,
         updatedAt: new Date()
       }).where(eq(integrations.id, existing.id))
         .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
@@ -407,7 +436,7 @@ export default async function integrationRoutes(fastify) {
     if (existing) {
       ;[integration] = await db.update(integrations).set({
         status: 'connected', credentials: encryptedCredentials, metadata,
-        lastError: null, lastErrorAt: null, updatedAt: new Date()
+        lastError: null, lastErrorAt: null, disconnectedAt: null, updatedAt: new Date()
       }).where(eq(integrations.id, existing.id))
         .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
     } else {
@@ -479,7 +508,7 @@ export default async function integrationRoutes(fastify) {
     if (existing) {
       ;[integration] = await db.update(integrations).set({
         status: 'connected', credentials: encryptedCredentials, metadata,
-        lastError: null, lastErrorAt: null, updatedAt: new Date()
+        lastError: null, lastErrorAt: null, disconnectedAt: null, updatedAt: new Date()
       }).where(eq(integrations.id, existing.id))
         .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
     } else {

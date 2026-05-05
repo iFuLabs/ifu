@@ -36,9 +36,13 @@ export function startScheduler() {
       const orgs = await orgsScheduledFor('comply', hour)
       if (orgs.length) {
         const orgIds = orgs.map(o => o.id)
+        // Compliance scans only run against integrations explicitly tied to
+        // the Comply product. GitHub integrations don't have FinOps siblings
+        // so 'comply' is the only product label they ever carry.
         const connected = await db.query.integrations.findMany({
           where: and(
             eq(integrations.status, 'connected'),
+            eq(integrations.product, 'comply'),
             inArray(integrations.orgId, orgIds)
           )
         })
@@ -75,6 +79,7 @@ export function startScheduler() {
           const awsIntegrations = await db.query.integrations.findMany({
             where: and(
               eq(integrations.type, 'aws'),
+              eq(integrations.product, 'finops'),
               eq(integrations.status, 'connected'),
               inArray(integrations.orgId, subscribedOrgIds)
             )

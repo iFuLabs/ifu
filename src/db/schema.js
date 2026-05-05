@@ -75,6 +75,10 @@ export const integrations = pgTable('integrations', {
   id:             uuid('id').primaryKey().defaultRandom(),
   orgId:          uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   type:           integrationTypeEnum('type').notNull(),
+  // Which iFu product this integration belongs to. Comply and FinOps each
+  // require their own AWS role with their own IAM policy; storing them on
+  // separate rows prevents the products from overwriting each other.
+  product:        text('product').notNull().default('comply'), // 'comply' | 'finops'
   status:         integrationStatusEnum('status').notNull().default('disconnected'),
   // Encrypted credentials stored as JSONB
   // AWS: { roleArn, externalId }
@@ -84,6 +88,7 @@ export const integrations = pgTable('integrations', {
   lastSyncAt:     timestamp('last_sync_at'),
   lastErrorAt:    timestamp('last_error_at'),
   lastError:      text('last_error'),
+  disconnectedAt: timestamp('disconnected_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow(),
   updatedAt:      timestamp('updated_at').notNull().defaultNow()
 }, (table) => [

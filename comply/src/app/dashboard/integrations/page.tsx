@@ -129,7 +129,7 @@ export default function IntegrationsPage() {
         desc="IAM, S3, CloudTrail, RDS, GuardDuty, EC2 — 20 automated controls"
         integration={awsIntegration}
         onConnect={() => setShowAwsForm(true)}
-        onReconnect={awsIntegration?.status === 'error' ? () => setShowAwsForm(true) : undefined}
+        onReconnect={awsIntegration?.status === 'error' || awsIntegration?.status === 'disconnected' ? () => setShowAwsForm(true) : undefined}
         onSync={() => awsIntegration && handleSync(awsIntegration.id)}
         onDisconnect={() => awsIntegration && handleDisconnect(awsIntegration.id)}
         syncing={syncing === awsIntegration?.id}
@@ -157,7 +157,7 @@ export default function IntegrationsPage() {
         desc="Branch protection, 2FA enforcement, secret scanning, Dependabot, PR reviews — 6 controls"
         integration={githubIntegration}
         onConnect={() => window.location.href = 'https://github.com/apps/ifu-labs/installations/new'}
-        onReconnect={githubIntegration?.status === 'error' ? () => window.location.href = 'https://github.com/apps/ifu-labs/installations/new' : undefined}
+        onReconnect={githubIntegration?.status === 'error' || githubIntegration?.status === 'disconnected' ? () => window.location.href = 'https://github.com/apps/ifu-labs/installations/new' : undefined}
         onSync={() => githubIntegration && handleSync(githubIntegration.id)}
         onDisconnect={() => githubIntegration && handleDisconnect(githubIntegration.id)}
         syncing={syncing === githubIntegration?.id}
@@ -321,21 +321,48 @@ function IntegrationCard({
             </div>
           )}
 
+          {integration.status === 'disconnected' && !integration.lastError && (
+            <div className="flex items-start gap-2 p-3 mb-4 rounded text-xs" style={{ background: '#FFFAEB', border: '1px solid #FEDF89' }}>
+              <AlertCircle size={13} className="flex-shrink-0 mt-0.5" style={{ color: '#B54708' }} />
+              <div className="flex-1" style={{ color: '#B54708' }}>
+                <div>Integration disconnected{integration.disconnectedAt ? ` on ${new Date(integration.disconnectedAt).toLocaleDateString()}` : ''}. Historical data is preserved.</div>
+                {onReconnect && (
+                  <button onClick={onReconnect} className="underline mt-1 font-medium" style={{ color: '#B54708' }}>
+                    Reconnect →
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
-            <button
-              onClick={onSync}
-              disabled={syncing}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded bg-bg hover:bg-border/50 transition-all text-muted hover:text-ink disabled:opacity-50"
-            >
-              <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
-              {syncing ? 'Scanning...' : 'Scan now'}
-            </button>
-            <button
-              onClick={onDisconnect}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded hover:border-danger/30 hover:text-danger transition-all text-muted"
-            >
-              <Trash2 size={12} /> Disconnect
-            </button>
+            {integration.status === 'connected' && (
+              <button
+                onClick={onSync}
+                disabled={syncing}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded bg-bg hover:bg-border/50 transition-all text-muted hover:text-ink disabled:opacity-50"
+              >
+                <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
+                {syncing ? 'Scanning...' : 'Scan now'}
+              </button>
+            )}
+            {integration.status === 'disconnected' && onReconnect && (
+              <button
+                onClick={onReconnect}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent text-white rounded hover:bg-accent/90 transition-all"
+              >
+                <RefreshCw size={12} />
+                Reconnect
+              </button>
+            )}
+            {integration.status !== 'disconnected' && (
+              <button
+                onClick={onDisconnect}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded hover:border-danger/30 hover:text-danger transition-all text-muted"
+              >
+                <Trash2 size={12} /> Disconnect
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -22,6 +22,8 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
     where: and(
       eq(integrations.id, integrationId),
       eq(integrations.orgId, orgId),
+      eq(integrations.type, 'aws'),
+      eq(integrations.product, 'finops'),
       eq(integrations.status, 'connected')
     )
   })
