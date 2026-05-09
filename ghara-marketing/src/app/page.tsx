@@ -1,122 +1,170 @@
-import { Shield, TrendingDown, LayoutDashboard, ArrowRight, CheckCircle } from 'lucide-react'
+'use client'
+import { useEffect } from 'react'
 import Link from 'next/link'
 
+const APP_URL = 'https://app.ghara.ifulabs.com'
+
+function useReveal() {
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target) }
+      })
+    }, { threshold: 0.08 })
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+}
+
 export default function HomePage() {
+  useReveal()
+
   return (
-    <main>
+    <>
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
-        <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-plum leading-tight max-w-3xl mx-auto">
-          Know your AWS is in good shape.
-        </h1>
-        <p className="text-lg text-plum/70 mt-6 max-w-2xl mx-auto">
-          Ghara watches your cloud for compliance gaps and wasted spend. One dashboard. One score. One action queue. Built by iFU Labs.
-        </p>
-        <div className="flex items-center justify-center gap-4 mt-8">
-          <a
-            href="https://app.ghara.ifulabs.com/signup"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-plum text-white rounded-lg font-medium hover:bg-plum/90 transition-colors"
-          >
-            Start 7-day free trial
-            <ArrowRight size={16} />
-          </a>
-          <Link
-            href="/demo"
-            className="inline-flex items-center gap-2 px-6 py-3 border border-plum/20 text-plum rounded-lg font-medium hover:bg-grey transition-colors"
-          >
-            Request demo
-          </Link>
+      <section className="hero">
+        <div>
+          <div className="hero-eyebrow">
+            <div className="hero-eyebrow-dot" />
+            Cloud compliance + cost · by iFU Labs
+          </div>
+          <h1>
+            Know your AWS is<br/>in <em>good shape.</em>
+          </h1>
+          <p className="hero-sub">
+            Ghara watches your cloud for compliance gaps and wasted spend. One dashboard. One score. One action queue. Built by the team at iFU Labs.
+          </p>
+          <div className="hero-actions">
+            <a href={`${APP_URL}/signup`} className="btn-primary">
+              Start 7-day free trial →
+            </a>
+            <Link href="/demo" className="btn-secondary">
+              Request a demo
+            </Link>
+          </div>
+          <div className="hero-trust">
+            {[
+              'No credit card required',
+              'Full Growth tier access',
+              'Connect in under 5 minutes',
+            ].map(item => (
+              <div key={item} className="trust-item">
+                <svg viewBox="0 0 14 14" fill="none">
+                  <path d="M2 7L6 11L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
-        <p className="text-sm text-plum/50 mt-4">No credit card required · Full Growth tier access</p>
+
+        <div className="hero-cards">
+          {[
+            { title: 'Cloud Health Score', desc: 'One number for your CTO — compliance + cost + security', badge: 'Dashboard' },
+            { title: 'SOC 2 in 6 weeks', desc: 'Automated evidence, AI remediation, drift alerts', badge: 'Compliance' },
+            { title: '$1,247/mo savings', desc: 'Idle resources, rightsizing, anomaly detection', badge: 'Cost' },
+            { title: 'Kubernetes cost', desc: 'Cost per namespace via OpenCost — Growth tier', badge: 'New' },
+          ].map(card => (
+            <div key={card.title} className="hero-card">
+              <div>
+                <div className="hero-card-title">{card.title}</div>
+                <div className="hero-card-desc">{card.desc}</div>
+              </div>
+              <span className="hero-card-badge">{card.badge}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
-      {/* Three features */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-3 gap-8">
-          <FeatureCard
-            icon={<Shield size={24} />}
-            title="Pass audits faster"
-            description="Automated evidence collection for SOC 2, ISO 27001, GDPR, HIPAA, and PCI DSS. AI-powered remediation guidance."
-          />
-          <FeatureCard
-            icon={<TrendingDown size={24} />}
-            title="Cut cloud waste"
-            description="Detect idle resources, rightsizing opportunities, and cost anomalies across AWS and Kubernetes."
-          />
-          <FeatureCard
-            icon={<LayoutDashboard size={24} />}
-            title="One dashboard for your CTO"
-            description="Cloud Health Score, unified action queue, and cross-engine findings. Everything in one place."
-          />
+      {/* Features */}
+      <section className="section reveal">
+        <div className="section-eyebrow">What Ghara does</div>
+        <h2 className="section-title">Compliance and cost in<br/>one <em>dashboard.</em></h2>
+        <p className="section-sub">Stop switching between tools. Ghara merges your compliance posture and cloud spend into a single ranked action queue.</p>
+
+        <div className="features-grid">
+          {[
+            { icon: '⬡', title: 'Pass audits faster', desc: 'Automated evidence collection for SOC 2, ISO 27001, GDPR, HIPAA, and PCI DSS. AI-powered remediation guidance for every failing control.' },
+            { icon: '◈', title: 'Cut cloud waste', desc: '8 waste types detected automatically. Rightsizing recommendations. Anomaly alerts. Kubernetes cost via OpenCost. Dollar values on everything.' },
+            { icon: '◻', title: 'One score for leadership', desc: 'Cloud Health Score: 40% compliance, 30% cost efficiency, 30% security. Weekly trend. One number your CTO can track.' },
+            { icon: '⟳', title: 'Drift alerts', desc: 'Get notified via Slack or email the moment a control flips from pass to fail. Never be surprised in an audit again.' },
+            { icon: '⎈', title: 'Kubernetes cost', desc: 'Connect OpenCost and see cost per namespace, per workload. Detect idle pods, oversized requests, and unused PVCs.' },
+            { icon: '⬒', title: 'Unified action queue', desc: 'One ranked list of findings from both engines — sorted by impact. Compliance gaps and cost waste, side by side.' },
+          ].map(f => (
+            <div key={f.title} className="feature-card">
+              <div className="feature-icon">{f.icon}</div>
+              <h3>{f.title}</h3>
+              <p>{f.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Social proof placeholder */}
-      <section className="bg-grey py-12">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <p className="text-sm text-plum/50 uppercase tracking-wider font-semibold mb-6">Trusted by engineering teams</p>
-          <div className="flex items-center justify-center gap-12 opacity-30">
-            <div className="w-24 h-8 bg-plum/20 rounded" />
-            <div className="w-24 h-8 bg-plum/20 rounded" />
-            <div className="w-24 h-8 bg-plum/20 rounded" />
-            <div className="w-24 h-8 bg-plum/20 rounded hidden md:block" />
+      {/* Pricing */}
+      <section className="section reveal" id="pricing">
+        <div className="section-eyebrow">Pricing</div>
+        <h2 className="section-title">Simple, transparent<br/><em>pricing.</em></h2>
+        <p className="section-sub">Three tiers based on your AWS spend. Start with a 7-day free trial on the Growth plan.</p>
+
+        <div className="pricing-grid">
+          <div className="pricing-card">
+            <div className="pricing-tier">Starter</div>
+            <div className="pricing-name">For small teams</div>
+            <div className="pricing-price">$499</div>
+            <div className="pricing-period">per month · up to $10k/mo AWS spend</div>
+            <p className="pricing-desc">SOC 2 compliance and basic cost waste detection for teams just getting started.</p>
+            <ul className="pricing-features">
+              <li>SOC 2 framework</li>
+              <li>Basic cost waste detection</li>
+              <li>Weekly scans</li>
+              <li>1 AWS account</li>
+              <li>Email support</li>
+            </ul>
+            <a href={`${APP_URL}/signup`} className="pricing-cta">Start free trial</a>
+          </div>
+
+          <div className="pricing-card featured">
+            <div className="pricing-tier">Growth · most popular</div>
+            <div className="pricing-name">Full platform</div>
+            <div className="pricing-price">$1,299</div>
+            <div className="pricing-period">per month · up to $100k/mo AWS spend</div>
+            <p className="pricing-desc">All frameworks, AI remediation, Kubernetes cost, Slack alerts, and daily scans.</p>
+            <ul className="pricing-features">
+              <li>All frameworks (SOC 2, ISO, GDPR, HIPAA, PCI)</li>
+              <li>AI evidence & remediation</li>
+              <li>Vendor risk management</li>
+              <li>Anomaly detection & Slack alerts</li>
+              <li>Kubernetes cost (OpenCost)</li>
+              <li>Daily scans · CSV/JSON export</li>
+            </ul>
+            <a href={`${APP_URL}/signup`} className="pricing-cta">Start free trial</a>
+          </div>
+
+          <div className="pricing-card">
+            <div className="pricing-tier">Scale</div>
+            <div className="pricing-name">Enterprise</div>
+            <div className="pricing-price">Custom</div>
+            <div className="pricing-period">unlimited AWS spend</div>
+            <p className="pricing-desc">Custom frameworks, multi-account, SSO, auditor roles, and a dedicated CSM.</p>
+            <ul className="pricing-features">
+              <li>Everything in Growth</li>
+              <li>Custom frameworks</li>
+              <li>Multi-account AWS</li>
+              <li>SSO / SAML</li>
+              <li>Auditor read-only role</li>
+              <li>Dedicated CSM · priority support</li>
+            </ul>
+            <Link href="/demo" className="pricing-cta">Talk to us</Link>
           </div>
         </div>
       </section>
 
-      {/* Pricing teaser */}
-      <section className="max-w-6xl mx-auto px-6 py-16 text-center">
-        <h2 className="font-serif text-3xl text-plum mb-4">Simple, transparent pricing</h2>
-        <p className="text-plum/70 mb-8 max-w-lg mx-auto">
-          Three tiers based on your AWS spend. Start with a 7-day free trial on the Growth plan.
-        </p>
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          <PricingTeaser name="Starter" price="$499" desc="Up to $10k/mo AWS" />
-          <PricingTeaser name="Growth" price="$1,299" desc="Up to $100k/mo AWS" popular />
-          <PricingTeaser name="Scale" price="Custom" desc="Unlimited" />
-        </div>
-        <Link href="/pricing" className="inline-flex items-center gap-1 text-iris font-medium mt-8 hover:underline">
-          See full comparison <ArrowRight size={14} />
-        </Link>
-      </section>
-
       {/* CTA */}
-      <section className="bg-plum py-16">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="font-serif text-3xl text-white mb-4">Ready to see what's in your AWS?</h2>
-          <p className="text-white/70 mb-8">Connect in under 5 minutes. No credit card. Full access for 7 days.</p>
-          <a
-            href="https://app.ghara.ifulabs.com/signup"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-plum rounded-lg font-medium hover:bg-grey transition-colors"
-          >
-            Start free trial
-            <ArrowRight size={16} />
-          </a>
-        </div>
-      </section>
-    </main>
-  )
-}
-
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-  return (
-    <div className="bg-white border border-grey rounded-xl p-6">
-      <div className="w-12 h-12 rounded-lg bg-lavender/30 flex items-center justify-center text-iris mb-4">
-        {icon}
+      <div className="cta-band reveal">
+        <h2>Ready to see what's in your AWS?</h2>
+        <p>Connect in under 5 minutes. No credit card. Full access for 7 days.</p>
+        <a href={`${APP_URL}/signup`} className="btn-primary">Start free trial →</a>
       </div>
-      <h3 className="text-lg font-semibold text-plum mb-2">{title}</h3>
-      <p className="text-sm text-plum/70 leading-relaxed">{description}</p>
-    </div>
-  )
-}
-
-function PricingTeaser({ name, price, desc, popular }: { name: string; price: string; desc: string; popular?: boolean }) {
-  return (
-    <div className={`bg-white border rounded-xl p-5 ${popular ? 'border-iris shadow-sm' : 'border-grey'}`}>
-      {popular && <span className="text-[10px] font-semibold uppercase tracking-wider text-iris">Most popular</span>}
-      <h3 className="text-lg font-semibold text-plum mt-1">{name}</h3>
-      <p className="font-mono text-2xl font-semibold text-plum mt-1">{price}<span className="text-sm font-normal text-plum/50">{price !== 'Custom' ? '/mo' : ''}</span></p>
-      <p className="text-xs text-plum/60 mt-1">{desc}</p>
-    </div>
+    </>
   )
 }
