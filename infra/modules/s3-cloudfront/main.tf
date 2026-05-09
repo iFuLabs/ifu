@@ -1,6 +1,11 @@
 # S3 Bucket for website
+locals {
+  bucket_name = var.bucket_name != "" ? var.bucket_name : "ifulabs-website-${var.environment}"
+  name_prefix = var.bucket_name != "" ? var.bucket_name : "ifulabs-website"
+}
+
 resource "aws_s3_bucket" "website" {
-  bucket = var.bucket_name != "" ? var.bucket_name : "ifulabs-website-${var.environment}"
+  bucket = local.bucket_name
 }
 
 resource "aws_s3_bucket_public_access_block" "website" {
@@ -22,7 +27,7 @@ resource "aws_s3_bucket_versioning" "website" {
 
 # CloudFront Origin Access Control
 resource "aws_cloudfront_origin_access_control" "website" {
-  name                              = "ifulabs-website-oac"
+  name                              = "${local.name_prefix}-oac"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -30,7 +35,7 @@ resource "aws_cloudfront_origin_access_control" "website" {
 
 # CloudFront Function for URL rewriting
 resource "aws_cloudfront_function" "url_rewrite" {
-  name    = "ifulabs-url-rewrite"
+  name    = "${local.name_prefix}-url-rewrite"
   runtime = "cloudfront-js-1.0"
   comment = "Rewrite URLs to add .html extension for Next.js static export"
   publish = true
@@ -118,7 +123,7 @@ resource "aws_cloudfront_distribution" "website" {
   }
 
   tags = {
-    Name        = "ifulabs-website"
+    Name        = local.name_prefix
     Environment = var.environment
   }
 }
