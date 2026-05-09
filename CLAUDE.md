@@ -132,6 +132,17 @@ F1, F5, F7, F10/A3, A2, C5, C8, F6, C4, C2
 - **Phase 3** ✅ Unified AWS integration (CloudFormation Quick Launch), Kubernetes cost via OpenCost connector, migration 0030 applied. K8s gated behind Growth tier.
 - **Phase 4** ✅ Unified dashboard: Cloud Health Score (40/30/30 weighting), KPI row, unified action queue merging compliance + cost findings sorted by impact.
 - **Phase 5** ✅ Onboarding wizard (4-step: welcome → AWS connect → scan → results), trial countdown banner, 7-day email drip (day 1/3/5/6/7), trial-end read-only mode.
+- **Phase 6** ✅ Billing page with plan cards, trial conversion via Paystack, grandfathering migration script.
+- **Phase 7** ✅ Ghara marketing site (homepage, pricing, compliance, cost, demo). iFU Labs website footers updated.
+- **Phase 8** ✅ Notifications page (Slack + email per-event toggles), integrations hub, team management.
+- **Phase 9** ✅ Legacy apps deprecated (comply/, finops/, portal/ marked with DEPRECATED.md). URL redirects added.
+
+## Legacy apps (deprecated — do not add features)
+- `comply/` — superseded by `ghara/src/app/(app)/compliance/`
+- `finops/` — superseded by `ghara/src/app/(app)/cost/`
+- `portal/` — superseded by `ghara/` (login, signup, onboarding, billing)
+- Planned deletion: 60 days after Ghara production launch
+- Backend routes (`src/routes/*`) are shared — still active and used by Ghara
 ---
 
 # Prior task — Brand Identity & Light-Mode Conversion (in progress)

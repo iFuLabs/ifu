@@ -8,6 +8,16 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      // Legacy Comply routes → Ghara equivalents
+      { source: '/comply', destination: '/compliance', permanent: true },
+      { source: '/comply/:path*', destination: '/compliance', permanent: true },
+      // Legacy FinOps routes → Ghara equivalents
+      { source: '/finops', destination: '/cost', permanent: true },
+      { source: '/finops/:path*', destination: '/cost', permanent: true },
+    ]
+  },
 }
 
 module.exports = nextConfig
