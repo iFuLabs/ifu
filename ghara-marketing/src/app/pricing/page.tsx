@@ -7,7 +7,7 @@ const PLANS = [
     price: '$499',
     spend: 'Up to $10k/mo AWS spend',
     cta: 'Start free trial',
-    ctaHref: 'https://app.ghara.cloud/signup',
+    ctaHref: 'https://app.ghara.ifulabs.com/signup',
   },
   {
     name: 'Growth',
@@ -15,7 +15,7 @@ const PLANS = [
     spend: 'Up to $100k/mo AWS spend',
     popular: true,
     cta: 'Start free trial',
-    ctaHref: 'https://app.ghara.cloud/signup',
+    ctaHref: 'https://app.ghara.ifulabs.com/signup',
   },
   {
     name: 'Scale',

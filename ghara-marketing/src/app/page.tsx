@@ -14,7 +14,7 @@ export default function HomePage() {
         </p>
         <div className="flex items-center justify-center gap-4 mt-8">
           <a
-            href="https://app.ghara.cloud/signup"
+            href="https://app.ghara.ifulabs.com/signup"
             className="inline-flex items-center gap-2 px-6 py-3 bg-plum text-white rounded-lg font-medium hover:bg-plum/90 transition-colors"
           >
             Start 7-day free trial
@@ -86,7 +86,7 @@ export default function HomePage() {
           <h2 className="font-serif text-3xl text-white mb-4">Ready to see what's in your AWS?</h2>
           <p className="text-white/70 mb-8">Connect in under 5 minutes. No credit card. Full access for 7 days.</p>
           <a
-            href="https://app.ghara.cloud/signup"
+            href="https://app.ghara.ifulabs.com/signup"
             className="inline-flex items-center gap-2 px-6 py-3 bg-white text-plum rounded-lg font-medium hover:bg-grey transition-colors"
           >
             Start free trial

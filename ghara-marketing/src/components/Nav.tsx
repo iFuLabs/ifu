@@ -25,8 +25,8 @@ export default function Nav() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <a href="https://app.ghara.cloud/login" className="text-sm text-plum/70 hover:text-plum px-3 py-2">Sign in</a>
-          <a href="https://app.ghara.cloud/signup" className="text-sm font-medium text-white bg-plum px-4 py-2 rounded-lg hover:bg-plum/90 transition-colors">
+          <a href="https://app.ghara.ifulabs.com/login" className="text-sm text-plum/70 hover:text-plum px-3 py-2">Sign in</a>
+          <a href="https://app.ghara.ifulabs.com/signup" className="text-sm font-medium text-white bg-plum px-4 py-2 rounded-lg hover:bg-plum/90 transition-colors">
             Start free trial
           </a>
         </div>
@@ -45,7 +45,7 @@ export default function Nav() {
           <Link href="/pricing" className="block text-sm text-plum/70">Pricing</Link>
           <Link href="/demo" className="block text-sm text-plum/70">Demo</Link>
           <hr className="border-grey" />
-          <a href="https://app.ghara.cloud/signup" className="block text-sm font-medium text-white bg-plum px-4 py-2.5 rounded-lg text-center">
+          <a href="https://app.ghara.ifulabs.com/signup" className="block text-sm font-medium text-white bg-plum px-4 py-2.5 rounded-lg text-center">
             Start free trial
           </a>
         </div>

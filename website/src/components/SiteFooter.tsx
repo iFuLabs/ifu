@@ -79,9 +79,9 @@ export function SiteFooter() {
             <div className="footer-col">
               <h4>Products</h4>
               <ul>
-                <li><a href="https://ghara.cloud">Ghara — Compliance & Cost</a></li>
-                <li><a href="https://ghara.cloud/pricing">Pricing</a></li>
-                <li><a href="https://app.ghara.cloud/login">Sign in</a></li>
+                <li><a href="https://ghara.ifulabs.com">Ghara — Compliance & Cost</a></li>
+                <li><a href="https://ghara.ifulabs.com/pricing">Pricing</a></li>
+                <li><a href="https://app.ghara.ifulabs.com/login">Sign in</a></li>
               </ul>
             </div>
             <div className="footer-col">

@@ -8,7 +8,7 @@ export default function CompliancePage() {
         <p className="text-lg text-plum/70 mb-8">
           Ghara continuously monitors your AWS and GitHub for compliance gaps. Automated evidence collection, AI-powered remediation, and real-time drift alerts.
         </p>
-        <a href="https://app.ghara.cloud/signup" className="inline-flex items-center gap-2 px-6 py-3 bg-plum text-white rounded-lg font-medium hover:bg-plum/90 transition-colors">
+        <a href="https://app.ghara.ifulabs.com/signup" className="inline-flex items-center gap-2 px-6 py-3 bg-plum text-white rounded-lg font-medium hover:bg-plum/90 transition-colors">
           Start free trial <ArrowRight size={16} />
         </a>
       </div>
