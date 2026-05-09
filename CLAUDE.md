@@ -183,7 +183,7 @@ F1, F5, F7, F10/A3, A2, C5, C8, F6, C4, C2
 - **Phase 1** ✅ `ghara/` app shell created (Next.js 16, Tailwind, Ghara brand, all routes).
 - **Phase 2** ✅ Ghara plan SKUs (`ghara_starter`, `ghara_growth`, `ghara_scale`), `productEntitlements()` middleware, 7-day trial, migration 0029 applied.
 - **Phase 3** ✅ Unified AWS integration (CloudFormation Quick Launch), Kubernetes cost via OpenCost connector, migration 0030 applied. K8s gated behind Growth tier.
-- **Phase 4** ✅ Unified dashboard: Cloud Health Score (40/30/30 weighting), KPI row, unified action queue merging compliance + cost findings sorted by impact.
+- **Phase 4** ✅ Unified dashboard: Cloud Health Score (40/30/30 weighting), KPI row, unified action queue merging compliance + cost findings sorted by impact. Full drilldown port complete — /compliance and /cost have full feature parity with retired Comply and FinOps apps.
 - **Phase 5** ✅ Onboarding wizard (4-step: welcome → AWS connect → scan → results), trial countdown banner, 7-day email drip (day 1/3/5/6/7), trial-end read-only mode.
 - **Phase 6** ✅ Billing page with plan cards, trial conversion via Paystack, grandfathering migration script.
 - **Phase 7** ✅ Ghara marketing site (homepage, pricing, compliance, cost, demo). iFU Labs website footers updated.
