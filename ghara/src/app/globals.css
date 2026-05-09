@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Ghara brand — iFU Labs identity */
+  --brand: #33063D;
+  --brand-light: rgba(51, 6, 61, 0.08);
+  --brand-dark: #250430;
+  --accent: #8A63E6;
+  --accent-light: rgba(138, 99, 230, 0.08);
+
+  /* Semantic tokens */
+  --bg: #F8F7FA;
+  --ink: #33063D;
+  --muted: rgba(51, 6, 61, 0.65);
+  --border: rgba(51, 6, 61, 0.12);
+  --border-emphasis: rgba(51, 6, 61, 0.20);
+  --card: #FFFFFF;
+  --surface: #F8F7FA;
+  --surface-hover: #FAFAFB;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Touch target floor */
+button, a, [role="button"] {
+  min-height: 44px;
+}
+p a, span a, li a { min-height: 0; }
+
+/* Phones */
+@media (max-width: 600px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}

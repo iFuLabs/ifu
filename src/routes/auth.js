@@ -10,7 +10,7 @@ import { auditAction } from '../services/audit.js'
 import { slugify } from '../services/utils.js'
 import { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS, TRIAL_DURATION_MS } from '../services/config.js'
 import { sendWelcomeEmail } from '../services/email.js'
-import { getActiveSubscriptions } from '../services/subscriptions.js'
+import { getActiveSubscriptions, upsertSubscription } from '../services/subscriptions.js'
 
 const onboardSchema = z.object({
   name: z.string().optional(),
@@ -23,7 +23,8 @@ const onboardSchema = z.object({
     .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character')
     .optional(),
   orgName: z.string().min(2).max(100),
-  orgDomain: z.string().optional()
+  orgDomain: z.string().optional(),
+  role: z.string().optional() // signup role: cto, engineering, compliance, founder, other
 })
 
 const loginSchema = z.object({
@@ -219,11 +220,26 @@ export default async function authRoutes(fastify) {
       })
     }
 
+    // Create Ghara trial subscription (7-day Growth tier, no card required)
+    try {
+      await upsertSubscription({
+        orgId: result.org.id,
+        product: 'ghara',
+        plan: 'ghara_growth_trial',
+        tier: 'growth',
+        status: 'trialing',
+        products: ['compliance', 'cost'],
+        trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS),
+      })
+    } catch (subErr) {
+      fastify.log.warn({ err: subErr.message, orgId: result.org.id }, 'Failed to create trial subscription row — org still created')
+    }
+
     await auditAction({
       orgId: result.org.id,
       userId: result.user.id,
       action: 'auth.onboarded',
-      metadata: { orgName: body.orgName, email: userEmail }
+      metadata: { orgName: body.orgName, email: userEmail, signupRole: body.role || null }
     })
 
     // Send welcome email

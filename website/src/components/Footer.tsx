@@ -69,10 +69,9 @@ export function Footer() {
           <div className="footer-col">
             <h4>Products</h4>
             <ul>
-              <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>iFu Comply</a></li>
-              <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>iFu Costless</a></li>
-              <li><a href={`${PORTAL_URL}/login`}>Client portal</a></li>
-              <li><a href={`${API_URL}/docs`}>API Documentation</a></li>
+              <li><a href="https://ghara.ifulabs.com">Ghara — Compliance & Cost</a></li>
+              <li><a href="https://ghara.ifulabs.com/pricing">Pricing</a></li>
+              <li><a href="https://app.ghara.ifulabs.com/login">Sign in</a></li>
             </ul>
           </div>
           <div className="footer-col">
