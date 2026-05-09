@@ -97,8 +97,8 @@ export default function LoginPage() {
         {/* iFU Labs attribution */}
         <p className="text-center text-xs text-muted mt-6">
           by{' '}
-          <a href="https://ifulabs.com" target="_blank" rel="noopener noreferrer" className="hover:underline">
-            iFU Labs
+          <a href="https://ifulabs.com" target="_blank" rel="noopener noreferrer" className="hover:underline inline-flex items-center gap-1">
+            <img src="/brand/ifulabs-logo.svg" alt="iFU Labs" className="h-3 inline" />
           </a>
         </p>
       </div>
