@@ -10,13 +10,14 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [orgName, setOrgName] = useState('')
+  const [role, setRole] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim() || !password.trim() || !orgName.trim()) {
-      setError('All fields are required')
+      setError('Email, password, and company name are required')
       return
     }
     if (password.length < 8) {
@@ -28,7 +29,12 @@ export default function SignupPage() {
     setError('')
 
     try {
-      await api.auth.signup({ name: name.trim(), email: email.trim(), password, orgName: orgName.trim() })
+      await api.auth.signup({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        orgName: orgName.trim(),
+      })
       router.push('/onboarding')
     } catch (err: any) {
       setError(err.message || 'Signup failed')
@@ -62,7 +68,7 @@ export default function SignupPage() {
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Jane Smith"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
               />
             </div>
 
@@ -73,7 +79,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@company.com"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
               />
             </div>
 
@@ -84,7 +90,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="Min 8 characters"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
               />
             </div>
 
@@ -95,14 +101,31 @@ export default function SignupPage() {
                 value={orgName}
                 onChange={e => setOrgName(e.target.value)}
                 placeholder="Acme Inc"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-ink mb-1">Your role</label>
+              <select
+                value={role}
+                onChange={e => setRole(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+              >
+                <option value="">Select...</option>
+                <option value="cto">CTO / VP Engineering</option>
+                <option value="engineering">Engineering</option>
+                <option value="compliance">Compliance / GRC</option>
+                <option value="founder">Founder / CEO</option>
+                <option value="other">Other</option>
+              </select>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-dark transition-colors disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
+              style={{ background: '#33063D' }}
             >
               {loading ? 'Creating account...' : 'Start free trial'}
             </button>
@@ -110,7 +133,7 @@ export default function SignupPage() {
 
           <p className="text-center text-sm text-muted mt-4">
             Already have an account?{' '}
-            <Link href="/login" className="text-brand hover:underline font-medium">
+            <Link href="/login" className="text-accent hover:underline font-medium">
               Sign in
             </Link>
           </p>

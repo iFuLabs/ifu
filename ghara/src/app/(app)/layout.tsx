@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
+import TrialBanner from '@/components/TrialBanner'
 
 const NAV = [
   { href: '/dashboard',      label: 'Dashboard',    icon: LayoutDashboard },
@@ -137,6 +138,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main className="flex-1 lg:ml-56 overflow-y-auto">
+        <TrialBanner />
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card">
           <button onClick={() => setMobileOpen(true)} aria-label="Open menu">
