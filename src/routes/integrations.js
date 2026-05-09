@@ -1,7 +1,8 @@
 import { db } from '../db/client.js'
-import { integrations } from '../db/schema.js'
+import { integrations, kubernetesIntegrations } from '../db/schema.js'
 import { eq, and } from 'drizzle-orm'
 import { verifyToken, requireUser, requireAdmin } from '../middleware/auth.js'
+import { requireTier } from '../middleware/plan.js'
 import { encrypt, decrypt } from '../services/encryption.js'
 import { auditAction } from '../services/audit.js'
 import { scanQueue } from '../jobs/queues.js'
@@ -10,6 +11,7 @@ import { validateInstallation } from '../connectors/github/client.js'
 import { handleGithubWebhook } from '../connectors/github/webhook.js'
 import { validateOktaCredentials } from '../connectors/okta/checks.js'
 import { validateGoogleWorkspaceCredentials } from '../connectors/google-workspace/checks.js'
+import { validateOpenCostEndpoint } from '../connectors/kubernetes/opencost.js'
 import { redis } from '../services/redis.js'
 import { rateLimit } from '../services/rate-limit.js'
 
@@ -547,4 +549,194 @@ export default async function integrationRoutes(fastify) {
     config: { rawBody: true }, // Need raw body for signature verification
     schema: { tags: ['Integrations'] }
   }, handleGithubWebhook)
+
+  // ── Kubernetes Integration Routes ──────────────────────────────────────────
+
+  // GET /api/v1/integrations/kubernetes
+  // List all K8s integrations for the org
+  fastify.get('/kubernetes', {
+    preHandler: [verifyToken, requireUser],
+    schema: { tags: ['Integrations'], security: [{ bearerAuth: [] }] }
+  }, async (request, reply) => {
+    const results = await db.query.kubernetesIntegrations.findMany({
+      where: eq(kubernetesIntegrations.orgId, request.orgId),
+      columns: { encryptedToken: false }
+    })
+    return reply.send(results)
+  })
+
+  // POST /api/v1/integrations/kubernetes
+  // Connect a Kubernetes cluster via OpenCost
+  fastify.post('/kubernetes', {
+    preHandler: [verifyToken, requireUser, requireAdmin, requireTier('growth')],
+    schema: {
+      tags: ['Integrations'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['clusterName', 'connectionType'],
+        properties: {
+          clusterName: { type: 'string', minLength: 1, description: 'Human-readable cluster name' },
+          connectionType: { type: 'string', enum: ['opencost', 'eks_container_insights'] },
+          endpointUrl: { type: 'string', description: 'OpenCost API URL (required for opencost type)' },
+          bearerToken: { type: 'string', description: 'Bearer token for OpenCost auth (optional)' },
+          awsIntegrationId: { type: 'string', description: 'AWS integration ID (required for eks_container_insights)' }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { clusterName, connectionType, endpointUrl, bearerToken, awsIntegrationId } = request.body
+
+    // Validate based on connection type
+    if (connectionType === 'opencost') {
+      if (!endpointUrl) {
+        return reply.status(400).send({ error: 'endpointUrl is required for OpenCost connection type' })
+      }
+
+      const validation = await validateOpenCostEndpoint(endpointUrl, bearerToken)
+      if (!validation.success) {
+        return reply.status(400).send({
+          error: 'Integration Error',
+          message: validation.error,
+          hint: 'Ensure OpenCost is running and the endpoint is reachable. Deploy with: helm install opencost opencost/opencost --namespace opencost --create-namespace'
+        })
+      }
+    } else if (connectionType === 'eks_container_insights') {
+      if (!awsIntegrationId) {
+        return reply.status(400).send({ error: 'awsIntegrationId is required for EKS Container Insights' })
+      }
+      // Verify the AWS integration exists and belongs to this org
+      const awsInt = await db.query.integrations.findFirst({
+        where: and(
+          eq(integrations.id, awsIntegrationId),
+          eq(integrations.orgId, request.orgId),
+          eq(integrations.type, 'aws'),
+          eq(integrations.status, 'connected')
+        )
+      })
+      if (!awsInt) {
+        return reply.status(400).send({ error: 'AWS integration not found or not connected' })
+      }
+    }
+
+    // Check for existing cluster with same name
+    const existing = await db.query.kubernetesIntegrations.findFirst({
+      where: and(
+        eq(kubernetesIntegrations.orgId, request.orgId),
+        eq(kubernetesIntegrations.clusterName, clusterName)
+      )
+    })
+
+    const encryptedTokenValue = bearerToken ? encrypt(bearerToken) : null
+
+    let k8sIntegration
+    if (existing) {
+      ;[k8sIntegration] = await db.update(kubernetesIntegrations).set({
+        connectionType,
+        endpointUrl: endpointUrl || null,
+        encryptedToken: encryptedTokenValue,
+        awsIntegrationId: awsIntegrationId || null,
+        status: 'connected',
+        lastError: null,
+        lastErrorAt: null,
+        updatedAt: new Date()
+      }).where(eq(kubernetesIntegrations.id, existing.id))
+        .returning()
+    } else {
+      ;[k8sIntegration] = await db.insert(kubernetesIntegrations).values({
+        orgId: request.orgId,
+        clusterName,
+        connectionType,
+        endpointUrl: endpointUrl || null,
+        encryptedToken: encryptedTokenValue,
+        awsIntegrationId: awsIntegrationId || null,
+        status: 'connected'
+      }).returning()
+    }
+
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user.id,
+      action: 'integration.kubernetes.connected',
+      resource: 'kubernetes',
+      resourceId: k8sIntegration.id,
+      metadata: { clusterName, connectionType }
+    })
+
+    return reply.status(201).send({
+      ...k8sIntegration,
+      encryptedToken: undefined,
+      message: `Kubernetes cluster "${clusterName}" connected via ${connectionType}.`
+    })
+  })
+
+  // DELETE /api/v1/integrations/kubernetes/:id
+  // Disconnect a Kubernetes integration
+  fastify.delete('/kubernetes/:id', {
+    preHandler: [verifyToken, requireUser, requireAdmin],
+    schema: {
+      tags: ['Integrations'],
+      security: [{ bearerAuth: [] }],
+      params: { type: 'object', properties: { id: { type: 'string' } } }
+    }
+  }, async (request, reply) => {
+    const k8s = await db.query.kubernetesIntegrations.findFirst({
+      where: and(
+        eq(kubernetesIntegrations.id, request.params.id),
+        eq(kubernetesIntegrations.orgId, request.orgId)
+      )
+    })
+
+    if (!k8s) {
+      return reply.status(404).send({ error: 'Kubernetes integration not found' })
+    }
+
+    await db.update(kubernetesIntegrations).set({
+      status: 'disconnected',
+      encryptedToken: null,
+      updatedAt: new Date()
+    }).where(eq(kubernetesIntegrations.id, k8s.id))
+
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user.id,
+      action: 'integration.kubernetes.disconnected',
+      resource: 'kubernetes',
+      resourceId: k8s.id,
+      metadata: { clusterName: k8s.clusterName }
+    })
+
+    return reply.status(204).send()
+  })
+
+  // GET /api/v1/integrations/aws/cloudformation-url
+  // Generate a pre-filled CloudFormation Quick Launch URL
+  fastify.get('/aws/cloudformation-url', {
+    preHandler: [verifyToken, requireUser],
+    schema: { tags: ['Integrations'], security: [{ bearerAuth: [] }] }
+  }, async (request, reply) => {
+    const accountId = process.env.AWS_ACCOUNT_ID || '123456789012'
+    const externalId = `ghara-${request.orgId.slice(0, 8)}`
+
+    // CloudFormation template URL (would be hosted in an S3 bucket in production)
+    const templateUrl = process.env.GHARA_CFN_TEMPLATE_URL || 'https://ghara-public.s3.amazonaws.com/cfn/ghara-iam-role.yaml'
+
+    const cfnUrl = new URL('https://console.aws.amazon.com/cloudformation/home')
+    cfnUrl.hash = `/stacks/quickcreate?templateURL=${encodeURIComponent(templateUrl)}&stackName=GharaReadOnlyRole&param_ExternalId=${externalId}&param_TrustedAccountId=${accountId}`
+
+    return reply.send({
+      cloudFormationUrl: cfnUrl.toString(),
+      externalId,
+      accountId,
+      templateUrl,
+      instructions: [
+        'Click the CloudFormation link to open AWS Console',
+        'Review the IAM role permissions (read-only)',
+        'Check "I acknowledge that AWS CloudFormation might create IAM resources"',
+        'Click "Create stack"',
+        'Once complete, copy the Role ARN from the Outputs tab',
+        'Paste it back here to finish connecting'
+      ]
+    })
+  })
 }

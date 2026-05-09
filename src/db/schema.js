@@ -453,6 +453,26 @@ export const slackWorkspaces = pgTable('slack_workspaces', {
   index('idx_slack_workspaces_org_id').on(table.orgId)
 ])
 
+// ── Kubernetes Integrations (Phase 3) ──────────────────────────────────────
+export const kubernetesIntegrations = pgTable('kubernetes_integrations', {
+  id:                uuid('id').primaryKey().defaultRandom(),
+  orgId:             uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  clusterName:       text('cluster_name').notNull(),
+  connectionType:    text('connection_type').notNull().default('opencost'), // 'opencost' | 'eks_container_insights'
+  endpointUrl:       text('endpoint_url'),
+  encryptedToken:    text('encrypted_token'),
+  awsIntegrationId:  uuid('aws_integration_id').references(() => integrations.id, { onDelete: 'set null' }),
+  status:            text('status').notNull().default('connected'),
+  lastSyncedAt:      timestamp('last_synced_at'),
+  lastError:         text('last_error'),
+  lastErrorAt:       timestamp('last_error_at'),
+  createdAt:         timestamp('created_at').notNull().defaultNow(),
+  updatedAt:         timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_k8s_integrations_org_id').on(table.orgId),
+  uniqueIndex('idx_k8s_integrations_org_cluster').on(table.orgId, table.clusterName)
+])
+
 
 // ── ALL Relations (after all table definitions) ────────────────────────────
 
@@ -504,4 +524,8 @@ export const webhookDeliveriesRelations = relations(webhookDeliveries, ({ one })
 export const finopsRecommendationStatesRelations = relations(finopsRecommendationStates, ({ one }) => ({
   org: one(organizations, { fields: [finopsRecommendationStates.orgId], references: [organizations.id] }),
   updatedByUser: one(users, { fields: [finopsRecommendationStates.updatedBy], references: [users.id] })
+}))
+export const kubernetesIntegrationsRelations = relations(kubernetesIntegrations, ({ one }) => ({
+  org: one(organizations, { fields: [kubernetesIntegrations.orgId], references: [organizations.id] }),
+  awsIntegration: one(integrations, { fields: [kubernetesIntegrations.awsIntegrationId], references: [integrations.id] })
 }))
