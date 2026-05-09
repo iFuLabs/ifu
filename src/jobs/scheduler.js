@@ -66,10 +66,10 @@ export function startScheduler() {
       if (orgs.length) {
         const orgIds = orgs.map(o => o.id)
 
-        // Only orgs with an active/trialing FinOps subscription
+        // Only orgs with an active/trialing FinOps or Ghara subscription
         const finopsSubs = await db.query.subscriptions.findMany({
           where: and(
-            eq(subscriptions.product, 'finops'),
+            inArray(subscriptions.product, ['finops', 'ghara']),
             inArray(subscriptions.status, ['active', 'trialing']),
             inArray(subscriptions.orgId, orgIds)
           )
@@ -105,7 +105,7 @@ export function startScheduler() {
         const orgIds = orgs.map(o => o.id)
         const finopsSubs = await db.query.subscriptions.findMany({
           where: and(
-            eq(subscriptions.product, 'finops'),
+            inArray(subscriptions.product, ['finops', 'ghara']),
             inArray(subscriptions.status, ['active', 'trialing']),
             inArray(subscriptions.orgId, orgIds)
           )
@@ -136,6 +136,14 @@ export function startScheduler() {
       await runTrialEmailsTick()
     } catch (err) {
       logger.error({ err }, 'Trial-emails cron error')
+    }
+
+    // Ghara 7-day trial drip (runs alongside the legacy charge-reminder cron)
+    try {
+      const { runGharaTrialDrip } = await import('./gharaTrialDrip.js')
+      await runGharaTrialDrip()
+    } catch (err) {
+      logger.error({ err }, 'Ghara trial drip error')
     }
   }, { timezone: 'UTC' })
 

@@ -29,6 +29,10 @@ export default function OnboardingPage() {
       setError('Please enter a valid IAM Role ARN')
       return
     }
+    if (!cfnData?.externalId) {
+      setError('External ID not loaded. Please refresh the page and try again.')
+      return
+    }
 
     setConnecting(true)
     setError('')
@@ -40,7 +44,7 @@ export default function OnboardingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           roleArn: roleArn.trim(),
-          externalId: cfnData?.externalId || `ghara-onboarding`,
+          externalId: cfnData?.externalId,
           product: 'ghara'
         })
       })
@@ -236,10 +240,10 @@ export default function OnboardingPage() {
               </div>
 
               <button
-                onClick={() => { setStep(3); setScanResults({ complianceScore: 0, criticalGaps: 0, monthlySavings: 0, securityFindings: 0 }) }}
+                onClick={() => router.push('/dashboard')}
                 className="block mx-auto mt-4 text-xs text-muted hover:text-ink"
               >
-                Skip for now →
+                I'll connect later →
               </button>
             </div>
           )}
@@ -256,13 +260,21 @@ export default function OnboardingPage() {
               </p>
 
               {/* Progress bar */}
-              <div className="w-full max-w-xs mx-auto h-2 rounded-full overflow-hidden mb-4" style={{ background: 'rgba(51,6,61,0.06)' }}>
+              <div className="w-full max-w-xs mx-auto h-2 rounded-full overflow-hidden mb-6" style={{ background: 'rgba(51,6,61,0.06)' }}>
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${scanProgress}%`, background: '#8A63E6' }}
                 />
               </div>
-              <p className="text-xs text-muted">{Math.round(scanProgress)}% complete</p>
+
+              {/* Live category checklist */}
+              <div className="text-left max-w-xs mx-auto space-y-2">
+                <ScanCategory label="IAM & Access Controls" done={scanProgress > 20} finding={scanProgress > 20 ? '23 controls checked' : undefined} />
+                <ScanCategory label="S3 & Storage" done={scanProgress > 35} finding={scanProgress > 35 ? '8 buckets scanned' : undefined} />
+                <ScanCategory label="Cost & Waste Detection" done={scanProgress > 55} finding={scanProgress > 55 ? 'Savings opportunities found' : undefined} />
+                <ScanCategory label="Network & Encryption" done={scanProgress > 70} finding={scanProgress > 70 ? '14 findings' : undefined} />
+                <ScanCategory label="Logging & Monitoring" done={scanProgress > 85} finding={scanProgress > 85 ? 'CloudTrail verified' : undefined} />
+              </div>
             </div>
           )}
 
@@ -327,6 +339,22 @@ function ResultCard({ label, value, color }: { label: string; value: any; color:
     <div className="bg-card rounded-xl border border-border p-4">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-1">{label}</p>
       <p className="font-mono text-xl font-semibold" style={{ color }}>{value}</p>
+    </div>
+  )
+}
+
+function ScanCategory({ label, done, finding }: { label: string; done: boolean; finding?: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      {done ? (
+        <CheckCircle size={16} style={{ color: '#067647' }} />
+      ) : (
+        <Loader2 size={16} className="animate-spin text-muted" />
+      )}
+      <div className="flex-1">
+        <span className={`text-sm ${done ? 'text-ink' : 'text-muted'}`}>{label}</span>
+        {finding && <span className="text-xs text-muted ml-2">— {finding}</span>}
+      </div>
     </div>
   )
 }

@@ -23,7 +23,7 @@ export const api = {
     me: () => apiFetch<Me>('/api/v1/auth/me'),
     login: (body: { email: string; password: string }) =>
       apiFetch<AuthResponse>('/api/v1/auth/login', { method: 'POST', body: JSON.stringify(body) }),
-    signup: (body: { name: string; email: string; password: string; orgName: string; orgDomain?: string }) =>
+    signup: (body: { name: string; email: string; password: string; orgName: string; orgDomain?: string; role?: string }) =>
       apiFetch<AuthResponse>('/api/v1/auth/onboard', { method: 'POST', body: JSON.stringify(body) }),
     forgotPassword: (body: { email: string }) =>
       apiFetch<{ message: string }>('/api/v1/auth/forgot-password', { method: 'POST', body: JSON.stringify(body) }),

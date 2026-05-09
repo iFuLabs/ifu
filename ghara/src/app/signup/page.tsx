@@ -34,6 +34,7 @@ export default function SignupPage() {
         email: email.trim(),
         password,
         orgName: orgName.trim(),
+        role: role || undefined,
       })
       router.push('/onboarding')
     } catch (err: any) {
