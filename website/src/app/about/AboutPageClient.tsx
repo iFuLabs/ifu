@@ -151,6 +151,22 @@ export default function AboutPageClient() {
 
       <div className="divider" />
 
+      {/* Ghara — our product */}
+      <section className="section reveal" style={{ textAlign: 'center' }}>
+        <div className="section-eyebrow">Our Product</div>
+        <h2 className="section-title">In 2026 we launched <em>Ghara.</em></h2>
+        <p className="section-sub" style={{ margin: '0 auto', maxWidth: '560px' }}>
+          Ghara is the productized version of our compliance and cost work — making the same insights available to teams that don't need full consulting engagements. One dashboard for SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS, and AWS cost waste. Same engineering rigor, self-serve.
+        </p>
+        <div style={{ marginTop: '28px', display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="https://ghara.ifulabs.com" target="_blank" rel="noopener noreferrer" className="btn-cta ghost" style={{ fontSize: '14px' }}>
+            Learn more about Ghara →
+          </a>
+        </div>
+      </section>
+
+      <div className="divider" />
+
       {/* CTA */}
       <section className="reveal" style={{ padding: '0 32px', margin: '80px auto', maxWidth: '1200px' }}>
         <div style={{

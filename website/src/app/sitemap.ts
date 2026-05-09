@@ -19,8 +19,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/services',
     '/for-startups',
     '/schedule-consultation',
-    '/demo/comply',
-    '/demo/costless',
     '/privacy',
     '/terms',
     '/acceptable-use',
