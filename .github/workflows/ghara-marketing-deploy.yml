@@ -47,13 +47,13 @@ jobs:
 
       - name: Sync to S3
         run: |
-          aws s3 sync ghara-marketing/out s3://ghara-marketing-production \
+          aws s3 sync ghara-marketing/out s3://ifulabs-ghara-marketing-production \
             --delete \
             --cache-control "public,max-age=31536000,immutable" \
             --exclude "*.html" \
             --exclude "*.json"
           
-          aws s3 sync ghara-marketing/out s3://ghara-marketing-production \
+          aws s3 sync ghara-marketing/out s3://ifulabs-ghara-marketing-production \
             --delete \
             --cache-control "public,max-age=0,must-revalidate" \
             --exclude "*" \

@@ -66,7 +66,7 @@ module "acm_ghara_marketing" {
 module "ghara_marketing" {
   source = "./modules/s3-cloudfront"
 
-  bucket_name     = "ghara-marketing-production"
+  bucket_name     = "ifulabs-ghara-marketing-production"
   domain_name     = "ghara.${var.domain_name}"
   certificate_arn = module.acm_ghara_marketing.certificate_arn
   environment     = var.environment
