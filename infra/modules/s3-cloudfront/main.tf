@@ -1,6 +1,6 @@
 # S3 Bucket for website
 resource "aws_s3_bucket" "website" {
-  bucket = "ifulabs-website-${var.environment}"
+  bucket = var.bucket_name != "" ? var.bucket_name : "ifulabs-website-${var.environment}"
 }
 
 resource "aws_s3_bucket_public_access_block" "website" {

@@ -1,3 +1,9 @@
+variable "bucket_name" {
+  description = "S3 bucket name (optional, defaults to ifulabs-website-{environment})"
+  type        = string
+  default     = ""
+}
+
 variable "domain_name" {
   description = "Domain name for the website"
   type        = string
