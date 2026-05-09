@@ -125,6 +125,12 @@ F1, F5, F7, F10/A3, A2, C5, C8, F6, C4, C2
 - Await explicit approval per suggestion before any implementation work.
 - Resume website light-mode conversion (HomePageClient → about → for-startups → services → demos → legal pages) when product-research items are queued or deferred.
 
+## Ghara launch progress
+- **Phase 0** ✅ Discovery complete. All infrastructure paths validated.
+- **Phase 1** ✅ `ghara/` app shell created (Next.js 16, Tailwind, Ghara brand, all routes).
+- **Phase 2** ✅ Ghara plan SKUs (`ghara_starter`, `ghara_growth`, `ghara_scale`), `productEntitlements()` middleware, 7-day trial, migration 0029 applied.
+- **Phase 3** ✅ Unified AWS integration (CloudFormation Quick Launch), Kubernetes cost via OpenCost connector, migration 0030 applied. K8s gated behind Growth tier.
+
 ---
 
 # Prior task — Brand Identity & Light-Mode Conversion (in progress)
