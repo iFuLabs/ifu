@@ -40,5 +40,5 @@ export const COOKIE_OPTIONS = {
 // Free trial length, in days. Used for both the org trialEndsAt timestamp
 // and the Paystack subscription start_date so the first real charge happens
 // after the trial.
-export const TRIAL_DURATION_DAYS = 3
+export const TRIAL_DURATION_DAYS = 7
 export const TRIAL_DURATION_MS = TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000

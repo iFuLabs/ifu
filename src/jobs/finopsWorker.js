@@ -1,11 +1,12 @@
 import { Worker } from 'bullmq'
 import { redis } from '../services/redis.js'
 import { db } from '../db/client.js'
-import { integrations, finopsRecommendationStates } from '../db/schema.js'
+import { integrations, finopsRecommendationStates, kubernetesIntegrations } from '../db/schema.js'
 import { eq, and } from 'drizzle-orm'
 import { decrypt } from '../services/encryption.js'
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts'
 import { runFinOpsChecks } from '../connectors/finops/checks.js'
+import { fetchOpenCostData } from '../connectors/kubernetes/opencost.js'
 import { generateFinOpsSummary } from '../services/finops-ai.js'
 import { auditAction } from '../services/audit.js'
 import { dispatchWebhook } from '../services/webhooks.js'
@@ -46,6 +47,58 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
 
   const cacheKey = `finops:findings:${orgId}:current-month`
   await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
+
+  // ── Kubernetes cost scan (if K8s integrations exist) ──────────────────────
+  let k8sFindings = []
+  try {
+    const k8sIntegrations = await db.query.kubernetesIntegrations.findMany({
+      where: and(
+        eq(kubernetesIntegrations.orgId, orgId),
+        eq(kubernetesIntegrations.status, 'connected')
+      )
+    })
+
+    for (const k8s of k8sIntegrations) {
+      if (k8s.connectionType === 'opencost' && k8s.endpointUrl) {
+        try {
+          const token = k8s.encryptedToken ? decrypt(k8s.encryptedToken) : null
+          const k8sData = await fetchOpenCostData({
+            endpointUrl: k8s.endpointUrl,
+            bearerToken: token,
+            window: '7d'
+          })
+
+          k8sFindings.push(...(k8sData.findings || []).map(f => ({
+            ...f,
+            source: 'kubernetes',
+            clusterName: k8s.clusterName
+          })))
+
+          // Update last synced
+          await db.update(kubernetesIntegrations)
+            .set({ lastSyncedAt: new Date(), lastError: null, lastErrorAt: null, updatedAt: new Date() })
+            .where(eq(kubernetesIntegrations.id, k8s.id))
+
+          // Cache K8s data
+          const k8sCacheKey = `finops:k8s:${orgId}:${k8s.clusterName}`
+          await redis.setex(k8sCacheKey, CACHE_TTL, JSON.stringify(k8sData)).catch(() => null)
+        } catch (k8sErr) {
+          logger.warn({ err: k8sErr.message, cluster: k8s.clusterName, orgId }, 'K8s scan failed for cluster')
+          await db.update(kubernetesIntegrations)
+            .set({ lastError: k8sErr.message, lastErrorAt: new Date(), updatedAt: new Date() })
+            .where(eq(kubernetesIntegrations.id, k8s.id))
+        }
+      }
+      // EKS Container Insights fallback would go here in future
+    }
+
+    if (k8sFindings.length > 0) {
+      const k8sFindingsCacheKey = `finops:k8s-findings:${orgId}`
+      await redis.setex(k8sFindingsCacheKey, CACHE_TTL, JSON.stringify(k8sFindings)).catch(() => null)
+    }
+  } catch (k8sErr) {
+    logger.warn({ err: k8sErr.message, orgId }, 'K8s scan phase failed — non-fatal')
+  }
 
   await db.update(integrations)
     .set({ lastSyncAt: new Date(), updatedAt: new Date() })

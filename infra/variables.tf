@@ -96,3 +96,18 @@ variable "aws_account_id" {
   description = "AWS Account ID for cross-account role setup"
   type        = string
 }
+
+# ── Ghara Paystack Plans ───────────────────────────────────────────────────
+variable "paystack_ghara_starter_plan" {
+  description = "Paystack plan code for Ghara Starter ($499/mo)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "paystack_ghara_growth_plan" {
+  description = "Paystack plan code for Ghara Growth ($1,299/mo)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

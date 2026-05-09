@@ -1,5 +1,5 @@
 import { verifyToken, requireUser } from '../middleware/auth.js'
-import { PLAN_FEATURES, getAllowedFrameworks, getMaxTeamMembers } from '../middleware/plan.js'
+import { PLAN_FEATURES, getAllowedFrameworks, getMaxTeamMembers, productEntitlements } from '../middleware/plan.js'
 import { db } from '../db/client.js'
 import { users } from '../db/schema.js'
 import { eq, count } from 'drizzle-orm'
@@ -65,6 +65,36 @@ export default async function planRoutes(fastify) {
       available: features[feature] || false,
       plan,
       requiredPlan: features[feature] ? null : 'growth'
+    })
+  })
+
+  // GET /api/v1/plan/entitlements
+  // Get product-level entitlements (Ghara-aware)
+  fastify.get('/entitlements', {
+    preHandler: [verifyToken, requireUser],
+    schema: {
+      tags: ['Plan'],
+      security: [{ bearerAuth: [] }]
+    }
+  }, async (request, reply) => {
+    const entitlements = await productEntitlements(request.orgId)
+    const tier = entitlements.tier || 'starter'
+    const features = PLAN_FEATURES[tier] || PLAN_FEATURES.starter
+
+    return reply.send({
+      ...entitlements,
+      features: {
+        frameworks: features.frameworks,
+        aiFeatures: features.aiFeatures,
+        maxTeamMembers: features.maxTeamMembers,
+        kubernetes: features.kubernetes || false,
+        anomalyDetection: features.anomalyDetection || false,
+        slackIntegration: features.slackIntegration || false,
+        csvExport: features.csvExport || false,
+        dailyScans: features.dailyScans || false,
+        vendorRisk: features.vendorRisk || false,
+        customDateRanges: features.customDateRanges || false,
+      }
     })
   })
 }
