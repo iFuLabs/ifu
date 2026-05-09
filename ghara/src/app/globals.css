@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Ghara brand — swap these to rebrand in one place */
+  --brand: #0D4F4C;
+  --brand-light: rgba(13, 79, 76, 0.08);
+  --brand-dark: #083533;
+  --accent: #E8B547;
+  --accent-light: rgba(232, 181, 71, 0.12);
+
+  /* Semantic tokens */
+  --bg: #F9FAFB;
+  --ink: #111827;
+  --muted: rgba(17, 24, 39, 0.6);
+  --border: rgba(17, 24, 39, 0.1);
+  --border-emphasis: rgba(17, 24, 39, 0.2);
+  --card: #FFFFFF;
+  --surface: #F3F4F6;
+  --surface-hover: #F9FAFB;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Touch target floor */
+button, a, [role="button"] {
+  min-height: 44px;
+}
+p a, span a, li a { min-height: 0; }
+
+/* Phones */
+@media (max-width: 600px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
