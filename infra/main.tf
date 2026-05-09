@@ -103,13 +103,11 @@ module "api" {
     AWS_SECRET_ACCESS_KEY        = var.aws_secret_access_key
     AWS_ACCOUNT_ID               = var.aws_account_id
     BEDROCK_REGION               = var.aws_region
-    PORTAL_URL                   = "https://app.ghara.${var.domain_name}"
+    PORTAL_URL                   = "https://portal.${var.domain_name}"
     COMPLY_URL                   = "https://comply.${var.domain_name}"
     FINOPS_URL                   = "https://finops.${var.domain_name}"
     WEBSITE_URL                  = "https://www.${var.domain_name}"
-    GHARA_URL                    = "https://app.ghara.${var.domain_name}"
-    GHARA_MARKETING_URL          = "https://ghara.${var.domain_name}"
-    ALLOWED_ORIGINS              = "https://portal.${var.domain_name},https://comply.${var.domain_name},https://finops.${var.domain_name},https://app.ghara.${var.domain_name}"
+    ALLOWED_ORIGINS              = "https://portal.${var.domain_name},https://comply.${var.domain_name},https://finops.${var.domain_name}"
   }
 }
 
