@@ -3,22 +3,22 @@
 @tailwind utilities;
 
 :root {
-  /* Ghara brand — swap these to rebrand in one place */
-  --brand: #0D4F4C;
-  --brand-light: rgba(13, 79, 76, 0.08);
-  --brand-dark: #083533;
-  --accent: #E8B547;
-  --accent-light: rgba(232, 181, 71, 0.12);
+  /* Ghara brand — iFU Labs identity */
+  --brand: #33063D;
+  --brand-light: rgba(51, 6, 61, 0.08);
+  --brand-dark: #250430;
+  --accent: #8A63E6;
+  --accent-light: rgba(138, 99, 230, 0.08);
 
   /* Semantic tokens */
-  --bg: #F9FAFB;
-  --ink: #111827;
-  --muted: rgba(17, 24, 39, 0.6);
-  --border: rgba(17, 24, 39, 0.1);
-  --border-emphasis: rgba(17, 24, 39, 0.2);
+  --bg: #F8F7FA;
+  --ink: #33063D;
+  --muted: rgba(51, 6, 61, 0.65);
+  --border: rgba(51, 6, 61, 0.12);
+  --border-emphasis: rgba(51, 6, 61, 0.20);
   --card: #FFFFFF;
-  --surface: #F3F4F6;
-  --surface-hover: #F9FAFB;
+  --surface: #F8F7FA;
+  --surface-hover: #FAFAFB;
 }
 
 html, body {

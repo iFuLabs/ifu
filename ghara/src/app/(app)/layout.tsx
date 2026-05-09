@@ -72,9 +72,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 className={clsx(
                   'flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all',
                   active
-                    ? 'font-semibold text-white bg-brand'
+                    ? 'font-semibold text-ink'
                     : 'text-muted hover:text-ink hover:bg-surface'
                 )}
+                style={active ? { background: '#DAC0FD', borderLeft: '3px solid #8A63E6', paddingLeft: 9, color: '#33063D' } : undefined}
               >
                 <Icon size={16} />
                 {label}
@@ -95,9 +96,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 className={clsx(
                   'flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all',
                   active
-                    ? 'font-semibold text-white bg-brand'
+                    ? 'font-semibold text-ink'
                     : 'text-muted hover:text-ink hover:bg-surface'
                 )}
+                style={active ? { background: '#DAC0FD', borderLeft: '3px solid #8A63E6', paddingLeft: 9, color: '#33063D' } : undefined}
               >
                 <Icon size={16} />
                 {label}
@@ -108,7 +110,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {/* User */}
           {user && (
             <div className="flex items-center gap-2.5 px-3 py-2 mt-2">
-              <div className="w-6 h-6 rounded-full bg-brand flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0" style={{ background: '#8A63E6' }}>
                 {(user.name?.[0] || user.email[0]).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -140,7 +142,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <button onClick={() => setMobileOpen(true)} aria-label="Open menu">
             <Menu size={20} className="text-muted" />
           </button>
-          <img src="/brand/logo.svg" alt="Ghara" className="h-6" />
+          <span className="font-mono text-sm font-medium text-ink">iFU Labs · Ghara</span>
           <div className="w-5" />
         </div>
 

@@ -4,8 +4,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Helvetica Neue', 'Arial', 'sans-serif'],
-        mono: ['SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', 'monospace'],
+        sans: ['Aeonik', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        serif: ['PP Fragment', 'Georgia', 'Times New Roman', 'serif'],
+        mono: ['Aeonik Fono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', 'monospace'],
       },
       colors: {
         // Ghara brand palette (CSS vars for easy swap)
