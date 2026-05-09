@@ -1,33 +1,61 @@
-# CLAUDE.md — Brand Identity & Product Research
+# CLAUDE.md — Ghara by iFU Labs
 
-### Team overview document
-- Location: TEAM_OVERVIEW.md
-- Created: 2026-04-26
-- Purpose: Team briefing document for May 1st product testing call
-- Last updated: 2026-04-26
+## Current product: Ghara
 
-## Current task
-FinOps and Comply product research and improvement suggestions. (Brand light-mode conversion is the prior task — preserved below.)
+**Ghara** is the unified SaaS product by iFU Labs, combining compliance automation and cloud cost intelligence into one dashboard.
 
-## FinOps current features
-**App:** `finops/src/app/dashboard/*` · **Connector:** `src/connectors/finops/checks.js`
-- Pages: Dashboard, Billing (Paystack), Integrations (AWS IAM-role), Team
-- API: `GET /api/v1/finops` (6h cache), `/finops/stream` (SSE progress), `/finops/summary`
-- Cloud: **AWS only**. STS AssumeRole + external ID for cross-account
-- AWS APIs: Cost Explorer (spend, forecast, rightsizing, RI/SP coverage), EC2, ELB/ELBv2, RDS, CloudWatch, Pricing API, Bedrock (Claude 3 Haiku for AI summaries)
-- Waste types (8): unattached EBS, unused EIPs, stopped EC2 (>30d), idle NAT, idle RDS, unused ALB/NLB/Classic LBs, old snapshots (>90d)
-- Recommendations: rightsizing (top 20 from AWS) + waste CLI commands; RI/SP coverage shown read-only
-- Forecast: end-of-month spend
-- AI: Bedrock summary (2-3 sentences, fallback rule-based)
-- Background jobs: scanWorker exists but **not wired** — scans are manual only
-- **Absent:** budgets, tag-based allocation/showback, anomaly detection (only rule-based thresholds, no ML), Slack/email alerts, scheduled scans, multi-cloud, custom date ranges, exports/reports, K8s cost, RI/SP automation
+- **Marketing site:** `ghara-marketing/` → `https://ghara.ifulabs.com`
+- **Product app:** `ghara/` → `https://app.ghara.ifulabs.com`
+- **Backend:** `src/` (Fastify API, shared across all frontends)
+- **Domain:** `ghara.ifulabs.com` (marketing), `app.ghara.ifulabs.com` (product)
 
-## Comply current features
-**App:** `comply/src/app/dashboard/*` · **Backend:** `src/routes/*`
-- Pages: Dashboard, Controls (list/detail), Evidence, Integrations, Scans, Vendors, Team, Billing, FinOps widget
-- API: Controls (list/score/detail/notes), Integrations (AWS/GitHub setup + sync + delete), Evidence (CRUD + PDF export per framework), Scans (list/detail + BullMQ progress), Vendors (CRUD), AI (`POST /ai/explain/:controlId` + SSE), Plan gating (`/plan/features`, `/plan/check/:feature`), Team (members + invitations), Billing (Paystack)
-- Frameworks wired: SOC 2 (~25 controls, all plans), ISO 27001 (~30, Growth), GDPR (~20, Growth), HIPAA (~15, Growth). **PCI DSS = stub** (enum only)
-- Evidence: Auto via AWS connector (IAM, S3, CloudTrail, RDS, GuardDuty), GitHub (branch protection, secret scanning, CODEOWNERS), manual S3 upload, AI-generated remediation (Claude, Growth, 24h cache)
+### Architecture
+```
+ghara/                  — Next.js 16 product app (port 3005)
+ghara-marketing/        — Next.js 16 marketing site (port 3006)
+src/                    — Fastify backend (port 3000)
+  ├── routes/           — API endpoints
+  ├── middleware/       — Auth + plan gating
+  ├── connectors/       — AWS, GitHub, Kubernetes (OpenCost)
+  ├── jobs/             — BullMQ workers (scan, finops, notifications, webhooks, trial drip)
+  ├── services/         — Email, Slack, billing, AI, health score, encryption
+  └── db/               — Drizzle ORM schema + migrations
+drizzle/                — SQL migrations (0000–0030)
+website/                — iFU Labs consultancy site (advisory, not product)
+comply/                 — ⚠️ DEPRECATED (see comply/DEPRECATED.md)
+finops/                 — ⚠️ DEPRECATED (see finops/DEPRECATED.md)
+portal/                 — ⚠️ DEPRECATED (see portal/DEPRECATED.md)
+```
+
+### Pricing tiers
+| Tier | Price | AWS spend cap | Key features |
+|------|-------|---------------|--------------|
+| Starter | $499/mo | ≤$10k/mo | SOC 2, basic waste detection, weekly scans, 1 AWS account |
+| Growth | $1,299/mo | ≤$100k/mo | All frameworks, AI remediation, K8s cost, Slack, anomaly detection, daily scans |
+| Scale | Custom | Unlimited | Custom frameworks, multi-account, SSO/SAML, auditor role, dedicated CSM |
+
+Trial: 7-day free on Growth tier, no credit card required.
+
+### Key features
+- **Cloud Health Score** — composite 0–100 (40% compliance, 30% cost, 30% security)
+- **Unified Action Queue** — ranked findings from both engines, sorted by impact
+- **5 compliance frameworks** — SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS
+- **8 AWS waste types** + rightsizing + anomaly detection
+- **Kubernetes cost** via OpenCost (Growth tier)
+- **CloudFormation Quick Launch** for AWS connection
+- **Trial email drip** — day 0/1/3/5/6/7 lifecycle emails
+- **Grandfathering** — existing customers keep their price via `scripts/migrate_legacy_to_ghara.js`
+
+### Backend infrastructure
+- Subscriptions: `drizzle/0009` + `0029` (Ghara plans, products JSONB, tier, legacy flag)
+- Plan gating: `src/middleware/plan.js` — `productEntitlements(orgId)`, `requireTier()`, `requireProduct()`
+- AWS connector: `src/connectors/aws/checks/*` (compliance) + `src/connectors/finops/checks.js` (cost)
+- K8s connector: `src/connectors/kubernetes/opencost.js`
+- Jobs: `scanWorker`, `finopsWorker` (includes K8s), `notificationWorker`, `webhookWorker`, `gharaTrialDrip`
+- Health score: `src/services/healthScore.js`
+- Billing: Paystack via `src/services/paystack.js` + `src/routes/billing.js`
+- Email: Resend via `src/services/email.js`
+- Slack: `src/services/slack.js` + `src/routes/slack.js`
 - Integrations live: AWS, GitHub, Paystack, Auth0, Claude, S3, Redis, Postgres. **Stubs:** Okta, Google Workspace
 - Jobs: Daily 2AM UTC scan scheduler + BullMQ worker
 - Vendor risk: live (CRUD + cert expiry)
@@ -43,7 +71,25 @@ FinOps and Comply product research and improvement suggestions. (Brand light-mod
 - **F10/A3** Slack app — done 2026-04-25. Migration `0013_add_slack_workspaces.sql` creates `slack_workspaces` (orgId+teamId unique). New `src/services/slack.js` handles OAuth v2 token exchange, encrypted token storage, `postMessage`, channel listing, and Block Kit builders for drift / scan-complete. New `src/routes/slack.js` exposes `GET /api/v1/slack`, `GET /install` (admin, returns OAuth URL), `GET /callback` (consumes Redis-backed state, redirects to portal), `PATCH /channel`, `GET /channels`, `POST /test`, `DELETE /` (uninstall). Wired into `notificationWorker.js` so control-drift events also post to Slack. Required env: `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_REDIRECT_URI`, `PORTAL_URL`. Required Slack scopes: `chat:write`, `chat:write.public`, `channels:read`, `groups:read`.
 - **F6** Recommendation workflow states — done 2026-04-25. Migration `0012_add_finops_recommendation_states.sql` creates table with states (open/snoozed/done). New API endpoints: `PATCH /api/v1/finops/recommendations/:resourceId/state` and `GET /api/v1/finops/recommendations/states`. UI added to `finops/src/app/dashboard/page.tsx` with state indicators, filter buttons, and inline state controls on waste/rightsizing cards.
 
-## Pending suggestions
+## Completed in Ghara launch
+- **F1** Wire scheduled FinOps scans ✅
+- **F5** Custom date ranges ✅
+- **F6** Recommendation workflow states ✅
+- **F7** CSV/JSON export ✅
+- **F10/A3** Slack app ✅
+- **A2** Outbound webhooks ✅
+- **C4** PCI DSS 4.0 controls ✅
+- **C8** Control-drift email alerts ✅
+- **F11** Kubernetes cost (via OpenCost, Growth tier) ✅
+- **F2** Anomaly detection (basic, via anomalyWorker) ✅
+- Unified dashboard with Cloud Health Score ✅
+- Unified action queue (cross-engine findings) ✅
+- 7-day no-card trial with email drip ✅
+- Ghara plan SKUs + product entitlements middleware ✅
+- CloudFormation Quick Launch for AWS ✅
+- Marketing site with pricing page ✅
+
+## Pending suggestions (post-launch)
 
 ### FinOps
 - ~~**F1** Wire scheduled scans~~ ✅ implemented
@@ -122,8 +168,15 @@ F1, F5, F7, F10/A3, A2, C5, C8, F6, C4, C2
 - **Light-mode brand conversion is in-progress on `brand-identity` branch** — see prior task table below.
 
 ## Todo
-- Await explicit approval per suggestion before any implementation work.
-- Resume website light-mode conversion (HomePageClient → about → for-startups → services → demos → legal pages) when product-research items are queued or deferred.
+- Deploy Ghara to production (`app.ghara.ifulabs.com`)
+- Deploy marketing site (`ghara.ifulabs.com`)
+- Create Paystack plans: `ghara_starter` ($499/mo), `ghara_growth` ($1,299/mo)
+- Run grandfathering script: `node --env-file=.env scripts/migrate_legacy_to_ghara.js`
+- Send migration email to existing customers
+- Port full Comply drilldown views to `/compliance` (currently placeholder)
+- Port full FinOps drilldown views to `/cost` (currently placeholder)
+- Resume website light-mode conversion (pages 9–18 pending)
+- Delete legacy apps 60 days after production launch confirmed stable
 
 ## Ghara launch progress
 - **Phase 0** ✅ Discovery complete. All infrastructure paths validated.
@@ -136,6 +189,7 @@ F1, F5, F7, F10/A3, A2, C5, C8, F6, C4, C2
 - **Phase 7** ✅ Ghara marketing site (homepage, pricing, compliance, cost, demo). iFU Labs website footers updated.
 - **Phase 8** ✅ Notifications page (Slack + email per-event toggles), integrations hub, team management.
 - **Phase 9** ✅ Legacy apps deprecated (comply/, finops/, portal/ marked with DEPRECATED.md). URL redirects added.
+- **Phase 10** ✅ Final CLAUDE.md rewrite. PR ready.
 
 ## Legacy apps (deprecated — do not add features)
 - `comply/` — superseded by `ghara/src/app/(app)/compliance/`
