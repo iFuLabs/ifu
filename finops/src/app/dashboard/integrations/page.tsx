@@ -12,16 +12,22 @@ interface Integration {
   lastError?: string
 }
 
+interface SlackStatus {
+  connected: boolean
+  teamName?: string
+  channelName?: string
+}
+
 export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<Integration[]>([])
   const [loading, setLoading] = useState(true)
   const [showAwsForm, setShowAwsForm] = useState(false)
   const [roleArn, setRoleArn] = useState('')
-  const [externalId] = useState(() => `ifu-${Math.random().toString(36).slice(2, 10)}`)
+  const [externalId] = useState(() => `ifu-labs-${Math.random().toString(36).slice(2, 10)}`)
   const [awsAccountId, setAwsAccountId] = useState('385936845264')
   const [connecting, setConnecting] = useState(false)
   const [error, setError] = useState('')
-  const [slackStatus, setSlackStatus] = useState<any>(null)
+  const [slackStatus, setSlackStatus] = useState<SlackStatus | null>(null)
 
   useEffect(() => {
     loadIntegrations()
@@ -30,7 +36,9 @@ export default function IntegrationsPage() {
     fetch('/api/v1/slack', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => setSlackStatus(data))
-      .catch(() => {})
+      .catch((err) => {
+        console.error('Failed to load Slack status:', err)
+      })
   }, [])
 
   const loadAwsSetupInfo = async () => {
@@ -83,8 +91,8 @@ export default function IntegrationsPage() {
         const data = await res.json()
         setError(data.message || 'Failed to connect AWS')
       }
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.')
     } finally {
       setConnecting(false)
     }
