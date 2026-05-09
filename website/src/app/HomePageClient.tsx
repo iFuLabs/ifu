@@ -118,7 +118,7 @@ export default function HomePageClient() {
 
         <div className="services-grid reveal-grid">
           {[
-            { num: '01', icon: '◈', label: 'FinOps',     name: 'Cost Optimisation',     desc: 'We audit your AWS spend, identify waste, and implement Savings Plans. Average client saves 25–40% within 30 days.', items: ['Full spend audit & waste report', 'Rightsizing recommendations', 'RI & Savings Plan strategy', 'Cost anomaly monitoring setup'] },
+            { num: '01', icon: '◈', label: 'Cost',     name: 'Cost Optimisation',     desc: 'We audit your AWS spend, identify waste, and implement Savings Plans. Average client saves 25–40% within 30 days.', items: ['Full spend audit & waste report', 'Rightsizing recommendations', 'RI & Savings Plan strategy', 'Cost anomaly monitoring setup'] },
             { num: '02', icon: '⬡', label: 'Compliance', name: 'Compliance & Security',  desc: 'SOC 2, ISO 27001, GDPR, and HIPAA readiness — evidence collection, gap remediation, and audit preparation end-to-end.', items: ['Gap assessment & risk report', 'Control remediation delivery', 'Evidence pack preparation', 'Auditor liaison support'] },
             { num: '03', icon: '☁', label: 'Migration',  name: 'Cloud Migration',        desc: 'On-premise to AWS, workload re-platforming, or cross-cloud migrations. Zero surprise downtime.', items: ['Discovery & dependency mapping', 'Migration wave planning', 'Lift-and-shift or re-architect', 'AWS MAP program support'] },
             { num: '04', icon: '⎈', label: 'Containers', name: 'EKS & ECS Engineering',  desc: 'We design, build, and secure Kubernetes clusters on AWS — from architecture to production-grade operations.', items: ['Cluster design & provisioning', 'Helm chart & manifest reviews', 'RBAC & network policy hardening', 'Observability stack setup'] },
@@ -166,43 +166,27 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      {/* Products */}
+      {/* Products → Ghara */}
       <section className="products-section" id="products">
         <div className="products-inner reveal">
-          <div className="section-eyebrow">SaaS Products</div>
+          <div className="section-eyebrow">Our Product</div>
           <h2 className="section-title">Prefer a product over<br/>a <em>consultant?</em></h2>
-          <p className="section-sub">Our consultancy experience packaged into standalone tools. Subscribe independently or combine with a managed services retainer.</p>
+          <p className="section-sub">We built Ghara so you don't need us forever. The same compliance and cost insights, productized and self-serve.</p>
 
           <div className="products-grid reveal-grid">
             <div className="product-card">
-              <span className="product-tag">● iFu Comply</span>
-              <div className="product-name">Compliance Automation</div>
-              <p className="product-desc">Automated SOC 2, ISO 27001, and GDPR evidence collection, control monitoring, and audit-ready PDF exports.</p>
+              <span className="product-tag">● Ghara</span>
+              <div className="product-name">Compliance + Cost in One Dashboard</div>
+              <p className="product-desc">Automated SOC 2, ISO 27001, GDPR, HIPAA, and PCI DSS evidence collection. AWS cost waste detection. Kubernetes cost via OpenCost. One Cloud Health Score.</p>
               <ul className="product-features">
-                {['Daily automated AWS control checks', 'AI-powered gap explanations & fix steps', 'One-click evidence pack PDF', 'Vendor risk & cert expiry tracking', 'Regulatory change monitoring'].map(f => (
+                {['Daily automated AWS control checks', 'AI-powered gap explanations & fix steps', 'Cost waste detection + rightsizing', 'Kubernetes cost visibility', 'Unified action queue'].map(f => (
                   <li key={f}>{f}</li>
                 ))}
               </ul>
-              <div className="product-price">From <strong>$299</strong> / month · or add to your retainer</div>
+              <div className="product-price">From <strong>$499</strong> / month · 7-day free trial</div>
               <div className="product-actions">
-                <IrisButton href="/demo/comply">Request a demo</IrisButton>
-                <a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`} className="product-cta ghost">Start free trial →</a>
-              </div>
-            </div>
-
-            <div className="product-card">
-              <span className="product-tag">● iFu Costless</span>
-              <div className="product-name">Cost Optimisation Tool</div>
-              <p className="product-desc">Connect your AWS account and get a live view of waste, savings opportunities, and spend anomalies — updated daily.</p>
-              <ul className="product-features">
-                {['Idle resource & waste detection', 'Reserved Instance & Savings Plan gaps', 'Weekly cost anomaly alerts', 'S3 storage class optimisation', 'Monthly executive spend report'].map(f => (
-                  <li key={f}>{f}</li>
-                ))}
-              </ul>
-              <div className="product-price">From <strong>$199</strong> / month · or add to your retainer</div>
-              <div className="product-actions">
-                <IrisButton href="/demo/costless">Request a demo</IrisButton>
-                <a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`} className="product-cta ghost">Start free trial →</a>
+                <IrisButton href="https://ghara.ifulabs.com">Learn more</IrisButton>
+                <a href="https://app.ghara.ifulabs.com/signup" className="product-cta ghost">Start free trial →</a>
               </div>
             </div>
           </div>
@@ -243,9 +227,9 @@ export default function HomePageClient() {
 
         <div className="pricing-grid" id="pricing-products" style={{ display: 'none' }}>
           {[
-            { tier: 'iFu Comply · Starter', name: 'Compliance Tool', price: '$299', period: 'per month, billed annually', desc: 'SOC 2 automation for early-stage teams.', features: ['SOC 2 control monitoring', 'AWS & GitHub connectors', 'Evidence PDF export', 'Vendor risk tracker', 'Up to 3 team members'], cta: 'Start free trial', product: 'comply', plan: 'starter' },
-            { tier: 'iFu Comply · Growth', name: 'Multi-framework', price: '$799', period: 'per month, billed annually', desc: 'SOC 2, ISO 27001, GDPR, and HIPAA — plus AI gap explanations.', features: ['Everything in Starter', 'ISO 27001, GDPR, HIPAA', 'AI gap explanations', 'Regulatory change alerts', 'Unlimited team members'], cta: 'Start free trial', featured: true, product: 'comply', plan: 'growth' },
-            { tier: 'iFu Costless', name: 'Cost Optimisation', price: '$199', period: 'per month, billed annually', desc: 'Live AWS cost dashboard with waste detection and anomaly alerts.', features: ['Idle resource detection', 'RI & Savings Plan analysis', 'Weekly anomaly alerts', 'Monthly spend report', 'Unlimited AWS accounts'], cta: 'Start free trial', product: 'finops', plan: 'starter' },
+            { tier: 'Ghara · Starter', name: 'Compliance + Cost', price: '$499', period: 'per month', desc: 'SOC 2 and basic cost waste detection for small teams.', features: ['SOC 2 framework', 'Basic cost waste detection', 'Weekly scans', '1 AWS account', 'Email support'], cta: 'Start free trial', product: 'ghara', plan: 'starter' },
+            { tier: 'Ghara · Growth', name: 'Full Platform', price: '$1,299', period: 'per month', desc: 'All frameworks, AI, K8s cost, Slack, daily scans.', features: ['All frameworks (SOC 2, ISO, GDPR, HIPAA, PCI)', 'AI remediation', 'Kubernetes cost', 'Slack alerts', 'Unlimited team members'], cta: 'Start free trial', featured: true, product: 'ghara', plan: 'growth' },
+            { tier: 'Ghara · Scale', name: 'Enterprise', price: 'Custom', period: 'unlimited AWS spend', desc: 'Custom frameworks, multi-account, SSO, dedicated CSM.', features: ['Everything in Growth', 'Custom frameworks', 'Multi-account AWS', 'SSO / SAML', 'Priority support'], cta: 'Talk to us', product: 'ghara', plan: 'scale' },
           ].map(p => (
             <div key={p.tier} className={`pricing-card${p.featured ? ' featured' : ''}`}>
               <div className="pricing-tier">{p.tier}</div>
@@ -257,7 +241,7 @@ export default function HomePageClient() {
                 {p.features.map(f => <li key={f} className="pricing-feature">{f}</li>)}
               </ul>
               <button
-                onClick={() => window.location.href = `${PORTAL_URL}/onboarding?product=${p.product}&plan=${p.plan}`}
+                onClick={() => window.location.href = `https://app.ghara.ifulabs.com/signup`}
                 className="pricing-cta"
                 style={{ cursor: 'pointer', border: 'none', width: '100%' }}
               >
@@ -269,7 +253,7 @@ export default function HomePageClient() {
 
         <div className="pricing-grid" id="pricing-managed" style={{ display: 'none' }}>
           {[
-            { tier: 'Managed · Essential', name: 'Core coverage', price: '$2,500', period: 'per month · cancel anytime', desc: 'Ongoing AWS management for small teams.', features: ['Dedicated cloud engineer (part-time)', 'Monthly cost & security review', 'Incident response (business hours)', 'iFu Comply SaaS tool included'], cta: 'Get started', href: '#contact' },
+            { tier: 'Managed · Essential', name: 'Core coverage', price: '$2,500', period: 'per month · cancel anytime', desc: 'Ongoing AWS management for small teams.', features: ['Dedicated cloud engineer (part-time)', 'Monthly cost & security review', 'Incident response (business hours)', 'Ghara platform included'], cta: 'Get started', href: '#contact' },
             { tier: 'Managed · Growth', name: 'Full coverage', price: '$5,000', period: 'per month · cancel anytime', desc: 'A senior engineer embedded with your team.', features: ['Senior engineer (up to 20hrs/month)', '24/7 incident response', 'Weekly check-in call', 'Quarterly roadmap review', 'All SaaS products included'], cta: 'Book discovery call', href: '#contact', featured: true },
             { tier: 'Managed · Enterprise', name: 'Embedded team', price: 'Custom', period: 'multi-engineer retainer', desc: 'Multiple engineers and programme management.', features: ['2–4 engineers depending on scope', 'Dedicated Slack channel & PM', 'Executive QBRs', 'Full SaaS platform included', 'AWS credits facilitation'], cta: 'Talk to us', href: 'mailto:info@ifulabs.com' },
           ].map(p => (

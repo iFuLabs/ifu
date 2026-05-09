@@ -46,8 +46,7 @@ export default function TermsPageClient() {
             </p>
             <ul style={{ marginLeft: '24px', marginBottom: '16px', color: 'var(--muted)' }}>
               <li><strong>Cloud Consultancy:</strong> AWS architecture, migration, optimization, and managed services</li>
-              <li><strong>Comply:</strong> Automated compliance monitoring for SOC 2, ISO 27001, and GDPR</li>
-              <li><strong>FinOps:</strong> AWS cost optimization and waste detection tool</li>
+              <li><strong>Ghara:</strong> Automated compliance monitoring (SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS) and AWS cost optimization</li>
             </ul>
           </section>
 

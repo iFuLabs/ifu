@@ -33,7 +33,7 @@ export default function PrivacyPageClient() {
               1. Introduction
             </h2>
             <p style={{ marginBottom: '16px', color: 'var(--muted)' }}>
-              iFu Labs Ltd ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services, including our website, cloud consultancy services, and SaaS products (Comply and FinOps).
+              iFu Labs Ltd ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services, including our website, cloud consultancy services, and our SaaS product Ghara.
             </p>
           </section>
 

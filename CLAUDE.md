@@ -56,10 +56,11 @@ Trial: 7-day free on Growth tier, no credit card required.
 - Billing: Paystack via `src/services/paystack.js` + `src/routes/billing.js`
 - Email: Resend via `src/services/email.js`
 - Slack: `src/services/slack.js` + `src/routes/slack.js`
-- Integrations live: AWS, GitHub, Paystack, Auth0, Claude, S3, Redis, Postgres. **Stubs:** Okta, Google Workspace
-- Jobs: Daily 2AM UTC scan scheduler + BullMQ worker
+- Integrations live: AWS, GitHub, Paystack, Auth0, Claude, S3, Redis, Postgres, Slack, Resend (email), OpenCost. **Stubs:** Okta, Google Workspace
+- Jobs: Daily 2AM UTC scan scheduler + BullMQ worker. Trial drip (`gharaTrialDrip`) runs hourly.
 - Vendor risk: live (CRUD + cert expiry)
-- **Absent:** Trust Center, policy management, employee training/lifecycle, risk register, auditor role, custom frameworks, security questionnaire automation, ISO 42001 / NIST AI RMF, MDM/HRIS integrations, Slack/email alerting
+- Slack + email alerting: live (control drift, scan complete, anomaly detection, monthly summary, trial lifecycle)
+- **Absent:** Trust Center, policy management, employee training/lifecycle, risk register, auditor role, custom frameworks, security questionnaire automation, ISO 42001 / NIST AI RMF, MDM/HRIS integrations
 
 ## Approved suggestions
 - **F1** Wire scheduled FinOps scans — done 2026-04-25. New `finopsScanQueue` in `src/jobs/queues.js`, new `src/jobs/finopsWorker.js`, daily 03:00 UTC cron in `src/jobs/scheduler.js` (queries active FinOps subscriptions + connected AWS integrations). Worker registered in `src/index.js`.
@@ -91,18 +92,18 @@ Trial: 7-day free on Growth tier, no credit card required.
 
 ## Pending suggestions (post-launch)
 
-### FinOps
+### FinOps (Cost engine)
 - ~~**F1** Wire scheduled scans~~ ✅ implemented
-- **F2** Anomaly detection + Slack/email alerts (Critical, Medium)
+- ~~**F2** Anomaly detection + Slack/email alerts~~ ✅ implemented
 - **F3** Tag-based allocation/showback (Critical, Medium)
-- **F4** Budgets + variance alerts (High, Medium)
-- ~~**F5** Custom date ranges~~ ✅ implemented (90-day trend chart still pending)
-- ~~**F6** Recommendation workflow states (Open/Snoozed/Done)~~ ✅ complete
-- ~~**F7** CSV export~~ ✅ implemented (monthly PDF report still pending)
+- **F4** Budgets + variance alerts (High, Medium) — partial: budgets table + Alerts tab in /cost; variance email alerts pending
+- ~~**F5** Custom date ranges + trend chart~~ ✅ implemented (30/90/180-day trend chart shipped)
+- ~~**F6** Recommendation workflow states (Open/Snoozed/Done/Dismissed)~~ ✅ complete
+- ~~**F7** CSV/JSON export~~ ✅ implemented (monthly PDF report still pending)
 - **F8** AI/GPU spend view (Bedrock/SageMaker/idle GPU) (High, Medium)
 - **F9** FOCUS 1.1 export (High, Medium)
-- ~~**F10** Slack integration~~ ✅ implemented (see F10/A3 above)
-- **F11** Kubernetes cost (Defer)
+- ~~**F10** Slack integration~~ ✅ implemented
+- ~~**F11** Kubernetes cost via OpenCost~~ ✅ implemented (Growth tier)
 - **F12** Multi-cloud Azure/GCP (Defer)
 - **F13** RI/SP autopilot (Defer — high risk)
 

@@ -18,7 +18,7 @@ export const SERVICES: Service[] = [
   {
     slug: 'cost-optimisation',
     num: '01',
-    label: 'FinOps',
+    label: 'Cost',
     name: 'Cost Optimisation',
     tagline: 'Stop overpaying AWS.',
     desc: 'We audit your AWS spend, identify waste, and implement Savings Plans. Average client saves 25–40% within 30 days.',
@@ -79,7 +79,7 @@ export const SERVICES: Service[] = [
     faqs: [
       { q: 'Which frameworks do you cover?', a: 'SOC 2 (Type I and II), ISO 27001, GDPR, HIPAA, and Cyber Essentials. The underlying control set overlaps significantly — we map once and reuse evidence.' },
       { q: 'Do you act as the auditor?', a: 'No. We prepare you for an independent auditor and sit alongside you during the audit. We can recommend auditors we\'ve worked with.' },
-      { q: 'How does iFu Comply fit in?', a: 'iFu Comply is our SaaS product that automates evidence collection daily. Consultancy clients get it included in the retainer.' },
+      { q: 'How does Ghara fit in?', a: 'Ghara is our SaaS product that automates compliance evidence collection and cost monitoring daily. Consultancy clients get it included in the retainer.' },
     ],
     pricingBlurb: 'SOC 2 readiness from $14,500 fixed-fee, or bundled into a compliance retainer from $7,500/month.',
   },

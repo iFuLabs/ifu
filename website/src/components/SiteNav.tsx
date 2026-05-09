@@ -108,7 +108,7 @@ export function SiteNav() {
             <div className="mega-menu" onMouseEnter={cancelClose} onMouseLeave={scheduleClose}>
               <div className="mega-menu-inner">
                 <a href="/services/cost-optimisation" className="mega-feature" onClick={() => setOpen(false)}>
-                  <div className="mega-feature-label">FinOps</div>
+                  <div className="mega-feature-label">Cost</div>
                   <div className="mega-feature-title">Cost Optimisation</div>
                   <div className="mega-feature-desc">We audit your AWS spend, identify waste, and implement Savings Plans. Average client saves 25–40% within 30 days.</div>
                   <div className="mega-feature-cta">Explore Cost Optimisation →</div>
