@@ -18,15 +18,21 @@ import { sendChargeReceiptEmail, sendPaymentFailedEmail } from '../services/emai
 import { users as usersTable } from '../db/schema.js'
 
 const PLAN_MAP = {
+  // Legacy per-product plans
   'comply-starter': process.env.PAYSTACK_COMPLY_STARTER_PLAN,
   'comply-growth': process.env.PAYSTACK_COMPLY_GROWTH_PLAN,
-  'finops': process.env.PAYSTACK_FINOPS_PLAN
+  'finops': process.env.PAYSTACK_FINOPS_PLAN,
+  // Ghara unified plans
+  'ghara-starter': process.env.PAYSTACK_GHARA_STARTER_PLAN,
+  'ghara-growth': process.env.PAYSTACK_GHARA_GROWTH_PLAN,
 }
 
 const PLAN_NAMES = {
   'comply-starter': 'Comply Starter',
   'comply-growth': 'Comply Growth',
-  'finops': 'FinOps'
+  'finops': 'FinOps',
+  'ghara-starter': 'Ghara Starter',
+  'ghara-growth': 'Ghara Growth',
 }
 
 // Maps the public plan slug to the org-level plan tier stored in the
@@ -35,14 +41,18 @@ const PLAN_NAMES = {
 const PLAN_TIERS = {
   'comply-starter': 'starter',
   'comply-growth': 'growth',
-  'finops': 'finops'
+  'finops': 'finops',
+  'ghara-starter': 'starter',
+  'ghara-growth': 'growth',
 }
 
 // Maps plan to product
 const PLAN_TO_PRODUCT = {
   'comply-starter': 'comply',
   'comply-growth': 'comply',
-  'finops': 'finops'
+  'finops': 'finops',
+  'ghara-starter': 'ghara',
+  'ghara-growth': 'ghara',
 }
 
 export default async function billingRoutes(fastify) {
@@ -121,7 +131,7 @@ export default async function billingRoutes(fastify) {
         type: 'object',
         required: ['plan'],
         properties: {
-          plan: { type: 'string', enum: ['comply-starter', 'comply-growth', 'finops'] }
+          plan: { type: 'string', enum: ['comply-starter', 'comply-growth', 'finops', 'ghara-starter', 'ghara-growth'] }
         }
       }
     }

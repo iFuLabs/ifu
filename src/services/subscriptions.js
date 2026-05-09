@@ -68,7 +68,12 @@ export async function getSubscription(orgId, product) {
  * @returns {Promise<Object>}
  */
 export async function upsertSubscription(data) {
-  const { orgId, product, plan, status, paystackSubscriptionCode, paystackPlanCode, trialEndsAt } = data
+  const { orgId, product, plan, status, paystackSubscriptionCode, paystackPlanCode, trialEndsAt, tier, products, legacy } = data
+
+  // Infer tier if not provided
+  const resolvedTier = tier || _inferTier(plan)
+  // Infer products array if not provided
+  const resolvedProducts = products || _inferProducts(product)
 
   // Check if subscription already exists
   const existing = await getSubscription(orgId, product)
@@ -80,6 +85,9 @@ export async function upsertSubscription(data) {
       .set({
         plan,
         status,
+        tier: resolvedTier,
+        products: resolvedProducts,
+        ...(legacy !== undefined && { legacy }),
         paystackSubscriptionCode,
         paystackPlanCode,
         trialEndsAt,
@@ -98,6 +106,9 @@ export async function upsertSubscription(data) {
         product,
         plan,
         status,
+        tier: resolvedTier,
+        products: resolvedProducts,
+        ...(legacy !== undefined && { legacy }),
         paystackSubscriptionCode,
         paystackPlanCode,
         trialEndsAt
@@ -106,6 +117,20 @@ export async function upsertSubscription(data) {
     
     return created
   }
+}
+
+function _inferTier(plan) {
+  if (!plan) return 'starter'
+  if (plan.includes('scale')) return 'scale'
+  if (plan.includes('growth') || plan === 'finops') return 'growth'
+  return 'starter'
+}
+
+function _inferProducts(product) {
+  if (product === 'ghara') return ['compliance', 'cost']
+  if (product === 'comply') return ['compliance']
+  if (product === 'finops') return ['cost']
+  return []
 }
 
 /**

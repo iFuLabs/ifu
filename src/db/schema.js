@@ -253,10 +253,13 @@ export const passwordResetTokens = pgTable('password_reset_tokens', {
 export const subscriptions = pgTable('subscriptions', {
   id:                      uuid('id').primaryKey().defaultRandom(),
   orgId:                   uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
-  product:                 text('product').notNull(), // 'comply' | 'finops'
-  plan:                    text('plan').notNull(), // 'starter' | 'growth' | 'finops'
+  product:                 text('product').notNull(), // 'comply' | 'finops' | 'ghara'
+  plan:                    text('plan').notNull(), // 'starter' | 'growth' | 'finops' | 'ghara_starter' | 'ghara_growth' | 'ghara_scale'
+  tier:                    text('tier'), // normalized: 'starter' | 'growth' | 'scale'
   status:                  text('status').notNull().default('active'), // 'active' | 'trialing' | 'cancelled' | 'expired'
-  paystackSubscriptionCode: text('paystack_subscription_code').unique(),
+  products:                jsonb('products').default([]), // engines granted: ["compliance", "cost"]
+  legacy:                  boolean('legacy').default(false), // grandfathered customer flag
+  paystackSubscriptionCode: text('paystack_subscription_code'),
   paystackPlanCode:        text('paystack_plan_code'),
   trialEndsAt:             timestamp('trial_ends_at'),
   createdAt:               timestamp('created_at').notNull().defaultNow(),
