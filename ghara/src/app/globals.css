@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Font faces ────────────────────────────────────────────────── */
+@font-face { font-family: 'Aeonik'; src: url('/fonts/aeonik/Aeonik-Regular.woff2') format('woff2'), url('/fonts/aeonik/Aeonik-Regular.woff') format('woff'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Aeonik'; src: url('/fonts/aeonik/Aeonik-Medium.woff2') format('woff2'), url('/fonts/aeonik/Aeonik-Medium.woff') format('woff'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Aeonik'; src: url('/fonts/aeonik/Aeonik-Bold.woff2') format('woff2'), url('/fonts/aeonik/Aeonik-Bold.woff') format('woff'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'PP Fragment'; src: url('/fonts/pp-fragment/PPFragment-SerifRegular.woff2') format('woff2'), url('/fonts/pp-fragment/PPFragment-SerifRegular.woff') format('woff'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'PP Fragment'; src: url('/fonts/pp-fragment/PPFragment-SerifExtraBold.woff2') format('woff2'), url('/fonts/pp-fragment/PPFragment-SerifExtraBold.woff') format('woff'); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Aeonik Fono'; src: url('/fonts/aeonik-fono/AeonikFono-Regular.woff2') format('woff2'), url('/fonts/aeonik-fono/AeonikFono-Regular.woff') format('woff'); font-weight: 400; font-style: normal; font-display: swap; }
+
 :root {
   /* Ghara brand — iFU Labs identity */
   --brand: #33063D;
