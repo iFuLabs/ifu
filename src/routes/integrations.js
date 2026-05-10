@@ -95,8 +95,8 @@ export default async function integrationRoutes(fastify) {
           },
           product: {
             type: 'string',
-            enum: ['comply', 'finops'],
-            description: 'Which iFu product this AWS role is for. Defaults to comply for backward compatibility.',
+            enum: ['comply', 'finops', 'ghara'],
+            description: 'Which product this AWS role is for.',
             default: 'comply'
           }
         }
