@@ -36,8 +36,16 @@ export default function NotificationsPage() {
     }).catch(() => setLoading(false))
   }, [])
 
-  const handleSlackInstall = () => {
-    window.location.href = `${API_URL}/api/v1/slack/install`
+  const handleSlackInstall = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/v1/slack/install`, { credentials: 'include' })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.installUrl) {
+          window.location.href = data.installUrl
+        }
+      }
+    } catch {}
   }
 
   const handleChannelChange = async (channelId: string) => {

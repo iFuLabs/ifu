@@ -72,10 +72,11 @@ export default async function slackRoutes(fastify) {
     }
   }, async (request, reply) => {
     const { code, state, error } = request.query
-    const complyUrl = process.env.COMPLY_URL || 'http://localhost:3001'
+    const redirectBase = process.env.GHARA_URL || process.env.COMPLY_URL || 'http://localhost:3005'
+    const redirectPath = '/notifications'
 
     if (error) {
-      return reply.redirect(`${complyUrl}/dashboard/integrations?slack_error=${encodeURIComponent(error)}`)
+      return reply.redirect(`${redirectBase}${redirectPath}?slack_error=${encodeURIComponent(error)}`)
     }
     if (!code || !state) {
       return reply.status(400).send({ error: 'Missing code or state' })
@@ -93,7 +94,7 @@ export default async function slackRoutes(fastify) {
       install = await exchangeCode(code)
     } catch (err) {
       fastify.log.error({ err: err.message }, 'Slack OAuth exchange failed')
-      return reply.redirect(`${complyUrl}/dashboard/integrations?slack_error=${encodeURIComponent(err.message)}`)
+      return reply.redirect(`${redirectBase}${redirectPath}?slack_error=${encodeURIComponent(err.message)}`)
     }
 
     await saveWorkspace({ orgId, userId, install })
@@ -105,7 +106,7 @@ export default async function slackRoutes(fastify) {
       metadata: { teamId: install.teamId, teamName: install.teamName }
     })
 
-    return reply.redirect(`${complyUrl}/dashboard/integrations?slack_connected=1`)
+    return reply.redirect(`${redirectBase}${redirectPath}?slack_connected=1`)
   })
 
   // PATCH /api/v1/slack/channel — choose default notification channel (admin)
