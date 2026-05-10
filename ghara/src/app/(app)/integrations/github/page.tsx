@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { Github, CheckCircle, ExternalLink, AlertCircle } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-const GITHUB_APP_URL = 'https://github.com/apps/ifu-labs-comply'
+const GITHUB_APP_URL = 'https://github.com/apps/ifu-labs'
 
 export default function GithubIntegrationPage() {
   const [integration, setIntegration] = useState<any>(null)

@@ -107,7 +107,6 @@ export default function AwsIntegrationPage() {
           </div>
         </div>
       </div>
-      </div>
     )
   }
 
