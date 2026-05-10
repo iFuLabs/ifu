@@ -383,7 +383,7 @@ export default function ForStartupsPageClient() {
             },
             {
               q: 'How do you price engagements?',
-              a: 'Three shapes. Fixed-scope projects (a cost audit, a SOC 2 sprint) are priced per project. Managed retainers start at $2,500/month, cancel any time. And our SaaS tools (iFu Comply, iFu Costless) start at $199/month self-serve. The discovery call is free and scope comes out of that conversation.',
+              a: 'Three shapes. Fixed-scope projects (a cost audit, a SOC 2 sprint) are priced per project. Managed retainers start at $2,500/month, cancel any time. And our self-serve product Ghara starts at $499/month. The discovery call is free and scope comes out of that conversation.',
             },
             {
               q: 'How is this different from hiring a freelance DevOps engineer?',

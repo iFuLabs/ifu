@@ -131,14 +131,14 @@ export function SiteNav() {
             </div>
           </li>
           <li><a href="/#methodology">Methodology</a></li>
-          <li><a href="/#products">Products</a></li>
+          <li><a href="https://ghara.ifulabs.com" target="_blank" rel="noopener noreferrer">Product ↗</a></li>
           <li><a href="/for-startups">For Startups</a></li>
           <li><a href="/#pricing">Pricing</a></li>
           <li><a href="/about">About</a></li>
         </ul>
         <div className="nav-actions">
           <a href="/schedule-consultation" className="btn-outline">Talk to us</a>
-          <a href={PORTAL_URL} className="btn-solid">Client portal →</a>
+          <a href="https://app.ghara.ifulabs.com/login" target="_blank" rel="noopener noreferrer" className="btn-solid">Sign in to Ghara ↗</a>
         </div>
         <button
           type="button"
@@ -184,14 +184,14 @@ export function SiteNav() {
             </li>
           ))}
           <li><a href="/#methodology" onClick={closeMobile}>Methodology</a></li>
-          <li><a href="/#products" onClick={closeMobile}>Products</a></li>
+          <li><a href="https://ghara.ifulabs.com" target="_blank" rel="noopener noreferrer" onClick={closeMobile}>Product ↗</a></li>
           <li><a href="/for-startups" onClick={closeMobile}>For Startups</a></li>
           <li><a href="/#pricing" onClick={closeMobile}>Pricing</a></li>
           <li><a href="/about" onClick={closeMobile}>About</a></li>
         </ul>
         <div className="nav-mobile-actions">
           <a href="/schedule-consultation" className="btn-outline" onClick={closeMobile}>Talk to us</a>
-          <a href={PORTAL_URL} className="btn-solid" onClick={closeMobile}>Client portal →</a>
+          <a href="https://app.ghara.ifulabs.com/login" target="_blank" rel="noopener noreferrer" className="btn-solid" onClick={closeMobile}>Sign in to Ghara ↗</a>
         </div>
       </aside>
     </>

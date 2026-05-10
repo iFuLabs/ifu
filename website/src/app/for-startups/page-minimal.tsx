@@ -252,11 +252,11 @@ export default function ForStartupsPage() {
               </ul>
             </div>
             <div className="footer-col">
-              <h4>Products</h4>
+              <h4>Product</h4>
               <ul>
-                <li><a href={`${PORTAL_URL}/onboarding?product=comply&plan=starter`}>iFu Comply</a></li>
-                <li><a href={`${PORTAL_URL}/onboarding?product=finops&plan=starter`}>iFu Costless</a></li>
-                <li><a href={`${PORTAL_URL}/login`}>Client Portal</a></li>
+                <li><a href="https://ghara.ifulabs.com" target="_blank" rel="noopener noreferrer">Ghara</a></li>
+                <li><a href="https://ghara.ifulabs.com/pricing" target="_blank" rel="noopener noreferrer">Pricing</a></li>
+                <li><a href="https://app.ghara.ifulabs.com/login" target="_blank" rel="noopener noreferrer">Sign in</a></li>
               </ul>
             </div>
             <div className="footer-col">
