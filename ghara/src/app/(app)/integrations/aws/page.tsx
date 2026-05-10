@@ -78,11 +78,35 @@ export default function AwsIntegrationPage() {
               <p className="text-sm text-muted">Account: {existing.metadata?.accountId || 'Unknown'}</p>
             </div>
           </div>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted mb-4">
             Both compliance and cost engines are reading from this connection.
             {existing.lastSyncAt && ` Last synced: ${new Date(existing.lastSyncAt).toLocaleString()}`}
           </p>
+          <div className="flex gap-3">
+            <button
+              onClick={async () => {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+                await fetch(`${API_URL}/api/v1/integrations/${existing.id}/sync`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+                alert('Scan triggered. Results will appear on your dashboard in 2-5 minutes.')
+              }}
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-brand text-white hover:bg-brand-dark transition-colors"
+            >
+              Re-sync now
+            </button>
+            <button
+              onClick={async () => {
+                if (!confirm('Disconnect AWS? This will stop all scans until you reconnect.')) return
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+                await fetch(`${API_URL}/api/v1/integrations/${existing.id}`, { method: 'DELETE', credentials: 'include' })
+                window.location.reload()
+              }}
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-danger/30 text-danger hover:bg-danger-bg transition-colors"
+            >
+              Disconnect
+            </button>
+          </div>
         </div>
+      </div>
       </div>
     )
   }

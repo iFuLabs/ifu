@@ -193,13 +193,22 @@ export default async function integrationRoutes(fastify) {
         .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
     }
 
-    // Kick off an immediate scan — only Comply integrations queue compliance scans.
-    // FinOps connections are picked up by the FinOps scheduler / manual sync.
-    if (product === 'comply') {
+    // Kick off an immediate scan for compliance + cost
+    if (product === 'comply' || product === 'ghara') {
       await scanQueue.add('scan', {
         orgId: request.orgId,
         integrationId: integration.id,
         integrationType: 'aws',
+        triggeredBy: 'manual'
+      }, { priority: 1 })
+    }
+
+    // Also queue a finops scan for ghara integrations
+    if (product === 'ghara' || product === 'finops') {
+      const { finopsScanQueue } = await import('../jobs/queues.js')
+      await finopsScanQueue.add('finops-scan', {
+        orgId: request.orgId,
+        integrationId: integration.id,
         triggeredBy: 'manual'
       }, { priority: 1 })
     }
@@ -307,6 +316,16 @@ export default async function integrationRoutes(fastify) {
       integrationType: integration.type,
       triggeredBy: 'manual'
     }, { priority: 1 })
+
+    // Also trigger finops scan if this is an AWS integration (ghara or finops product)
+    if (integration.type === 'aws' && ['ghara', 'finops'].includes(integration.product)) {
+      const { finopsScanQueue } = await import('../jobs/queues.js')
+      await finopsScanQueue.add('finops-scan', {
+        orgId: request.orgId,
+        integrationId: integration.id,
+        triggeredBy: 'manual'
+      }, { priority: 1 })
+    }
 
     await auditAction({
       orgId: request.orgId,

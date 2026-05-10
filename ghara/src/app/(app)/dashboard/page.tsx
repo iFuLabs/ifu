@@ -65,6 +65,25 @@ export default function DashboardPage() {
             <p style={{ fontSize: 16, color: 'rgba(51,6,61,0.6)', maxWidth: 440, margin: '0 auto 36px', lineHeight: 1.7 }}>
               Your first scan is being processed. Results will appear here shortly.
             </p>
+            <button
+              onClick={async () => {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+                try {
+                  const intRes = await fetch(`${API_URL}/api/v1/integrations`, { credentials: 'include' })
+                  if (intRes.ok) {
+                    const ints = await intRes.json()
+                    const connected = ints.filter((i: any) => i.status === 'connected' && i.type === 'aws')
+                    for (const i of connected) {
+                      await fetch(`${API_URL}/api/v1/integrations/${i.id}/sync`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+                    }
+                  }
+                  window.location.reload()
+                } catch {}
+              }}
+              style={{ padding: '12px 24px', background: PLUM, color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(51,6,61,0.2)' }}
+            >
+              Run scan now
+            </button>
             <div style={{ width: 200, height: 4, borderRadius: 2, background: 'rgba(51,6,61,0.06)', margin: '0 auto', overflow: 'hidden', position: 'relative' }}>
               <div style={{ position: 'absolute', width: '40%', height: '100%', borderRadius: 2, background: IRIS, animation: 'scanPulse 2s ease-in-out infinite' }} />
             </div>

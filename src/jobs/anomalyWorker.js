@@ -2,7 +2,7 @@ import { Worker } from 'bullmq'
 import { redis } from '../services/redis.js'
 import { db } from '../db/client.js'
 import { integrations } from '../db/schema.js'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
 import { decrypt } from '../services/encryption.js'
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts'
 import { detectAnomalies, evaluateBudgets } from '../services/anomaly.js'
@@ -18,7 +18,7 @@ export const anomalyWorker = new Worker('anomaly-detection', async (job) => {
     where: and(
       eq(integrations.orgId, orgId),
       eq(integrations.type, 'aws'),
-      eq(integrations.product, 'finops'),
+      inArray(integrations.product, ['finops', 'ghara']),
       eq(integrations.status, 'connected')
     )
   })
