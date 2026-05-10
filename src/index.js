@@ -68,9 +68,12 @@ await app.register(helmet, {
 })
 await app.register(cors, {
   origin: process.env.NODE_ENV === 'production'
-    ? (process.env.ALLOWED_ORIGINS || 'https://app.ifu-labs.io').split(',')
+    ? (process.env.ALLOWED_ORIGINS || 'https://app.ghara.ifulabs.com,https://ghara.ifulabs.com,https://ifulabs.com,https://www.ifulabs.com').split(',')
     : true,
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie']
 })
 await app.register(rateLimit, {
   max: 100,
@@ -81,7 +84,7 @@ await app.register(rateLimit, {
 if (process.env.NODE_ENV === 'development') {
   await app.register(swagger, {
     openapi: {
-      info: { title: 'iFu Labs — Comply API', version: '0.1.0' },
+      info: { title: 'Ghara API · by iFU Labs', version: '0.1.0' },
       components: {
         securitySchemes: {
           bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
@@ -163,7 +166,7 @@ const start = async () => {
     app.log.info('✅ Redis connected')
 
     await app.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' })
-    app.log.info(`🚀 iFu Labs — Comply API running on port ${process.env.PORT || 3000}`)
+    app.log.info(`🚀 Ghara API running on port ${process.env.PORT || 3000}`)
 
     // Start background job scheduler (daily compliance scans)
     startScheduler()

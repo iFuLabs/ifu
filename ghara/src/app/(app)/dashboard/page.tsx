@@ -66,7 +66,11 @@ export default function DashboardPage() {
               Your first scan is being processed. Results will appear here shortly.
             </p>
             <button
-              onClick={async () => {
+              onClick={async (e) => {
+                const btn = e.currentTarget
+                btn.textContent = 'Starting scan...'
+                btn.disabled = true
+                btn.style.opacity = '0.6'
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
                 try {
                   const intRes = await fetch(`${API_URL}/api/v1/integrations`, { credentials: 'include' })
@@ -76,15 +80,25 @@ export default function DashboardPage() {
                     for (const i of connected) {
                       await fetch(`${API_URL}/api/v1/integrations/${i.id}/sync`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' })
                     }
+                    btn.textContent = '✓ Scan queued — refreshing in 30s...'
+                    btn.style.background = '#067647'
+                    setTimeout(() => window.location.reload(), 30000)
+                  } else {
+                    btn.textContent = 'Failed — try again'
+                    btn.disabled = false
+                    btn.style.opacity = '1'
                   }
-                  window.location.reload()
-                } catch {}
+                } catch {
+                  btn.textContent = 'Failed — try again'
+                  btn.disabled = false
+                  btn.style.opacity = '1'
+                }
               }}
-              style={{ padding: '12px 24px', background: PLUM, color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(51,6,61,0.2)' }}
+              style={{ padding: '14px 28px', background: PLUM, color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', boxShadow: '0 6px 16px rgba(51,6,61,0.2)', transition: 'all 0.2s' }}
             >
               Run scan now
             </button>
-            <div style={{ width: 200, height: 4, borderRadius: 2, background: 'rgba(51,6,61,0.06)', margin: '0 auto', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ width: 200, height: 4, borderRadius: 2, background: 'rgba(51,6,61,0.06)', margin: '24px auto 0', overflow: 'hidden', position: 'relative' }}>
               <div style={{ position: 'absolute', width: '40%', height: '100%', borderRadius: 2, background: IRIS, animation: 'scanPulse 2s ease-in-out infinite' }} />
             </div>
           </div>

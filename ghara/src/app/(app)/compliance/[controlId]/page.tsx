@@ -40,6 +40,7 @@ export default function ControlDetailPage() {
   const [savingRem, setSavingRem] = useState(false)
   const [aiExplanation, setAiExplanation] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState('')
 
   const updateRemediation = async (patch: { ownerId?: string | null; dueDate?: string | null; status?: RemediationStatus | null }) => {
     setSavingRem(true)
@@ -67,13 +68,19 @@ export default function ControlDetailPage() {
 
   const fetchAiExplanation = async () => {
     setAiLoading(true)
+    setAiError('')
     try {
       const res = await fetch(`${API_URL}/api/v1/ai/explain/${controlId}`, { method: 'POST', credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
-        setAiExplanation(data.explanation || data.message || '')
+        setAiExplanation(data.explanation || data.message || data.text || JSON.stringify(data))
+      } else {
+        const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }))
+        setAiError(err.message || err.error || 'AI suggestion failed')
       }
-    } catch {} finally { setAiLoading(false) }
+    } catch (err: any) {
+      setAiError(err.message || 'Network error')
+    } finally { setAiLoading(false) }
   }
 
   if (error) return (
@@ -160,6 +167,7 @@ export default function ControlDetailPage() {
             )}
           </div>
           {aiExplanation && <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">{aiExplanation}</p>}
+          {aiError && <p className="text-sm text-danger mt-2">{aiError}</p>}
         </div>
       )}
 
