@@ -67,11 +67,18 @@ export default function ControlsPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-5">
 
       {/* Header */}
-      <div>
-        <h1 className="font-serif text-2xl font-normal text-ink">Controls</h1>
-        <p className="text-sm text-muted mt-0.5">
-          {total > 0 ? `${passCount} of ${total} controls passing` : 'Loading controls...'}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-serif text-2xl font-normal text-ink">Controls</h1>
+          <p className="text-sm text-muted mt-0.5">
+            {total > 0 ? `${passCount} of ${total} controls passing` : 'Loading controls...'}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/compliance/evidence" className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted hover:text-ink hover:bg-surface transition-colors">Evidence</Link>
+          <Link href="/compliance/vendors" className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted hover:text-ink hover:bg-surface transition-colors">Vendors</Link>
+          <Link href="/compliance/scans" className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted hover:text-ink hover:bg-surface transition-colors">Scans</Link>
+        </div>
       </div>
 
       {/* Explainer card */}
