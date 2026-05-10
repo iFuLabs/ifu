@@ -16,12 +16,14 @@ export default function DashboardPage() {
   const { data: controls } = useSWR('controls', api.controls.list, { refreshInterval: 30000 })
   const { data: finops } = useSWR('finops', () => api.finops.get(), { refreshInterval: 60000 })
   const { data: scans } = useSWR('scans', api.scans.list, { refreshInterval: 10000 })
+  const { data: integrations } = useSWR('integrations', api.integrations.list)
   const { data: me } = useSWR('me', api.auth.me)
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
   const latestScan = scans?.[0]
   const hasData = latestScan?.status === 'complete'
+  const hasAwsConnected = integrations?.some((i: any) => i.type === 'aws' && i.status === 'connected')
   const userName = me?.user?.name?.split(' ')[0] || ''
 
   // Scores
@@ -38,6 +40,41 @@ export default function DashboardPage() {
 
   // Empty state
   if (!hasData) {
+    // AWS connected but scan hasn't completed — show waiting state
+    if (hasAwsConnected) {
+      return (
+        <div style={{ padding: '48px 32px', maxWidth: 860, margin: '0 auto', opacity: mounted ? 1 : 0, transition: 'opacity 0.5s ease' }}>
+          <GreetingHeader name={userName} />
+          <div style={{
+            background: `linear-gradient(135deg, #FFFFFF 0%, rgba(218,192,253,0.12) 100%)`,
+            border: '1px solid rgba(51,6,61,0.08)', borderRadius: 20,
+            padding: '64px 48px', textAlign: 'center',
+            boxShadow: '0 12px 48px rgba(51,6,61,0.06)', marginTop: 28,
+          }}>
+            <div style={{
+              width: 80, height: 80, borderRadius: 20,
+              background: `linear-gradient(135deg, ${LAVENDER} 0%, rgba(138,99,230,0.2) 100%)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 28px', boxShadow: '0 8px 24px rgba(138,99,230,0.15)',
+            }}>
+              <Zap size={36} style={{ color: IRIS }} />
+            </div>
+            <h2 style={{ fontSize: 28, fontWeight: 400, color: PLUM, fontFamily: "'PP Fragment', serif", marginBottom: 12 }}>
+              AWS connected — scanning
+            </h2>
+            <p style={{ fontSize: 16, color: 'rgba(51,6,61,0.6)', maxWidth: 440, margin: '0 auto 36px', lineHeight: 1.7 }}>
+              Your first scan is being processed. Results will appear here shortly.
+            </p>
+            <div style={{ width: 200, height: 4, borderRadius: 2, background: 'rgba(51,6,61,0.06)', margin: '0 auto', overflow: 'hidden', position: 'relative' }}>
+              <div style={{ position: 'absolute', width: '40%', height: '100%', borderRadius: 2, background: IRIS, animation: 'scanPulse 2s ease-in-out infinite' }} />
+            </div>
+          </div>
+          <style>{`@keyframes scanPulse { 0% { left: -40%; } 100% { left: 100%; } }`}</style>
+        </div>
+      )
+    }
+
+    // Not connected — show connect CTA
     return (
       <div style={{ padding: '48px 32px', maxWidth: 860, margin: '0 auto', opacity: mounted ? 1 : 0, transition: 'opacity 0.5s ease' }}>
         <GreetingHeader name={userName} />
