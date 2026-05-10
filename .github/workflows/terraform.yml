@@ -4,11 +4,13 @@ on:
   pull_request:
     paths:
       - 'infra/**'
+      - '!infra/cfn/**'
   push:
     branches:
       - aws-deployment
     paths:
       - 'infra/**'
+      - '!infra/cfn/**'
 
 permissions:
   id-token: write
