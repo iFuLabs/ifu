@@ -153,7 +153,7 @@ export default async function teamRoutes(fastify) {
     })
 
     // Send invitation email
-    const inviteUrl = `${process.env.PORTAL_URL || 'http://localhost:3003'}/invite/${token}`
+    const inviteUrl = `${process.env.GHARA_URL || process.env.PORTAL_URL || 'http://localhost:3005'}/invite/${token}`
     
     const emailResult = await sendTeamInvitationEmail({
       to: body.email,

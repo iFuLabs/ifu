@@ -1,30 +1,35 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { ArrowRight, Loader2 } from 'lucide-react'
+
+const PLUM = '#33063D'
+const IRIS = '#8A63E6'
+const LAVENDER = '#DAC0FD'
+const BORDER = 'rgba(51, 6, 61, 0.2)'
+const MUTED = 'rgba(51, 6, 61, 0.7)'
+const SUBTLE = 'rgba(51, 6, 61, 0.5)'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 export default function InvitePage() {
   const params = useParams()
   const router = useRouter()
   const token = params.token as string
   const [invite, setInvite] = useState<any>(null)
-  const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [accepting, setAccepting] = useState(false)
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
   useEffect(() => {
     fetch(`${API_URL}/api/v1/team/invite/${token}`)
       .then(r => r.ok ? r.json() : Promise.reject(r))
       .then(data => { setInvite(data); setLoading(false) })
-      .catch(() => { setError('Invalid or expired invitation'); setLoading(false) })
-  }, [token, API_URL])
+      .catch(() => { setError('This invitation is invalid or has expired.'); setLoading(false) })
+  }, [token])
 
-  const handleAccept = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleAccept = async () => {
     if (!password || password.length < 8) {
       setError('Password must be at least 8 characters')
       return
@@ -54,73 +59,110 @@ export default function InvitePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg">
-        <div className="text-muted text-sm">Loading invitation...</div>
+      <div style={{ minHeight: '100vh', background: `radial-gradient(ellipse at top, ${LAVENDER} 0%, #FFFFFF 60%)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 size={24} style={{ color: IRIS }} className="animate-spin" />
+        <style>{`.animate-spin { animation: spin 1s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
 
   if (error && !invite) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-        <div className="text-center">
-          <p className="text-danger mb-4">{error}</p>
-          <Link href="/login" className="text-brand hover:underline text-sm">Go to sign in</Link>
+      <div style={{ minHeight: '100vh', background: `radial-gradient(ellipse at top, ${LAVENDER} 0%, #FFFFFF 60%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', fontFamily: "'Aeonik', system-ui, sans-serif" }}>
+        <div style={{ maxWidth: 440, width: '100%', textAlign: 'center' }}>
+          <img src="/brand/logo.svg" alt="Ghara" style={{ height: 48, margin: '0 auto 24px' }} />
+          <div style={{ background: '#FFFFFF', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 40, boxShadow: '0 12px 48px rgba(51,6,61,0.12)' }}>
+            <p style={{ fontSize: 15, color: '#B42318', marginBottom: 16 }}>{error}</p>
+            <a href="/login" style={{ fontSize: 14, color: IRIS, textDecoration: 'none', fontWeight: 500 }}>Go to sign in →</a>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-      <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center mb-8">
-          <img src="/brand/logo.svg" alt="Ghara" className="h-8" />
+    <div style={{ minHeight: '100vh', background: `radial-gradient(ellipse at top, ${LAVENDER} 0%, #FFFFFF 60%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', fontFamily: "'Aeonik', system-ui, sans-serif" }}>
+      <div style={{ maxWidth: 440, width: '100%' }}>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <div style={{ margin: '0 auto 20px', display: 'flex', justifyContent: 'center' }}>
+            <img src="/brand/logo.svg" alt="Ghara" style={{ height: 48 }} />
+          </div>
+          <h1 style={{ fontSize: 34, fontWeight: 500, color: PLUM, marginBottom: 8, fontFamily: "'PP Fragment', serif", letterSpacing: '-0.02em' }}>
+            Join {invite?.organization?.name || 'the team'}
+          </h1>
+          <p style={{ fontSize: 15, color: MUTED }}>
+            You've been invited as <strong style={{ color: PLUM }}>{invite?.role || 'member'}</strong>
+          </p>
         </div>
 
-        <div className="bg-card rounded-xl border border-border p-8">
-          <h1 className="text-xl font-semibold text-ink mb-1">Join {invite?.orgName || 'the team'}</h1>
-          <p className="text-sm text-muted mb-6">
-            You've been invited as <strong>{invite?.role || 'member'}</strong>. Set up your account to get started.
-          </p>
+        {/* Card */}
+        <div style={{ background: '#FFFFFF', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 40, boxShadow: '0 12px 48px rgba(51,6,61,0.12)' }}>
 
-          <form onSubmit={handleAccept} className="space-y-4">
-            {error && (
-              <div className="text-sm text-danger bg-danger-bg rounded-lg px-3 py-2">{error}</div>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: PLUM, marginBottom: 8, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+              Your name
+            </label>
+            <input
+              type="text" value={name} onChange={e => setName(e.target.value)}
+              placeholder="Jane Smith"
+              style={{ width: '100%', padding: '14px 16px', fontSize: 15, background: '#FFFFFF', border: `1px solid ${BORDER}`, borderRadius: 10, color: PLUM, outline: 'none', transition: 'all 0.2s', fontFamily: "'Aeonik', sans-serif" }}
+              onFocus={e => { e.target.style.borderColor = IRIS; e.target.style.boxShadow = '0 0 0 3px rgba(138,99,230,0.15)' }}
+              onBlur={e => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = 'none' }}
+            />
+          </div>
+
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: PLUM, marginBottom: 8, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+              Create a password
+            </label>
+            <input
+              type="password" value={password} onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAccept()}
+              placeholder="Min 8 characters"
+              style={{ width: '100%', padding: '14px 16px', fontSize: 15, background: '#FFFFFF', border: `1px solid ${BORDER}`, borderRadius: 10, color: PLUM, outline: 'none', transition: 'all 0.2s', fontFamily: "'Aeonik', sans-serif" }}
+              onFocus={e => { e.target.style.borderColor = IRIS; e.target.style.boxShadow = '0 0 0 3px rgba(138,99,230,0.15)' }}
+              onBlur={e => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = 'none' }}
+            />
+          </div>
+
+          {error && (
+            <div style={{ padding: '12px 16px', background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 10, fontSize: 14, color: '#B91C1C', marginBottom: 20 }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleAccept}
+            disabled={accepting}
+            style={{
+              width: '100%', padding: 14, background: accepting ? '#F4F4F4' : PLUM,
+              color: accepting ? MUTED : '#FFFFFF', fontSize: 15, fontWeight: 600,
+              border: 'none', borderRadius: 10, cursor: accepting ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              transition: 'all 0.2s', boxShadow: accepting ? 'none' : '0 6px 16px rgba(51,6,61,0.22)',
+            }}
+            onMouseOver={e => !accepting && (e.currentTarget.style.background = IRIS)}
+            onMouseOut={e => !accepting && (e.currentTarget.style.background = PLUM)}
+          >
+            {accepting ? (
+              <><Loader2 size={18} className="animate-spin" /> Joining...</>
+            ) : (
+              <>Accept & join <ArrowRight size={18} /></>
             )}
+          </button>
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-ink mb-1">Your name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Jane Smith"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-ink mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Min 8 characters"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={accepting}
-              className="w-full py-2.5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-dark transition-colors disabled:opacity-50"
-            >
-              {accepting ? 'Joining...' : 'Accept invitation'}
-            </button>
-          </form>
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: 28 }}>
+          <a href="https://ifulabs.com" target="_blank" rel="noopener noreferrer">
+            <img src="/brand/ifulabs-logo.svg" alt="iFU Labs" style={{ height: 14, opacity: 0.4 }} />
+          </a>
         </div>
       </div>
+
+      <style>{`.animate-spin { animation: spin 1s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }

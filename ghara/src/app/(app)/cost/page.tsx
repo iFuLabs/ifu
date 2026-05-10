@@ -272,6 +272,24 @@ export default function CostPage() {
           <RefreshCw size={14} className={scanning ? 'animate-spin' : ''} />
           {scanning ? 'Stop scan' : 'Re-analyse'}
         </button>
+        <button
+          onClick={async () => {
+            const res = await fetch(`${API_URL}/api/v1/finops/export?format=csv`, { credentials: 'include' })
+            if (res.ok) {
+              const blob = await res.blob()
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = `ghara-cost-export-${new Date().toISOString().slice(0, 10)}.csv`
+              a.click()
+              URL.revokeObjectURL(url)
+            }
+          }}
+          className={clsx('flex items-center gap-2 px-3 py-2 text-sm border border-border rounded text-muted hover:text-ink hover:bg-bg transition-all')}
+        >
+          <TrendingDown size={14} />
+          Export CSV
+        </button>
       </div>
 
       {/* Scan progress */}

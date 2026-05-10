@@ -4,8 +4,8 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 const DOMAIN = process.env.EMAIL_DOMAIN || 'resend.dev'
 const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'info@ifulabs.com'
-const COMPANY_NAME = 'iFu Labs'
-const PORTAL_URL = process.env.PORTAL_URL || 'http://localhost:3003'
+const COMPANY_NAME = 'Ghara by iFU Labs'
+const PORTAL_URL = process.env.GHARA_URL || process.env.PORTAL_URL || 'http://localhost:3005'
 
 // Helper to create from address with reply-to
 function getEmailConfig(emailPrefix) {
@@ -48,8 +48,8 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
-                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
+                <div class="logo"><span style="font-size: 22px; font-weight: 600; color: #FFFFFF; margin-right: 8px;">Ghara</span> <span style="font-size: 12px; color: rgba(255,255,255,0.7);">by</span> <img src="https://www.ifulabs.com/logos/white.svg" alt="iFU Labs" style="height: 24px; width: auto; vertical-align: middle; margin-left: 6px;" /></div>
+                <p class="tagline">Cloud compliance and cost in one dashboard</p>
               </div>
               <div class="content">
                 <p>Hi ${name || 'there'},</p>
@@ -72,8 +72,8 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
                 <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
               </div>
               <div class="footer">
-                <p><strong>iFu Labs</strong></p>
-                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
+                <p><strong>Ghara by iFU Labs</strong></p>
+                <p style="margin: 5px 0;">Cloud compliance and cost in one dashboard</p>
                 <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
               </div>
             </div>
@@ -106,7 +106,7 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
       year: 'numeric' 
     })
 
-    const productName = product === 'finops' ? 'iFu Labs FinOps' : 'iFu Labs Comply'
+    const productName = product === 'ghara' ? 'Ghara' : product === 'finops' ? 'iFu Labs FinOps' : 'iFu Labs Comply'
     const productTagline = product === 'finops' ? 'Cloud Cost Optimization' : 'Compliance Automation'
 
     const emailConfig = getEmailConfig('team')
@@ -137,7 +137,7 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
+                <div class="logo"><span style="font-size: 22px; font-weight: 600; color: #FFFFFF; margin-right: 8px;">Ghara</span> <span style="font-size: 12px; color: rgba(255,255,255,0.7);">by</span> <img src="https://www.ifulabs.com/logos/white.svg" alt="iFU Labs" style="height: 24px; width: auto; vertical-align: middle; margin-left: 6px;" /></div>
                 <p class="tagline">${productTagline}</p>
               </div>
               <div class="content">
@@ -219,8 +219,8 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo"><img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 40px; width: auto;" /></div>
-                <p class="tagline">Compliance Automation & Cloud Cost Optimization</p>
+                <div class="logo"><span style="font-size: 22px; font-weight: 600; color: #FFFFFF; margin-right: 8px;">Ghara</span> <span style="font-size: 12px; color: rgba(255,255,255,0.7);">by</span> <img src="https://www.ifulabs.com/logos/white.svg" alt="iFU Labs" style="height: 24px; width: auto; vertical-align: middle; margin-left: 6px;" /></div>
+                <p class="tagline">Cloud compliance and cost in one dashboard</p>
               </div>
               <div class="content">
                 <p>Hi ${name || 'there'},</p>
@@ -240,8 +240,8 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
                 <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
               </div>
               <div class="footer">
-                <p><strong>iFu Labs</strong></p>
-                <p style="margin: 5px 0;">Compliance Automation & Cloud Cost Optimization</p>
+                <p><strong>Ghara by iFU Labs</strong></p>
+                <p style="margin: 5px 0;">Cloud compliance and cost in one dashboard</p>
                 <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
               </div>
             </div>
@@ -288,7 +288,7 @@ export async function sendControlDriftEmail({ to, orgName, drifted, scanId }) {
           <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: #33063D; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-                <img src="https://www.ifulabs.com/logos/white.svg" alt="iFu Labs" style="height: 36px; width: auto;" />
+                <span style="font-size: 20px; font-weight: 600; color: #FFFFFF; margin-right: 6px;">Ghara</span> <span style="font-size: 11px; color: rgba(255,255,255,0.7);">by</span> <img src="https://www.ifulabs.com/logos/white.svg" alt="iFU Labs" style="height: 20px; width: auto; vertical-align: middle; margin-left: 5px;" />
               </div>
               <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
                 <div style="background: #FEF3F2; border-left: 4px solid #B42318; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
@@ -362,7 +362,7 @@ function formatDate(d) {
 export async function sendTrialChargeReminderEmail({ to, name, orgName, planName, amount, currency, chargeDate, last4 }) {
   try {
     const emailConfig = getEmailConfig('billing')
-    const cancelUrl = `${PORTAL_URL}/dashboard/billing`
+    const cancelUrl = `${PORTAL_URL}/billing`
     const { data, error } = await resend.emails.send({
       ...emailConfig,
       to,
@@ -386,7 +386,7 @@ export async function sendTrialChargeReminderEmail({ to, name, orgName, planName
 
             <p class="meta">This is a billing notification you cannot opt out of while you have an active subscription. Reply to this email if you need help.</p>
           </div>
-          <div class="footer"><p><strong>iFu Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
+          <div class="footer"><p><strong>Ghara by iFU Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
         </div>
       </body></html>`
     })
@@ -402,7 +402,7 @@ export async function sendTrialChargeReminderEmail({ to, name, orgName, planName
 export async function sendChargeReceiptEmail({ to, name, orgName, planName, amount, currency, reference, nextPaymentDate, last4 }) {
   try {
     const emailConfig = getEmailConfig('billing')
-    const billingUrl = `${PORTAL_URL}/dashboard/billing`
+    const billingUrl = `${PORTAL_URL}/billing`
     const { data, error } = await resend.emails.send({
       ...emailConfig,
       to,
@@ -425,7 +425,7 @@ export async function sendChargeReceiptEmail({ to, name, orgName, planName, amou
             <a href="${billingUrl}" class="button">View billing</a>
             <p class="meta">Need a tax invoice? Reply and we'll send one over.</p>
           </div>
-          <div class="footer"><p><strong>iFu Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
+          <div class="footer"><p><strong>Ghara by iFU Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
         </div>
       </body></html>`
     })
@@ -442,7 +442,7 @@ export async function sendChargeReceiptEmail({ to, name, orgName, planName, amou
 export async function sendPaymentFailedEmail({ to, name, orgName, planName, amount, currency, last4 }) {
   try {
     const emailConfig = getEmailConfig('billing')
-    const billingUrl = `${PORTAL_URL}/dashboard/billing`
+    const billingUrl = `${PORTAL_URL}/billing`
     const { data, error } = await resend.emails.send({
       ...emailConfig,
       to,
@@ -457,7 +457,7 @@ export async function sendPaymentFailedEmail({ to, name, orgName, planName, amou
             <a href="${billingUrl}" class="button">Update payment method</a>
             <p class="meta">If your card is fine and this looks like a mistake, reply to this email and we'll investigate.</p>
           </div>
-          <div class="footer"><p><strong>iFu Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
+          <div class="footer"><p><strong>Ghara by iFU Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
         </div>
       </body></html>`
     })
@@ -474,7 +474,7 @@ export async function sendPaymentFailedEmail({ to, name, orgName, planName, amou
 export async function sendIntegrationFailureEmail({ to, name, orgName, integrationType, errorMessage, dashboardUrl }) {
   try {
     const emailConfig = getEmailConfig('alerts')
-    const url = dashboardUrl || `${PORTAL_URL}/dashboard/integrations`
+    const url = dashboardUrl || `${PORTAL_URL}/integrations`
     const typeLabel = integrationType === 'aws' ? 'AWS' : (integrationType || 'integration').toUpperCase()
     const { data, error } = await resend.emails.send({
       ...emailConfig,
@@ -496,7 +496,7 @@ export async function sendIntegrationFailureEmail({ to, name, orgName, integrati
 
             <p class="meta">You'll receive at most one of these per day. If the next scan succeeds, you won't hear from us again.</p>
           </div>
-          <div class="footer"><p><strong>iFu Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
+          <div class="footer"><p><strong>Ghara by iFU Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
         </div>
       </body></html>`
     })

@@ -524,7 +524,7 @@ export default async function authRoutes(fastify) {
 
     // Send password reset email
     const { sendPasswordResetEmail } = await import('../services/email.js')
-    const portalUrl = process.env.PORTAL_URL || 'http://localhost:3003'
+    const portalUrl = process.env.GHARA_URL || process.env.PORTAL_URL || 'http://localhost:3005'
     const resetUrl = `${portalUrl}/reset-password/${token}`
 
     const emailResult = await sendPasswordResetEmail({
