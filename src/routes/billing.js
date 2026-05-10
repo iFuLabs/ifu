@@ -400,6 +400,21 @@ export default async function billingRoutes(fastify) {
     const event = request.body
     logger.info({ event: event.event }, 'Paystack webhook received')
 
+    // Idempotency: skip if we've already processed this event
+    const eventId = event.data?.id?.toString() || `${event.event}-${Date.now()}`
+    try {
+      await db.execute(
+        `INSERT INTO paystack_events (id, type, payload) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING RETURNING id`,
+        [eventId, event.event, JSON.stringify(event.data)]
+      )
+    } catch (dedupErr) {
+      // If insert fails due to duplicate, we've already processed this event
+      if (dedupErr.code === '23505') {
+        logger.info({ eventId }, 'Duplicate Paystack event — skipping')
+        return reply.send({ received: true, duplicate: true })
+      }
+    }
+
     switch (event.event) {
       case 'subscription.create': {
         const sub = event.data
@@ -544,6 +559,14 @@ export default async function billingRoutes(fastify) {
             .where(eq(organizations.paystackCustomerCode, customerCode))
             .limit(1)
           if (org) {
+            // Mark subscription as past_due
+            await db.update(subscriptionsTable)
+              .set({ status: 'past_due', updatedAt: new Date() })
+              .where(and(
+                eq(subscriptionsTable.orgId, org.id),
+                eq(subscriptionsTable.status, 'active')
+              ))
+
             // Email the owner so they can fix the card before Paystack's retries
             // run out and access stops.
             try {

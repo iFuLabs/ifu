@@ -44,10 +44,10 @@ export default function TrialBanner() {
       <div className="px-4 py-2 text-center text-sm flex items-center justify-center gap-2" style={{ background: 'rgba(138,99,230,0.06)', borderBottom: '1px solid rgba(138,99,230,0.1)' }}>
         <Clock size={14} style={{ color: '#8A63E6' }} />
         <span className="text-muted">
-          {trialDays} day{trialDays !== 1 ? 's' : ''} left in your free trial.
+          Your card will be charged in {trialDays} day{trialDays !== 1 ? 's' : ''}.
         </span>
         <Link href="/billing" className="font-medium text-accent hover:underline">
-          Upgrade →
+          Manage →
         </Link>
       </div>
     )
