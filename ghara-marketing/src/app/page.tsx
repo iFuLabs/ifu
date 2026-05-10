@@ -59,7 +59,7 @@ export default function HomePage() {
           </div>
           <div className="hero-trust">
             {[
-              'No credit card required',
+              '7 days free, cancel anytime',
               'Connect in under 5 minutes',
               'Read-only access, always',
             ].map(item => (
@@ -346,7 +346,7 @@ export default function HomePage() {
           Simple. <em>Transparent.</em>
         </h2>
         <p className="section-sub">
-          Three tiers based on AWS spend. No per-seat surprises. No procurement committee required. 7-day free trial on Growth, no credit card.
+          Three tiers based on AWS spend. No per-seat surprises. 7-day free trial on Growth. Card captured at signup, first charge on day 8. Cancel anytime.
         </p>
 
         <div className="pricing-grid">
@@ -427,7 +427,7 @@ export default function HomePage() {
             },
             {
               q: 'How does the 7-day trial work?',
-              a: 'Sign up with email and password — no credit card required. You get the full Growth tier for 7 days. At the end, your account moves to read-only (you can still see findings, scans pause). Add a card any time during or after the trial to continue.',
+              a: 'Sign up with your email and a credit card. We don't charge during the 7-day trial. On day 8, your card is charged the price of your selected plan ($499 or $1,299/mo). Cancel any time during the trial with one click — no charge.',
             },
             {
               q: 'How is this different from Vanta or Drata?',
@@ -464,7 +464,7 @@ export default function HomePage() {
       {/* ── Final CTA ─────────────────────────────────────────────────── */}
       <div className="cta-band reveal">
         <h2>See what's in your AWS account.</h2>
-        <p>4-minute connection. 7-day free trial. No credit card. No procurement.</p>
+        <p>4-minute connection. 7-day free trial. Cancel anytime — no charge until day 8.</p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginTop: 24 }}>
           <a href={`${APP_URL}/signup`} className="btn-primary">Start free trial →</a>
           <Link href="/demo" className="btn-secondary">Book a demo</Link>

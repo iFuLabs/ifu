@@ -26,8 +26,8 @@ const DRIP_SCHEDULE = [
   { key: 'ghara_day1_tips', dayAfterStart: 1, subject: 'Quick tips to get the most from Ghara' },
   { key: 'ghara_day3_drift', dayAfterStart: 3, subject: 'What changed in your AWS since day 1' },
   { key: 'ghara_day5_summary', dayAfterStart: 5, subject: 'Your mid-trial progress report' },
-  { key: 'ghara_day6_ending', dayAfterStart: 6, subject: 'Your Ghara trial ends tomorrow' },
-  { key: 'ghara_day7_ended', dayAfterStart: 7, subject: 'Your trial has ended — upgrade to keep going' },
+  { key: 'ghara_day6_ending', dayAfterStart: 6, subject: 'Heads up — your card will be charged tomorrow' },
+  { key: 'ghara_day7_ended', dayAfterStart: 7, subject: 'Your trial has ended — your subscription is now active' },
 ]
 
 export async function runGharaTrialDrip() {
@@ -117,16 +117,16 @@ function buildDripEmail(key, { name, orgName, trialEndsAt }) {
       <p>Your trial ends on ${endDate}. <a href="${process.env.PORTAL_URL || 'http://localhost:3005'}/billing">Upgrade now</a> to keep full access.</p>
     `,
     ghara_day6_ending: `
-      <h2>Your trial ends tomorrow</h2>
+      <h2>Heads up — your card will be charged tomorrow</h2>
       <p>Hey ${firstName}, your Ghara trial for ${orgName} ends tomorrow (${endDate}).</p>
-      <p>After that, your account moves to read-only mode — you can still view your data, but scans and alerts will pause.</p>
-      <p><strong><a href="${process.env.PORTAL_URL || 'http://localhost:3005'}/billing">Upgrade now to keep full access →</a></strong></p>
+      <p>Your card on file will be charged automatically. If you'd like to cancel before then, you can do so with one click from your billing page — no charge.</p>
+      <p><a href="${process.env.GHARA_URL || 'http://localhost:3005'}/billing">Manage billing →</a></p>
     `,
     ghara_day7_ended: `
-      <h2>Your trial has ended</h2>
-      <p>Hey ${firstName}, your Ghara trial for ${orgName} has ended.</p>
-      <p>Your account is now in read-only mode. Your data is safe — scans and alerts are paused until you upgrade.</p>
-      <p><strong><a href="${process.env.PORTAL_URL || 'http://localhost:3005'}/billing">Upgrade to reactivate →</a></strong></p>
+      <h2>Your subscription is now active</h2>
+      <p>Hey ${firstName}, your Ghara trial for ${orgName} has ended and your subscription is now active.</p>
+      <p>Your card has been charged. You'll continue to have full access to all features on your plan.</p>
+      <p><a href="${process.env.GHARA_URL || 'http://localhost:3005'}/dashboard">Go to dashboard →</a></p>
       <p>Questions? Reply to this email — we're happy to help.</p>
     `,
   }

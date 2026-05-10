@@ -18,7 +18,7 @@ export default function PricingPage() {
       <section className="section" style={{ paddingTop: 80 }}>
         <div className="section-eyebrow">Pricing</div>
         <h2 className="section-title">One product. Three <em>tiers.</em></h2>
-        <p className="section-sub">Start with a 7-day free trial on the Growth plan — full access, no credit card.</p>
+        <p className="section-sub">Start with a 7-day free trial on the Growth plan — full access. Card required, first charge on day 8.</p>
 
         <div className="pricing-grid">
           <div className="pricing-card">
@@ -85,7 +85,7 @@ export default function PricingPage() {
         <h2 className="section-title">Frequently <em>asked.</em></h2>
         <div style={{ marginTop: 32, maxWidth: 640 }}>
           {[
-            { q: 'How does the 7-day trial work?', a: 'Sign up, connect AWS, and get full Growth-tier access for 7 days. No credit card required. At the end, choose a plan or your account goes read-only (no data deleted).' },
+            { q: 'How does the 7-day trial work?', a: "Sign up with your email and a credit card. We don\u2019t charge during the 7-day trial. On day 8, your card is charged your selected plan price. Cancel any time during the trial with one click \u2014 no charge." },
             { q: 'What counts as AWS spend?', a: 'Your monthly AWS bill as reported by Cost Explorer. We use this to determine your tier. If you\'re between tiers, you\'re on the lower one until you cross the threshold.' },
             { q: 'Do you support Kubernetes?', a: 'Yes — Growth tier includes Kubernetes cost visibility via OpenCost. Works on EKS, GKE, AKS, or self-managed clusters.' },
             { q: 'What about existing Comply or FinOps customers?', a: 'You\'re grandfathered at your current price. Your features and billing stay the same. You\'ll see the new unified dashboard automatically.' },

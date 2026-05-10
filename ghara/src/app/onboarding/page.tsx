@@ -158,6 +158,7 @@ export default function OnboardingPage() {
               <p className="text-muted text-sm mb-8 max-w-sm mx-auto">
                 Ghara uses a read-only IAM role to scan for compliance gaps and cost waste. Takes about 3 minutes.
               </p>
+              <p className="text-xs text-muted mb-4">Your trial is active. No charge until day 8.</p>
               <button
                 onClick={() => setStep(1)}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-white text-sm font-medium transition-colors"
