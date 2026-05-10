@@ -442,6 +442,14 @@ export default async function billingRoutes(fastify) {
               ))
               .returning()
             if (updated) {
+              // Downgrade tier to selectedTier now that trial is over
+              // (e.g., customer picked Starter but had Growth during trial)
+              if (updated.selectedTier && updated.selectedTier !== updated.tier) {
+                await db.update(subscriptionsTable)
+                  .set({ tier: updated.selectedTier, updatedAt: new Date() })
+                  .where(eq(subscriptionsTable.id, updated.id))
+                logger.info({ orgId: org.id, from: updated.tier, to: updated.selectedTier }, 'Tier downgraded to selectedTier after trial')
+              }
               logger.info({ orgId: org.id, subId: updated.id }, 'Subscription flipped to active on first charge')
             }
 

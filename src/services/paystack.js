@@ -69,6 +69,40 @@ export async function listPlans() {
 // Verify webhook signature (HMAC SHA-512)
 import crypto from 'crypto'
 
+// Refund a transaction by reference
+export async function refundTransaction(reference) {
+  return paystackFetch('POST', '/refund', {
+    transaction: reference
+  })
+}
+
+// Create a trial subscription with delayed start_date
+export async function createTrialSubscription({ email, planCode, authorizationCode, trialEndsAt }) {
+  // Get or create customer
+  let customerCode
+  try {
+    const customer = await paystackFetch('GET', `/customer/${encodeURIComponent(email)}`)
+    customerCode = customer.customer_code
+  } catch {
+    const newCustomer = await paystackFetch('POST', '/customer', { email })
+    customerCode = newCustomer.customer_code
+  }
+
+  // Create subscription with start_date = trialEndsAt (first charge delayed)
+  const subscription = await createSubscription({
+    customer: customerCode,
+    plan: planCode,
+    authorization: authorizationCode,
+    startDate: trialEndsAt.toISOString()
+  })
+
+  return {
+    subscriptionCode: subscription.subscription_code,
+    customerCode,
+    status: subscription.status
+  }
+}
+
 export function verifyWebhookSignature(body, signature) {
   if (!process.env.PAYSTACK_WEBHOOK_SECRET) {
     throw new Error('PAYSTACK_WEBHOOK_SECRET is not configured — refusing to verify webhook')

@@ -11,6 +11,7 @@ import { slugify } from '../services/utils.js'
 import { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS, TRIAL_DURATION_MS } from '../services/config.js'
 import { sendWelcomeEmail } from '../services/email.js'
 import { getActiveSubscriptions, upsertSubscription } from '../services/subscriptions.js'
+import { initializeTransaction, verifyTransaction, refundTransaction, createTrialSubscription as paystackCreateTrialSub } from '../services/paystack.js'
 
 const onboardSchema = z.object({
   name: z.string().optional(),
@@ -302,6 +303,239 @@ export default async function authRoutes(fastify) {
         message: 'Failed to create account. Please try again or contact support.'
       })
     }
+  })
+
+  // POST /api/v1/auth/onboard-tokenize
+  // New card-at-signup flow: creates account + redirects to Paystack for card capture
+  fastify.post('/onboard-tokenize', {
+    schema: {
+      tags: ['Auth'],
+      body: {
+        type: 'object',
+        required: ['email', 'password', 'orgName', 'plan'],
+        properties: {
+          name: { type: 'string' },
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', minLength: 8 },
+          orgName: { type: 'string', minLength: 2 },
+          role: { type: 'string' },
+          plan: { type: 'string', enum: ['ghara-starter', 'ghara-growth'] }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    try {
+      const { name, email, password, orgName, role, plan } = request.body
+      const normalizedEmail = email.trim().toLowerCase()
+
+      // Check if user already exists
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.email, normalizedEmail)
+      })
+      if (existingUser) {
+        return reply.status(409).send({ error: 'Conflict', message: 'User with this email already exists' })
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10)
+      const baseSlug = slugify(orgName)
+      const trialEndsAt = new Date(Date.now() + TRIAL_DURATION_MS)
+
+      // Determine plan code
+      const PLAN_MAP = {
+        'ghara-starter': process.env.PAYSTACK_GHARA_STARTER_PLAN,
+        'ghara-growth': process.env.PAYSTACK_GHARA_GROWTH_PLAN,
+      }
+      const planCode = PLAN_MAP[plan]
+      if (!planCode) {
+        return reply.status(400).send({ error: 'Invalid plan or plan not configured' })
+      }
+
+      // Create org + user
+      let result
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const slug = attempt === 0 ? baseSlug : `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`
+        try {
+          result = await db.transaction(async (tx) => {
+            const [org] = await tx.insert(organizations).values({
+              name: orgName,
+              slug,
+              plan: 'starter',
+              trialEndsAt
+            }).returning()
+
+            const [user] = await tx.insert(users).values({
+              email: normalizedEmail,
+              name: name?.trim(),
+              passwordHash,
+              orgId: org.id,
+              role: 'owner'
+            }).returning()
+
+            return { org, user }
+          })
+          break
+        } catch (err) {
+          if (err.code === '23505' && err.constraint?.includes('slug')) continue
+          throw err
+        }
+      }
+
+      if (!result) {
+        return reply.status(409).send({ error: 'Conflict', message: 'Could not generate a unique organization slug.' })
+      }
+
+      // Create trial subscription row (status: trialing, tier: growth during trial)
+      const selectedTier = plan === 'ghara-growth' ? 'growth' : 'starter'
+      await upsertSubscription({
+        orgId: result.org.id,
+        product: 'ghara',
+        plan: `ghara_${selectedTier}_trial`,
+        tier: 'growth', // Always Growth during trial
+        status: 'trialing',
+        products: ['compliance', 'cost'],
+        trialEndsAt,
+      })
+
+      // Initialize Paystack transaction for card tokenization (100 kobo = smallest valid)
+      const callbackUrl = `${process.env.GHARA_URL || 'http://localhost:3005'}/billing/callback`
+      const paystackResult = await initializeTransaction({
+        email: normalizedEmail,
+        amount: 100, // 100 kobo = 1 NGN / 1 ZAR cent — will be refunded immediately
+        callbackUrl,
+        metadata: {
+          orgId: result.org.id,
+          userId: result.user.id,
+          plan,
+          planCode,
+          selectedTier,
+          trialEndsAt: trialEndsAt.toISOString(),
+          type: 'card_tokenization'
+        }
+      })
+
+      // Set auth cookie so user is logged in when they return from Paystack
+      const token = jwt.sign({
+        userId: result.user.id,
+        email: normalizedEmail,
+        orgId: result.org.id,
+        role: 'owner'
+      }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+
+      reply.setCookie('token', token, COOKIE_OPTIONS)
+
+      await auditAction({
+        orgId: result.org.id,
+        userId: result.user.id,
+        action: 'auth.onboard_tokenize',
+        metadata: { plan, selectedTier, reference: paystackResult.reference }
+      })
+
+      return reply.send({
+        authorizationUrl: paystackResult.authorization_url,
+        reference: paystackResult.reference,
+        accessCode: paystackResult.access_code,
+        user: { id: result.user.id, email: normalizedEmail, name: result.user.name, role: 'owner' },
+        organization: { id: result.org.id, name: result.org.name, slug: result.org.slug }
+      })
+    } catch (err) {
+      fastify.log.error({ err, email: request.body?.email }, 'Onboard-tokenize failed')
+      return reply.status(500).send({ error: 'Internal Server Error', message: 'Signup failed. Please try again.' })
+    }
+  })
+
+  // POST /api/v1/auth/complete-signup
+  // Called after Paystack card capture callback — verifies, refunds tokenization, creates subscription
+  fastify.post('/complete-signup', {
+    preHandler: [verifyToken],
+    schema: {
+      tags: ['Auth'],
+      querystring: {
+        type: 'object',
+        required: ['reference'],
+        properties: { reference: { type: 'string' } }
+      }
+    }
+  }, async (request, reply) => {
+    const { reference } = request.query
+
+    // Verify the transaction
+    const txn = await verifyTransaction(reference)
+    if (txn.status !== 'success') {
+      return reply.status(400).send({ error: 'Payment verification failed', message: `Transaction status: ${txn.status}` })
+    }
+
+    const metadata = txn.metadata || {}
+    const authorizationCode = txn.authorization?.authorization_code
+    const customerCode = txn.customer?.customer_code
+
+    if (!authorizationCode) {
+      return reply.status(400).send({ error: 'Missing card authorization' })
+    }
+
+    // Ensure this transaction belongs to the authenticated user's org
+    if (metadata.orgId && metadata.orgId !== request.orgId) {
+      return reply.status(403).send({ error: 'Transaction does not belong to this organization' })
+    }
+
+    // Refund the tokenization charge immediately
+    try {
+      await refundTransaction(reference)
+      fastify.log.info({ reference, orgId: request.orgId }, 'Tokenization charge refunded')
+    } catch (refundErr) {
+      // Log loudly but don't block the customer — refund can be retried
+      fastify.log.error({ err: refundErr.message, reference, orgId: request.orgId }, 'CRITICAL: Tokenization refund failed — needs manual retry')
+    }
+
+    // Create the actual Paystack subscription with delayed start_date
+    const planCode = metadata.planCode
+    const trialEndsAt = metadata.trialEndsAt ? new Date(metadata.trialEndsAt) : new Date(Date.now() + TRIAL_DURATION_MS)
+
+    const subResult = await paystackCreateTrialSub({
+      email: txn.customer?.email || request.user?.email,
+      planCode,
+      authorizationCode,
+      trialEndsAt
+    })
+
+    // Update org with Paystack details
+    await db.update(organizations).set({
+      paystackCustomerCode: customerCode,
+      paystackAuthCode: authorizationCode,
+      paystackSubscriptionCode: subResult.subscriptionCode,
+      updatedAt: new Date()
+    }).where(eq(organizations.id, request.orgId))
+
+    // Update subscription row
+    const { subscriptions } = await import('../db/schema.js')
+    const { and: andOp } = await import('drizzle-orm')
+    await db.update(subscriptions).set({
+      paystackSubscriptionCode: subResult.subscriptionCode,
+      paystackPlanCode: planCode,
+      tokenizationReference: reference,
+      tokenizationRefundedAt: new Date(),
+      updatedAt: new Date()
+    }).where(andOp(
+      eq(subscriptions.orgId, request.orgId),
+      eq(subscriptions.product, 'ghara')
+    ))
+
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user?.id,
+      action: 'signup.card_captured',
+      metadata: {
+        reference,
+        subscriptionCode: subResult.subscriptionCode,
+        plan: metadata.plan,
+        selectedTier: metadata.selectedTier
+      }
+    })
+
+    return reply.send({
+      status: 'success',
+      subscriptionCode: subResult.subscriptionCode,
+      trialEndsAt: trialEndsAt.toISOString()
+    })
   })
 
   // POST /api/v1/auth/login

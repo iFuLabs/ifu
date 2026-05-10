@@ -259,6 +259,9 @@ export const subscriptions = pgTable('subscriptions', {
   status:                  text('status').notNull().default('active'), // 'active' | 'trialing' | 'cancelled' | 'expired'
   products:                jsonb('products').default([]), // engines granted: ["compliance", "cost"]
   legacy:                  boolean('legacy').default(false), // grandfathered customer flag
+  selectedTier:            text('selected_tier'), // what customer picked at signup (may differ from tier during trial)
+  tokenizationReference:   text('tokenization_reference'), // Paystack txn reference for card capture
+  tokenizationRefundedAt:  timestamp('tokenization_refunded_at'), // when the tokenization charge was refunded
   paystackSubscriptionCode: text('paystack_subscription_code'),
   paystackPlanCode:        text('paystack_plan_code'),
   trialEndsAt:             timestamp('trial_ends_at'),

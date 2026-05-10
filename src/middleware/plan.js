@@ -96,7 +96,9 @@ export async function productEntitlements(orgId) {
   const tierRank = { starter: 1, growth: 2, scale: 3 }
 
   for (const sub of activeSubs) {
-    const tier = sub.tier || _inferTier(sub.plan)
+    // During trial, always grant Growth-tier access regardless of selectedTier
+    const effectiveTier = (sub.status === 'trialing') ? 'growth' : (sub.tier || _inferTier(sub.plan))
+    const tier = effectiveTier
     const rank = tierRank[tier] || 0
 
     // Ghara plans grant both engines
@@ -152,47 +154,68 @@ function hasFramework(plan, framework) {
   return planConfig.frameworks.includes(framework)
 }
 
-// Middleware: require AI features (Growth plan only)
+// Middleware: require AI features (Growth plan or higher).
+// Sources entitlements from the subscriptions table via productEntitlements
+// so Ghara trial users (org.plan='starter' but Growth-tier subscription)
+// correctly get AI access.
 async function requireAiFeatures(request, reply) {
   if (!request.user?.org) {
-    return reply.status(403).send({ 
-      error: 'Forbidden', 
-      message: 'Organization required' 
+    return reply.status(403).send({
+      error: 'Forbidden',
+      message: 'Organization required'
     })
   }
 
-  const plan = request.user.org.plan || 'starter'
-  
-  if (!hasFeature(plan, 'aiFeatures')) {
+  const entitlements = await productEntitlements(request.orgId)
+  const tier = entitlements.tier
+
+  if (tier !== 'growth' && tier !== 'scale') {
     return reply.status(403).send({
       error: 'Upgrade Required',
-      message: 'AI features are only available on the Growth plan',
+      message: 'AI features are only available on the Growth plan or higher',
       code: 'PLAN_UPGRADE_REQUIRED',
       requiredPlan: 'growth',
-      currentPlan: plan
+      currentTier: tier
     })
   }
 }
 
-// Middleware: check framework access
-async function requireFramework(framework) {
+// Middleware: check framework access.
+// SOC 2 is available on every paid tier. ISO 27001, GDPR, HIPAA, PCI DSS
+// require Growth+ in compliance entitlements.
+// NOTE: this is a middleware factory — calling requireFramework('iso27001')
+// returns a middleware function. It must NOT be async at the outer level,
+// otherwise Fastify treats the returned Promise as the handler.
+function requireFramework(framework) {
   return async function(request, reply) {
     if (!request.user?.org) {
-      return reply.status(403).send({ 
-        error: 'Forbidden', 
-        message: 'Organization required' 
+      return reply.status(403).send({
+        error: 'Forbidden',
+        message: 'Organization required'
       })
     }
 
-    const plan = request.user.org.plan || 'starter'
-    
-    if (!hasFramework(plan, framework)) {
+    const entitlements = await productEntitlements(request.orgId)
+    const complianceTier = entitlements.compliance
+
+    if (!complianceTier) {
       return reply.status(403).send({
         error: 'Upgrade Required',
-        message: `${framework.toUpperCase()} framework is only available on the Growth plan`,
+        message: `${framework.toUpperCase()} requires an active compliance subscription`,
+        code: 'PLAN_UPGRADE_REQUIRED',
+        requiredPlan: 'starter',
+        currentTier: null
+      })
+    }
+
+    // SOC 2 is on every tier; everything else needs growth or scale.
+    if (framework !== 'soc2' && complianceTier === 'starter') {
+      return reply.status(403).send({
+        error: 'Upgrade Required',
+        message: `${framework.toUpperCase()} framework is only available on the Growth plan or higher`,
         code: 'PLAN_UPGRADE_REQUIRED',
         requiredPlan: 'growth',
-        currentPlan: plan
+        currentTier: complianceTier
       })
     }
   }
