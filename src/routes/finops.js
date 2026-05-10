@@ -1,6 +1,6 @@
 import { db } from '../db/client.js'
 import { integrations, finopsRecommendationStates } from '../db/schema.js'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
 import { verifyToken, requireUser } from '../middleware/auth.js'
 import { decrypt } from '../services/encryption.js'
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts'
@@ -52,7 +52,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
-        eq(integrations.product, 'finops'),
+        inArray(integrations.product, ['finops', 'ghara']),
         eq(integrations.status, 'connected')
       )
     })
@@ -109,7 +109,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
-        eq(integrations.product, 'finops'),
+        inArray(integrations.product, ['finops', 'ghara']),
         eq(integrations.status, 'connected')
       )
     })
@@ -177,7 +177,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
-        eq(integrations.product, 'finops'),
+        inArray(integrations.product, ['finops', 'ghara']),
         eq(integrations.status, 'connected')
       )
     })
@@ -238,7 +238,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
-        eq(integrations.product, 'finops'),
+        inArray(integrations.product, ['finops', 'ghara']),
         eq(integrations.status, 'connected')
       )
     })
@@ -292,7 +292,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
-        eq(integrations.product, 'finops'),
+        inArray(integrations.product, ['finops', 'ghara']),
         eq(integrations.status, 'connected')
       )
     })
@@ -336,7 +336,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
-        eq(integrations.product, 'finops'),
+        inArray(integrations.product, ['finops', 'ghara']),
         eq(integrations.status, 'connected')
       )
     })
@@ -377,7 +377,7 @@ export default async function finopsRoutes(fastify) {
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
-        eq(integrations.product, 'finops'),
+        inArray(integrations.product, ['finops', 'ghara']),
         eq(integrations.status, 'connected')
       )
     })

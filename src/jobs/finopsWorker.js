@@ -2,7 +2,7 @@ import { Worker } from 'bullmq'
 import { redis } from '../services/redis.js'
 import { db } from '../db/client.js'
 import { integrations, finopsRecommendationStates, kubernetesIntegrations } from '../db/schema.js'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
 import { decrypt } from '../services/encryption.js'
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts'
 import { runFinOpsChecks } from '../connectors/finops/checks.js'
@@ -25,7 +25,7 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
       eq(integrations.id, integrationId),
       eq(integrations.orgId, orgId),
       eq(integrations.type, 'aws'),
-      eq(integrations.product, 'finops'),
+      inArray(integrations.product, ['finops', 'ghara']),
       eq(integrations.status, 'connected')
     )
   })
