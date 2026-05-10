@@ -3,7 +3,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   LayoutDashboard, Shield, TrendingDown, GitBranch,
-  Users, CreditCard, Bell, Settings, LogOut, Menu, X
+  Users, CreditCard, Bell, Settings, LogOut, Menu, X, ScrollText
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -20,6 +20,7 @@ const BOTTOM_NAV = [
   { href: '/team',           label: 'Team',          icon: Users },
   { href: '/billing',        label: 'Billing',       icon: CreditCard },
   { href: '/notifications',  label: 'Notifications', icon: Bell },
+  { href: '/compliance/audit-log', label: 'Audit Log', icon: ScrollText },
   { href: '/account',        label: 'Settings',      icon: Settings },
 ]
 

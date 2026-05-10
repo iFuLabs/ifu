@@ -22,6 +22,11 @@ export default function TrialBanner() {
       .catch(() => {})
   }, [])
 
+  // Don't show banner in the first 5 days — let them use the product in peace
+  if (status === 'trialing' && trialDays !== null && trialDays > 2) {
+    return null
+  }
+
   if (status === 'expired') {
     return (
       <div className="px-4 py-2.5 text-center text-sm" style={{ background: '#FEF3F2', borderBottom: '1px solid rgba(180,35,24,0.15)' }}>
@@ -33,7 +38,8 @@ export default function TrialBanner() {
     )
   }
 
-  if (status === 'trialing' && trialDays !== null) {
+  // Only show on last 2 days
+  if (status === 'trialing' && trialDays !== null && trialDays <= 2) {
     return (
       <div className="px-4 py-2 text-center text-sm flex items-center justify-center gap-2" style={{ background: 'rgba(138,99,230,0.06)', borderBottom: '1px solid rgba(138,99,230,0.1)' }}>
         <Clock size={14} style={{ color: '#8A63E6' }} />
