@@ -204,6 +204,34 @@
       "when": 1776026649186,
       "tag": "0028_add_integration_failure_email",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1776026649187,
+      "tag": "0029_add_ghara_plans",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1776026649188,
+      "tag": "0030_add_kubernetes_integrations",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1776026649189,
+      "tag": "0031_add_signup_payment_tracking",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1776026649190,
+      "tag": "0032_add_paystack_events",
+      "breakpoints": true
     }
   ]
 }

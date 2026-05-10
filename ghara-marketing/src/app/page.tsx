@@ -427,7 +427,7 @@ export default function HomePage() {
             },
             {
               q: 'How does the 7-day trial work?',
-              a: 'Sign up with your email and a credit card. We don't charge during the 7-day trial. On day 8, your card is charged the price of your selected plan ($499 or $1,299/mo). Cancel any time during the trial with one click — no charge.',
+              a: "Sign up with your email and a credit card. We don\u2019t charge during the 7-day trial. On day 8, your card is charged the price of your selected plan ($499 or $1,299/mo). Cancel any time during the trial with one click \u2014 no charge.",
             },
             {
               q: 'How is this different from Vanta or Drata?',
