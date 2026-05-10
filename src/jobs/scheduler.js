@@ -42,7 +42,7 @@ export function startScheduler() {
         const connected = await db.query.integrations.findMany({
           where: and(
             eq(integrations.status, 'connected'),
-            eq(integrations.product, 'comply'),
+            inArray(integrations.product, ['comply', 'ghara']),
             inArray(integrations.orgId, orgIds)
           )
         })
@@ -79,7 +79,7 @@ export function startScheduler() {
           const awsIntegrations = await db.query.integrations.findMany({
             where: and(
               eq(integrations.type, 'aws'),
-              eq(integrations.product, 'finops'),
+              inArray(integrations.product, ['finops', 'ghara']),
               eq(integrations.status, 'connected'),
               inArray(integrations.orgId, subscribedOrgIds)
             )
