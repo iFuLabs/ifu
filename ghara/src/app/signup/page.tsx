@@ -78,8 +78,9 @@ export default function SignupPage() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ margin: '0 auto 20px', display: 'flex', justifyContent: 'center' }}>
-            <img src="/brand/logo.svg" alt="Ghara" style={{ height: 48 }} />
+          <div style={{ margin: '0 auto 20px', display: 'inline-flex', alignItems: 'center', gap: 12, justifyContent: 'center' }} aria-label="Ghara">
+            <img src="/brand/ghara-mark.svg" alt="" style={{ height: 40, width: 40 }} />
+            <span style={{ fontFamily: "'PP Fragment', Georgia, 'Times New Roman', serif", fontSize: 32, fontWeight: 400, color: PLUM, letterSpacing: '-0.5px', lineHeight: 1 }}>Ghara</span>
           </div>
           <h1 style={{ fontSize: 34, fontWeight: 500, color: PLUM, marginBottom: 8, fontFamily: "'PP Fragment', serif", letterSpacing: '-0.02em' }}>
             {step === 1 ? 'Start your free trial' : 'Choose your plan'}
@@ -198,7 +199,7 @@ export default function SignupPage() {
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: 28 }}>
           <a href="https://ifulabs.com" target="_blank" rel="noopener noreferrer">
-            <img src="/brand/ifulabs-logo.svg" alt="iFU Labs" style={{ height: 14, opacity: 0.4 }} />
+            <img src="/brand/plum.svg" alt="iFU Labs" style={{ height: 14, opacity: 0.4 }} />
           </a>
         </div>
       </div>

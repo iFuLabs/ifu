@@ -157,7 +157,7 @@ export default function InvitePage() {
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: 28 }}>
           <a href="https://ifulabs.com" target="_blank" rel="noopener noreferrer">
-            <img src="/brand/ifulabs-logo.svg" alt="iFU Labs" style={{ height: 14, opacity: 0.4 }} />
+            <img src="/brand/plum.svg" alt="iFU Labs" style={{ height: 14, opacity: 0.4 }} />
           </a>
         </div>
       </div>

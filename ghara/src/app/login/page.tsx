@@ -52,8 +52,9 @@ function LoginForm() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <div style={{ margin: '0 auto 20px', display: 'flex', justifyContent: 'center' }}>
-            <img src="/brand/logo.svg" alt="Ghara" style={{ height: '48px', width: 'auto' }} />
+          <div style={{ margin: '0 auto 20px', display: 'inline-flex', alignItems: 'center', gap: 12, justifyContent: 'center' }} aria-label="Ghara">
+            <img src="/brand/ghara-mark.svg" alt="" style={{ height: 40, width: 40 }} />
+            <span style={{ fontFamily: "'PP Fragment', Georgia, 'Times New Roman', serif", fontSize: 32, fontWeight: 400, color: PLUM, letterSpacing: '-0.5px', lineHeight: 1 }}>Ghara</span>
           </div>
           <h1 style={{
             fontSize: '34px',
@@ -184,7 +185,7 @@ function LoginForm() {
         {/* iFU Labs attribution */}
         <div style={{ textAlign: 'center', marginTop: '16px' }}>
           <a href="https://ifulabs.com" target="_blank" rel="noopener noreferrer">
-            <img src="/brand/ifulabs-logo.svg" alt="iFU Labs" style={{ height: '14px', opacity: 0.4 }} />
+            <img src="/brand/plum.svg" alt="iFU Labs" style={{ height: '14px', opacity: 0.4 }} />
           </a>
         </div>
       </div>

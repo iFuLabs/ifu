@@ -2,12 +2,12 @@ import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk
 import { IAMClient, ListAccountAliasesCommand } from '@aws-sdk/client-iam'
 
 /**
- * Validates that iFu Labs Comply can assume the customer's IAM role.
+ * Validates that Ghara can assume the customer's IAM role.
  * Returns the AWS account ID and alias if successful.
  */
 export async function validateAwsRole(roleArn, externalId) {
   try {
-    const sts = new STSClient({ 
+    const sts = new STSClient({
       region: process.env.AWS_REGION,
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -15,10 +15,11 @@ export async function validateAwsRole(roleArn, externalId) {
       }
     })
 
-    // Try assuming the role
+    // Try assuming the role. RoleSessionName appears in the customer's
+    // CloudTrail logs, so we brand it as Ghara not the legacy Comply name.
     const assumed = await sts.send(new AssumeRoleCommand({
       RoleArn: roleArn,
-      RoleSessionName: 'iFu-Labs-ComplyValidation',
+      RoleSessionName: 'GharaValidation',
       ExternalId: externalId,
       DurationSeconds: 900 // 15 min — minimum
     }))
@@ -71,7 +72,7 @@ export async function validateAwsRole(roleArn, externalId) {
     return {
       success: false,
       error: err.name === 'AccessDenied' || err.name === 'AccessDeniedException'
-        ? 'iFu Labs Comply cannot assume this role. Check the trust policy allows assumption from account ' + process.env.AWS_ACCOUNT_ID
+        ? 'Ghara cannot assume this role. Check the trust policy allows assumption from account ' + process.env.AWS_ACCOUNT_ID
         : err.message
     }
   }

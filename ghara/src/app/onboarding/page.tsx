@@ -328,7 +328,7 @@ export default function OnboardingPage() {
       {/* Footer */}
       <div className="px-6 py-4 text-center">
         <a href="https://ifulabs.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1">
-          <img src="/brand/ifulabs-logo.svg" alt="iFU Labs" className="h-3 opacity-50 hover:opacity-100 transition-opacity" />
+          <img src="/brand/plum.svg" alt="iFU Labs" className="h-3 opacity-50 hover:opacity-100 transition-opacity" />
         </a>
       </div>
     </div>

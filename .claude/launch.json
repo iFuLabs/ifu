@@ -39,6 +39,14 @@
       "port": 3004,
       "cwd": "website",
       "autoPort": true
+    },
+    {
+      "name": "Ghara Marketing (Next.js)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "autoPort": true,
+      "port": 3006,
+      "cwd": "ghara-marketing"
     }
   ]
 }

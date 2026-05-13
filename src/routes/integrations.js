@@ -122,7 +122,7 @@ export default async function integrationRoutes(fastify) {
       return reply.status(400).send({
         error: 'Integration Error',
         message: validation.error,
-        hint: 'Ensure the IAM role trust policy allows assumption from the iFu Labs Comply account'
+        hint: 'Ensure the IAM role trust policy allows assumption from the Ghara account'
       })
     }
 

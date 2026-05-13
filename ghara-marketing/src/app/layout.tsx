@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Link from 'next/link'
+import MobileNav from './_components/MobileNav'
 
 const APP_URL = 'https://app.ghara.ifulabs.com'
 
@@ -9,6 +10,10 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, them
 export const metadata: Metadata = {
   title: 'Ghara — Cloud compliance and cost in one dashboard',
   description: 'Ghara watches your AWS for compliance gaps and wasted spend. One dashboard. One score. One action queue. Built by iFU Labs.',
+  icons: {
+    icon: '/brand/ghara-mark.svg',
+    apple: '/brand/ghara-mark.svg',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -17,14 +22,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {/* Nav */}
         <nav className="site-nav">
-          <Link href="/" className="nav-logo">
-            <div style={{ width: 28, height: 28, borderRadius: 6, background: '#33063D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>G</span>
-            </div>
+          <Link href="/" className="nav-logo" aria-label="Ghara home">
+            <img src="/brand/ghara-mark.svg" alt="" />
             <span>Ghara</span>
           </Link>
 
           <div className="nav-links">
+            <Link href="/#features">Features</Link>
             <Link href="/#pricing">Pricing</Link>
             <Link href="/about">About</Link>
             <Link href="/demo">Demo</Link>
@@ -33,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="nav-actions">
             <a href={`${APP_URL}/login`} className="btn-ghost">Sign in</a>
             <a href={`${APP_URL}/signup`} className="btn-primary" style={{ padding: '8px 16px', fontSize: 13 }}>Start free trial</a>
+            <MobileNav appUrl={APP_URL} />
           </div>
         </nav>
 
@@ -42,17 +47,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="site-footer">
           <div className="footer-grid">
             <div className="footer-brand">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 24, height: 24, borderRadius: 5, background: '#33063D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 11 }}>G</span>
-                </div>
-                <span style={{ fontWeight: 600, fontSize: 15 }}>Ghara</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <img src="/brand/ghara-mark.svg" alt="" style={{ width: 26, height: 26 }} />
+                <span style={{ fontFamily: "'PP Fragment', serif", fontSize: 20, fontWeight: 400, letterSpacing: '-0.5px' }}>Ghara</span>
               </div>
               <p>Cloud compliance and cost intelligence. One dashboard for your entire AWS posture.</p>
-              <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, color: 'rgba(51,6,61,0.5)' }}>Built by</span>
-                <a href="https://ifulabs.com" target="_blank" rel="noopener noreferrer">
-                  <img src="/ifulabs-logo.svg" alt="iFU Labs" style={{ height: 16 }} />
+              <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>Built by</span>
+                <a href="https://ifulabs.com" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex' }}>
+                  <img src="/logos/plum.svg" alt="iFU Labs" style={{ height: 18, width: 'auto' }} />
                 </a>
               </div>
             </div>
@@ -60,6 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="footer-col">
               <h4>Product</h4>
               <ul>
+                <li><Link href="/#features">Features</Link></li>
                 <li><Link href="/#pricing">Pricing</Link></li>
                 <li><a href={`${APP_URL}/signup`}>Start trial</a></li>
                 <li><a href={`${APP_URL}/login`}>Sign in</a></li>
@@ -90,6 +94,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <div className="footer-bottom">
             <p>© {new Date().getFullYear()} iFU Labs. All rights reserved.</p>
+            <div className="co-brand" aria-label="Built on AWS, powered by Anthropic Claude">
+              <img className="co-brand-mark" src="/logos/plum.svg" alt="iFU Labs" />
+              <span className="co-brand-divider" />
+              <img
+                className="co-brand-mark"
+                src="https://d0.awsstatic.com/logos/powered-by-aws.png"
+                alt="Powered by AWS"
+                style={{ height: 22 }}
+              />
+              <span className="co-brand-divider" />
+              <span className="co-brand-partner">Powered by Anthropic Claude</span>
+            </div>
           </div>
         </footer>
       </body>

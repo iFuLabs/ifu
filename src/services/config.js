@@ -28,10 +28,14 @@ const getCookieDomain = () => {
   return undefined // localhost
 }
 
+// SameSite=none is required when the API is on a different subdomain than the
+// frontend (api.ifulabs.com ↔ app.ghara.ifulabs.com) — browsers block cookies
+// on cross-site state-changing requests with sameSite=lax. Production uses
+// 'none' + secure: true; dev keeps 'lax' so cookies still work on localhost.
 export const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production' || process.env.API_URL?.includes('https://'),
-  sameSite: 'lax',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   path: '/',
   maxAge: COOKIE_MAX_AGE,
   domain: getCookieDomain()
