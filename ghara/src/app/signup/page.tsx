@@ -28,6 +28,7 @@ export default function SignupPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [orgName, setOrgName] = useState('')
   const [role, setRole] = useState('')
   const [plan, setPlan] = useState('ghara-growth')
@@ -37,13 +38,22 @@ export default function SignupPage() {
   const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
   const planPrice = plan === 'ghara-growth' ? '$1,299' : '$499'
 
+  const passwordChecks = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  }
+  const passwordValid = Object.values(passwordChecks).every(Boolean)
+
   const handleContinueToCard = async () => {
     if (!email.trim() || !password.trim() || !orgName.trim()) {
       setError('Email, password, and company name are required')
       return
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters')
+    if (!passwordValid) {
+      setError('Password does not meet all requirements')
       return
     }
     setError('')
@@ -107,9 +117,29 @@ export default function SignupPage() {
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={labelStyle}>Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 8 characters" style={inputStyle}
-                onFocus={e => { e.target.style.borderColor = IRIS; e.target.style.boxShadow = '0 0 0 3px rgba(138,99,230,0.15)' }}
-                onBlur={e => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = 'none' }} />
+              <div style={{ position: 'relative' }}>
+                <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 8 characters" style={{ ...inputStyle, paddingRight: 48 }}
+                  onFocus={e => { e.target.style.borderColor = IRIS; e.target.style.boxShadow = '0 0 0 3px rgba(138,99,230,0.15)' }}
+                  onBlur={e => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = 'none' }} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: SUBTLE, padding: '4px 6px' }}>
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+              {password.length > 0 && (
+                <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
+                  {[
+                    { key: 'length', label: '8+ characters' },
+                    { key: 'uppercase', label: 'Uppercase letter' },
+                    { key: 'lowercase', label: 'Lowercase letter' },
+                    { key: 'number', label: 'Number' },
+                    { key: 'special', label: 'Special character' },
+                  ].map(({ key, label }) => (
+                    <span key={key} style={{ fontSize: 11, color: passwordChecks[key as keyof typeof passwordChecks] ? '#067647' : 'rgba(51,6,61,0.4)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {passwordChecks[key as keyof typeof passwordChecks] ? '✓' : '○'} {label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={labelStyle}>Company name</label>

@@ -16,6 +16,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -113,14 +114,15 @@ function LoginForm() {
             }}>
               Password
             </label>
+            <div style={{ position: 'relative' }}>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               placeholder="Enter your password"
               style={{
-                width: '100%', padding: '14px 16px', fontSize: '15px',
+                width: '100%', padding: '14px 48px 14px 16px', fontSize: '15px',
                 background: '#FFFFFF', border: `1px solid ${BORDER}`,
                 borderRadius: '10px', color: PLUM, outline: 'none',
                 transition: 'all 0.2s', fontFamily: "'Aeonik', sans-serif"
@@ -128,6 +130,10 @@ function LoginForm() {
               onFocus={(e) => { e.target.style.borderColor = IRIS; e.target.style.boxShadow = '0 0 0 3px rgba(138, 99, 230, 0.15)' }}
               onBlur={(e) => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = 'none' }}
             />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(51,6,61,0.5)', padding: '4px 6px' }}>
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+            </div>
           </div>
 
           {error && (
