@@ -7,6 +7,7 @@ import { decrypt } from '../services/encryption.js'
 import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts'
 import { runFinOpsChecks } from '../connectors/finops/checks.js'
 import { fetchOpenCostData } from '../connectors/kubernetes/opencost.js'
+import { fetchContainerInsightsData } from '../connectors/kubernetes/containerInsights.js'
 import { generateFinOpsSummary } from '../services/finops-ai.js'
 import { auditAction } from '../services/audit.js'
 import { dispatchWebhook } from '../services/webhooks.js'
@@ -101,7 +102,54 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
             .where(eq(kubernetesIntegrations.id, k8s.id))
         }
       }
-      // EKS Container Insights fallback would go here in future
+      // EKS Container Insights — pull cost data via CloudWatch
+      if (k8s.connectionType === 'eks_container_insights' && k8s.awsIntegrationId) {
+        try {
+          // Look up the linked AWS integration to get credentials
+          const awsInt = await db.query.integrations.findFirst({
+            where: and(
+              eq(integrations.id, k8s.awsIntegrationId),
+              eq(integrations.orgId, orgId),
+              eq(integrations.status, 'connected')
+            )
+          })
+
+          if (!awsInt) {
+            logger.warn({ cluster: k8s.clusterName, orgId }, 'Linked AWS integration not found for Container Insights')
+            continue
+          }
+
+          const awsCreds = JSON.parse(decrypt(awsInt.credentials))
+          const tempCredentials = await assumeRole(awsCreds.roleArn, awsCreds.externalId)
+
+          const k8sData = await fetchContainerInsightsData({
+            credentials: tempCredentials,
+            region: process.env.AWS_REGION || 'us-east-1',
+            clusterName: k8s.clusterName,
+            window: '7d'
+          })
+
+          k8sFindings.push(...(k8sData.findings || []).map(f => ({
+            ...f,
+            source: 'kubernetes',
+            clusterName: k8s.clusterName
+          })))
+
+          // Update last synced
+          await db.update(kubernetesIntegrations)
+            .set({ lastSyncedAt: new Date(), lastError: null, lastErrorAt: null, updatedAt: new Date() })
+            .where(eq(kubernetesIntegrations.id, k8s.id))
+
+          // Cache K8s data
+          const k8sCacheKey = `finops:k8s:${orgId}:${k8s.clusterName}`
+          await redis.setex(k8sCacheKey, CACHE_TTL, JSON.stringify(k8sData)).catch(() => null)
+        } catch (k8sErr) {
+          logger.warn({ err: k8sErr.message, cluster: k8s.clusterName, orgId }, 'Container Insights scan failed for cluster')
+          await db.update(kubernetesIntegrations)
+            .set({ lastError: k8sErr.message, lastErrorAt: new Date(), updatedAt: new Date() })
+            .where(eq(kubernetesIntegrations.id, k8s.id))
+        }
+      }
     }
 
     if (k8sFindings.length > 0) {

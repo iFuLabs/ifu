@@ -21,6 +21,7 @@
     "@aws-sdk/client-config-service": "^3.540.0",
     "@aws-sdk/client-cost-explorer": "^3.540.0",
     "@aws-sdk/client-ec2": "^3.1029.0",
+    "@aws-sdk/client-eks": "^3.1047.0",
     "@aws-sdk/client-elastic-load-balancing": "^3.540.0",
     "@aws-sdk/client-elastic-load-balancing-v2": "^3.540.0",
     "@aws-sdk/client-guardduty": "^3.1029.0",

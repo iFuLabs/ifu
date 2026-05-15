@@ -652,6 +652,41 @@ export default async function integrationRoutes(fastify) {
       if (!awsInt) {
         return reply.status(400).send({ error: 'AWS integration not found or not connected' })
       }
+
+      // Validate we can reach Container Insights metrics
+      try {
+        const { decrypt } = await import('../services/encryption.js')
+        const { STSClient, AssumeRoleCommand } = await import('@aws-sdk/client-sts')
+        const { validateContainerInsights } = await import('../connectors/kubernetes/containerInsights.js')
+
+        const creds = JSON.parse(decrypt(awsInt.credentials))
+        const sts = new STSClient({ region: process.env.AWS_REGION || 'us-east-1' })
+        const { Credentials } = await sts.send(new AssumeRoleCommand({
+          RoleArn: creds.roleArn,
+          RoleSessionName: `Ghara-K8s-Validate-${Date.now()}`,
+          ExternalId: creds.externalId,
+          DurationSeconds: 900
+        }))
+
+        const validation = await validateContainerInsights(
+          { accessKeyId: Credentials.AccessKeyId, secretAccessKey: Credentials.SecretAccessKey, sessionToken: Credentials.SessionToken },
+          process.env.AWS_REGION || 'us-east-1'
+        )
+
+        if (!validation.success) {
+          return reply.status(400).send({
+            error: 'Integration Error',
+            message: validation.error,
+            hint: 'Ensure Container Insights is enabled on your EKS cluster. See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-EKS-quickstart.html'
+          })
+        }
+      } catch (valErr) {
+        return reply.status(400).send({
+          error: 'Validation Failed',
+          message: `Could not validate Container Insights access: ${valErr.message}`,
+          hint: 'Ensure the IAM role has cloudwatch:GetMetricData and eks:ListClusters permissions'
+        })
+      }
     }
 
     // Check for existing cluster with same name
