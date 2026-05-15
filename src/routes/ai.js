@@ -78,10 +78,11 @@ export default async function aiRoutes(fastify) {
 
       return reply.send({ ...explanation, cached: false })
     } catch (err) {
-      fastify.log.error(err, 'AI explanation failed')
+      fastify.log.error({ err: { name: err.name, message: err.message, code: err.$metadata?.httpStatusCode } }, 'AI explanation failed')
       return reply.status(503).send({
         error: 'AI Unavailable',
         message: 'Could not generate AI explanation. Showing built-in guidance instead.',
+        code: err.name || 'BedrockError',
         fallback: {
           summary: def.description,
           steps: def.guidance ? [{ order: 1, title: 'Fix', detail: def.guidance, effort: '30 mins' }] : [],

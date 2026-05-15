@@ -13,6 +13,11 @@ import { sql } from 'drizzle-orm'
 // Update these when AWS changes prices — historical rows keep the rate that
 // was in effect when they were written.
 const RATES = {
+  // Current generation (active on Bedrock)
+  'anthropic.claude-sonnet-4-5-20250929-v1:0': { input: 3.00,  output: 15.00 },
+  'anthropic.claude-haiku-4-5-20251001-v1:0':  { input: 1.00,  output: 5.00  },
+  'anthropic.claude-opus-4-1-20250805-v1:0':   { input: 15.00, output: 75.00 },
+  // Legacy entries kept so historical aiUsageLog rows still cost-out correctly.
   'anthropic.claude-3-5-sonnet-20241022-v2:0': { input: 3.00,  output: 15.00 },
   'anthropic.claude-3-5-sonnet-20240620-v1:0': { input: 3.00,  output: 15.00 },
   'anthropic.claude-3-haiku-20240307-v1:0':    { input: 0.25,  output: 1.25  },
@@ -20,7 +25,10 @@ const RATES = {
 }
 
 function estimateCostUsd(model, inputTokens, outputTokens) {
-  const rate = RATES[model]
+  // Cross-region inference profile ids are prefixed with the region (us./eu./apac.).
+  // Same underlying foundation model, same price — strip the prefix for lookup.
+  const baseModel = model?.replace(/^(us|eu|apac|global)\./, '') || ''
+  const rate = RATES[model] || RATES[baseModel]
   if (!rate) return 0
   return (inputTokens / 1_000_000) * rate.input + (outputTokens / 1_000_000) * rate.output
 }

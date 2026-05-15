@@ -1,7 +1,7 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
 import { recordUsage } from './ai-usage.js'
 
-const FINOPS_MODEL = 'anthropic.claude-3-haiku-20240307-v1:0'
+const FINOPS_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0'
 
 /**
  * Generate AI-powered natural language summaries for FinOps findings.

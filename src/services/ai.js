@@ -3,7 +3,7 @@ import { recordUsage } from './ai-usage.js'
 
 const bedrock = new BedrockRuntimeClient({ region: process.env.BEDROCK_REGION || 'us-east-1' })
 
-const MODEL_ID = 'anthropic.claude-3-5-sonnet-20241022-v2:0'
+const MODEL_ID = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0'
 
 /**
  * Generates a plain-English explanation for a failing control,

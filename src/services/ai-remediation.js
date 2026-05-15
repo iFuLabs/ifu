@@ -11,7 +11,7 @@ import { BedrockRuntimeClient, InvokeModelCommand, InvokeModelWithResponseStream
 import { recordUsage } from './ai-usage.js'
 
 const bedrock = new BedrockRuntimeClient({ region: process.env.BEDROCK_REGION || 'us-east-1' })
-const MODEL_ID = 'anthropic.claude-3-5-sonnet-20241022-v2:0'
+const MODEL_ID = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0'
 
 const REMEDIATION_SYSTEM_PROMPT = `You are a senior DevOps/SRE engineer specializing in AWS infrastructure security and compliance automation.
 

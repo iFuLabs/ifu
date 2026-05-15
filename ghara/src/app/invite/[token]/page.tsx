@@ -23,13 +23,17 @@ export default function InvitePage() {
   const [accepting, setAccepting] = useState(false)
 
   useEffect(() => {
-    fetch(`${API_URL}/api/v1/team/invite/${token}`)
+    fetch(`${API_URL}/api/v1/team/invitation/${token}`)
       .then(r => r.ok ? r.json() : Promise.reject(r))
       .then(data => { setInvite(data); setLoading(false) })
       .catch(() => { setError('This invitation is invalid or has expired.'); setLoading(false) })
   }, [token])
 
   const handleAccept = async () => {
+    if (!name.trim()) {
+      setError('Please enter your name')
+      return
+    }
     if (!password || password.length < 8) {
       setError('Password must be at least 8 characters')
       return
@@ -39,11 +43,11 @@ export default function InvitePage() {
     setError('')
 
     try {
-      const res = await fetch(`${API_URL}/api/v1/team/invite/${token}/accept`, {
+      const res = await fetch(`${API_URL}/api/v1/team/accept-invitation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: name.trim(), password }),
+        body: JSON.stringify({ token, name: name.trim(), password }),
       })
       if (!res.ok) {
         const data = await res.json()
