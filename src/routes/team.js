@@ -343,6 +343,39 @@ export default async function teamRoutes(fastify) {
     })
 
     if (!invitation) {
+      // Check if there's an already-accepted invitation for this token
+      // (user may have hit back/refresh after accepting, or retried)
+      const usedInvitation = await db.query.invitations.findFirst({
+        where: eq(invitations.token, token)
+      })
+
+      if (usedInvitation && usedInvitation.status === 'accepted') {
+        // Check if the user account was already created — just log them in
+        const existingUser = await db.query.users.findFirst({
+          where: and(
+            eq(users.email, usedInvitation.email),
+            eq(users.orgId, usedInvitation.orgId)
+          )
+        })
+
+        if (existingUser) {
+          const jwt = await import('jsonwebtoken')
+          const { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } = await import('../services/config.js')
+          const jwtToken = jwt.sign(
+            { userId: existingUser.id, email: existingUser.email, orgId: existingUser.orgId, role: existingUser.role },
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
+          )
+          reply.setCookie('auth_token', jwtToken, COOKIE_OPTIONS)
+          return reply.status(200).send({
+            token: jwtToken,
+            user: { id: existingUser.id, email: existingUser.email, name: existingUser.name, role: existingUser.role },
+            product: usedInvitation.product || 'ghara',
+            message: 'You have already joined this organization. Logging you in.'
+          })
+        }
+      }
+
       return reply.status(404).send({
         error: 'Not Found',
         message: 'Invitation not found or already used'
@@ -365,9 +398,26 @@ export default async function teamRoutes(fastify) {
     if (existingUser) {
       // User exists - check if they're already in this org
       if (existingUser.orgId === invitation.orgId) {
-        return reply.status(409).send({
-          error: 'Conflict',
-          message: 'You are already a member of this organization'
+        // Already a member — just log them in
+        const jwt = await import('jsonwebtoken')
+        const { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } = await import('../services/config.js')
+        const jwtToken = jwt.sign(
+          { userId: existingUser.id, email: existingUser.email, orgId: existingUser.orgId, role: existingUser.role },
+          JWT_SECRET,
+          { expiresIn: JWT_EXPIRES_IN }
+        )
+        reply.setCookie('auth_token', jwtToken, COOKIE_OPTIONS)
+
+        // Mark invitation as accepted if still pending
+        await db.update(invitations)
+          .set({ status: 'accepted', acceptedAt: new Date() })
+          .where(eq(invitations.id, invitation.id))
+
+        return reply.status(200).send({
+          token: jwtToken,
+          user: { id: existingUser.id, email: existingUser.email, name: existingUser.name, role: existingUser.role },
+          product: invitation.product || 'ghara',
+          message: 'You are already a member. Logging you in.'
         })
       }
 
