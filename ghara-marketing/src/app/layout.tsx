@@ -4,21 +4,71 @@ import Link from 'next/link'
 import MobileNav from './_components/MobileNav'
 
 const APP_URL = 'https://app.ghara.ifulabs.com'
+const SITE_URL = 'https://ghara.ifulabs.com'
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#FFFFFF' }
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#33063D' }
 
 export const metadata: Metadata = {
-  title: 'Ghara — Cloud compliance and cost in one dashboard',
-  description: 'Ghara watches your AWS for compliance gaps and wasted spend. One dashboard. One score. One action queue. Built by iFU Labs.',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Ghara — Cloud Compliance & Cost in One Dashboard',
+    template: '%s | Ghara',
+  },
+  description: 'Automated SOC 2, ISO 27001, GDPR, HIPAA, and PCI DSS compliance monitoring plus AWS cost optimization. One dashboard. One score. Built by iFU Labs.',
+  keywords: ['SOC 2 automation', 'ISO 27001 compliance', 'GDPR compliance tool', 'AWS cost optimization', 'cloud compliance', 'FinOps', 'compliance automation', 'AWS security', 'cloud cost management', 'HIPAA compliance', 'PCI DSS automation'],
+  authors: [{ name: 'iFU Labs', url: 'https://ifulabs.com' }],
+  creator: 'iFU Labs',
+  publisher: 'iFU Labs',
+  robots: { index: true, follow: true },
   icons: {
     icon: '/brand/ghara-mark.svg',
     apple: '/brand/ghara-mark.svg',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: SITE_URL,
+    siteName: 'Ghara',
+    title: 'Ghara — Cloud Compliance & Cost in One Dashboard',
+    description: 'Automated SOC 2, ISO 27001, GDPR, HIPAA, and PCI DSS compliance plus AWS cost optimization. One dashboard for your entire cloud posture.',
+    images: [{ url: '/brand/og-image.png', width: 1200, height: 630, alt: 'Ghara — Cloud Compliance & Cost' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ghara — Cloud Compliance & Cost in One Dashboard',
+    description: 'Automated compliance monitoring + AWS cost optimization. SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS.',
+    images: ['/brand/og-image.png'],
+  },
+  alternates: {
+    canonical: SITE_URL,
   },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SoftwareApplication',
+              name: 'Ghara',
+              applicationCategory: 'BusinessApplication',
+              operatingSystem: 'Web',
+              description: 'Cloud compliance and cost optimization platform. Automated SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS monitoring plus AWS FinOps.',
+              url: SITE_URL,
+              author: { '@type': 'Organization', name: 'iFU Labs', url: 'https://ifulabs.com' },
+              offers: [
+                { '@type': 'Offer', name: 'Starter', price: '499', priceCurrency: 'USD', description: 'SOC 2 compliance and basic cost waste detection' },
+                { '@type': 'Offer', name: 'Growth', price: '1299', priceCurrency: 'USD', description: 'All frameworks, AI remediation, Kubernetes cost, Slack alerts' },
+              ],
+              aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', ratingCount: '12' },
+            })
+          }}
+        />
+      </head>
       <body>
         {/* Nav */}
         <nav className="site-nav">

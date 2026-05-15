@@ -17,9 +17,15 @@ export default function DemoPage() {
   const [role, setRole] = useState('')
   const [awsSpend, setAwsSpend] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // In production: POST to /api/v1/demo-requests
+    try {
+      await fetch('https://api.ifulabs.com/api/v1/demo-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, company, role, awsSpend }),
+      })
+    } catch {}
     setSubmitted(true)
   }
 

@@ -72,7 +72,7 @@ export default function BillingPage() {
   const handleUpgrade = async (planId: string) => {
     if (planId === 'ghara-scale') {
       // Scale tier = sales-led
-      window.open('mailto:info@ifulabs.com?subject=Ghara Scale tier inquiry', '_blank')
+      window.open('mailto:caleb.ackom@ifulabs.com?subject=Ghara Scale tier inquiry', '_blank')
       return
     }
 
