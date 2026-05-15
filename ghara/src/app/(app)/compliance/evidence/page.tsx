@@ -12,6 +12,8 @@ const FRAMEWORKS = [
   { value: 'soc2',     label: 'SOC 2 Type II' },
   { value: 'iso27001', label: 'ISO 27001' },
   { value: 'gdpr',     label: 'GDPR' },
+  { value: 'hipaa',    label: 'HIPAA' },
+  { value: 'pci_dss',  label: 'PCI DSS 4.0' },
 ]
 
 export default function EvidencePage() {
@@ -97,7 +99,7 @@ export default function EvidencePage() {
           </div>
         )}
         
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {FRAMEWORKS.map(fw => {
             const isLocked = planFeatures && !planFeatures.features.frameworks.includes(fw.value)
             
