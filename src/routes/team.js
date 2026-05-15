@@ -1,5 +1,7 @@
 import { z } from 'zod'
 import crypto from 'crypto'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 import { db } from '../db/client.js'
 import { users, invitations, organizations } from '../db/schema.js'
 import { eq, and, count } from 'drizzle-orm'
@@ -7,6 +9,7 @@ import { verifyToken, requireUser, requireAdmin } from '../middleware/auth.js'
 import { auditAction } from '../services/audit.js'
 import { sendTeamInvitationEmail } from '../services/email.js'
 import { getMaxTeamMembers } from '../middleware/plan.js'
+import { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } from '../services/config.js'
 
 const inviteSchema = z.object({
   email: z.string().email(),
@@ -359,8 +362,6 @@ export default async function teamRoutes(fastify) {
         })
 
         if (existingUser) {
-          const jwt = await import('jsonwebtoken')
-          const { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } = await import('../services/config.js')
           const jwtToken = jwt.sign(
             { userId: existingUser.id, email: existingUser.email, orgId: existingUser.orgId, role: existingUser.role },
             JWT_SECRET,
@@ -399,8 +400,6 @@ export default async function teamRoutes(fastify) {
       // User exists - check if they're already in this org
       if (existingUser.orgId === invitation.orgId) {
         // Already a member — just log them in
-        const jwt = await import('jsonwebtoken')
-        const { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } = await import('../services/config.js')
         const jwtToken = jwt.sign(
           { userId: existingUser.id, email: existingUser.email, orgId: existingUser.orgId, role: existingUser.role },
           JWT_SECRET,
@@ -429,7 +428,6 @@ export default async function teamRoutes(fastify) {
     }
 
     // Create new user
-    const bcrypt = await import('bcryptjs')
     const passwordHash = await bcrypt.hash(password, 10)
 
     const [newUser] = await db.insert(users).values({
@@ -457,9 +455,6 @@ export default async function teamRoutes(fastify) {
     })
 
     // Generate JWT token
-    const jwt = await import('jsonwebtoken')
-    const { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } = await import('../services/config.js')
-    
     const jwtToken = jwt.sign(
       { 
         userId: newUser.id, 
