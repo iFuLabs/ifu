@@ -403,6 +403,63 @@ export default async function finopsRoutes(fastify) {
     }
   })
 
+  // GET /api/v1/finops/accounts
+  // List all connected AWS accounts with summary cost data (multi-account support)
+  fastify.get('/accounts', {
+    preHandler: [verifyToken, requireUser],
+    schema: {
+      tags: ['FinOps'],
+      security: [{ bearerAuth: [] }]
+    }
+  }, async (request, reply) => {
+    // Get all connected AWS integrations for this org
+    const awsIntegrations = await db.query.integrations.findMany({
+      where: and(
+        eq(integrations.orgId, request.orgId),
+        eq(integrations.type, 'aws'),
+        inArray(integrations.product, ['finops', 'ghara']),
+        eq(integrations.status, 'connected')
+      )
+    })
+
+    if (awsIntegrations.length === 0) {
+      return reply.send({ accounts: [], multiAccount: false })
+    }
+
+    // For each integration, try to load cached findings
+    const accounts = await Promise.all(awsIntegrations.map(async (integration) => {
+      const cacheKey = `finops:findings:${request.orgId}:${integration.id}`
+      const cached = await redis.get(cacheKey).catch(() => null)
+      let summary = null
+
+      if (cached) {
+        const findings = JSON.parse(cached)
+        summary = {
+          monthlyCost: findings.monthlyCost,
+          forecastedCost: findings.forecastedCost,
+          totalSavings: findings.summary?.totalMonthlySavings,
+          wasteItems: findings.summary?.wasteItems || 0,
+          rightsizingItems: findings.summary?.rightsizingItems || 0,
+        }
+      }
+
+      return {
+        id: integration.id,
+        accountId: integration.metadata?.accountId,
+        accountAlias: integration.metadata?.alias,
+        accountLabel: integration.accountLabel,
+        lastSyncAt: integration.lastSyncAt,
+        summary,
+      }
+    }))
+
+    return reply.send({
+      accounts,
+      multiAccount: awsIntegrations.length > 1,
+      total: awsIntegrations.length,
+    })
+  })
+
   // GET /api/v1/finops/export
   // Export findings as CSV, JSON, or FOCUS 1.1 format
   fastify.get('/export', {

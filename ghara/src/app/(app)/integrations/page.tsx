@@ -31,7 +31,8 @@ export default function IntegrationsPage() {
     }).catch(() => setLoading(false))
   }, [])
 
-  const awsIntegration = integrations.find(i => i.type === 'aws' && i.status === 'connected')
+  const awsIntegrations = integrations.filter(i => i.type === 'aws' && i.status === 'connected')
+  const awsIntegration = awsIntegrations[0]
   const githubIntegration = integrations.find(i => i.type === 'github')
   const k8sConnected = k8s.filter(k => k.status === 'connected')
 
@@ -49,9 +50,16 @@ export default function IntegrationsPage() {
           name="AWS"
           description="IAM role for compliance scans and cost analysis"
           status={awsIntegration ? 'connected' : 'disconnected'}
-          detail={awsIntegration?.metadata?.accountId ? `Account: ${awsIntegration.metadata.accountId}` : undefined}
+          detail={
+            awsIntegrations.length > 1
+              ? `${awsIntegrations.length} accounts connected`
+              : awsIntegration?.metadata?.accountId
+                ? `Account: ${awsIntegration.metadata.accountId}`
+                : undefined
+          }
           lastSync={awsIntegration?.lastSyncAt}
           href="/integrations/aws"
+          badge={awsIntegrations.length > 1 ? 'Multi-account' : undefined}
         />
 
         {/* GitHub */}

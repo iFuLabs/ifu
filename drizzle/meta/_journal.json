@@ -232,6 +232,20 @@
       "when": 1776026649190,
       "tag": "0032_add_paystack_events",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1776026649191,
+      "tag": "0033_add_sso_connections",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1776026649192,
+      "tag": "0034_multi_account_aws",
+      "breakpoints": true
     }
   ]
 }

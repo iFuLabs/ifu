@@ -43,7 +43,19 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
     onProgress: async (pct) => job.updateProgress(pct)
   })
 
+  // Tag findings with account info for multi-account support
+  const accountId = creds.awsAccountId || integration.metadata?.accountId || 'unknown'
+  const accountLabel = integration.accountLabel || accountId
+  findings.accountId = accountId
+  findings.accountLabel = accountLabel
+  if (findings.waste) findings.waste = findings.waste.map(w => ({ ...w, accountId, accountLabel }))
+  if (findings.rightsizing) findings.rightsizing = findings.rightsizing.map(r => ({ ...r, accountId, accountLabel }))
+
   findings.aiSummary = await generateFinOpsSummary(findings, { orgId })
+
+  // Cache per-integration (for multi-account aggregation) and per-org (for backward compat)
+  const integrationCacheKey = `finops:findings:${orgId}:${integrationId}`
+  await redis.setex(integrationCacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)
 
   const cacheKey = `finops:findings:${orgId}:current-month`
   await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(findings)).catch(() => null)

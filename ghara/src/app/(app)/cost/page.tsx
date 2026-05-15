@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { TrendingDown, AlertTriangle, Zap, BarChart2, RefreshCw, ChevronDown, ChevronUp, DollarSign, ArrowRight, Check, Clock, X, Copy, MapPin } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts'
 import clsx from 'clsx'
+import Link from 'next/link'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
@@ -272,6 +273,13 @@ export default function CostPage() {
           <RefreshCw size={14} className={scanning ? 'animate-spin' : ''} />
           {scanning ? 'Stop scan' : 'Re-analyse'}
         </button>
+        <Link
+          href="/cost/allocation"
+          className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded text-muted hover:text-ink hover:bg-bg transition-all"
+        >
+          <BarChart2 size={14} />
+          Allocation
+        </Link>
         <button
           onClick={async () => {
             const res = await fetch(`${API_URL}/api/v1/finops/export?format=csv`, { credentials: 'include' })

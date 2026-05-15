@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 import useSWR from 'swr'
-import { Clock, ToggleLeft, ToggleRight, Save, Loader2, Shield, AlertCircle, User } from 'lucide-react'
+import Link from 'next/link'
+import { Clock, ToggleLeft, ToggleRight, Save, Loader2, Shield, AlertCircle, User, KeyRound } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
@@ -100,6 +101,18 @@ export default function SettingsPage() {
   return (
     <div style={{ padding: '32px', maxWidth: 680, margin: '0 auto' }}>
       <h1 style={{ fontSize: 22, fontWeight: 600, color: '#33063D', marginBottom: 24 }}>Settings</h1>
+
+      {/* SSO link */}
+      <Link href="/account/sso" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#FFFFFF', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 14, padding: '18px 24px', marginBottom: 20, boxShadow: '0 2px 12px rgba(51,6,61,0.03)', textDecoration: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <KeyRound size={16} style={{ color: '#8A63E6' }} />
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: '#33063D' }}>Single Sign-On (SSO)</div>
+            <div style={{ fontSize: 12, color: 'rgba(51,6,61,0.5)', marginTop: 2 }}>Configure SAML SSO for your organization</div>
+          </div>
+        </div>
+        <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, background: 'rgba(138,99,230,0.08)', color: '#8A63E6', fontWeight: 500 }}>Scale</span>
+      </Link>
 
       {/* Profile section */}
       <div style={{ background: '#FFFFFF', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 14, padding: '28px', marginBottom: 20, boxShadow: '0 2px 12px rgba(51,6,61,0.03)' }}>

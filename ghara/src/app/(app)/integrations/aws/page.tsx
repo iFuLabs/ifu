@@ -7,16 +7,18 @@ export default function AwsIntegrationPage() {
   const [step, setStep] = useState<'connect' | 'verify'>('connect')
   const [cfnData, setCfnData] = useState<any>(null)
   const [roleArn, setRoleArn] = useState('')
+  const [accountLabel, setAccountLabel] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [existing, setExisting] = useState<any>(null)
+  const [existing, setExisting] = useState<any[]>([])
+  const [showAddForm, setShowAddForm] = useState(false)
 
   useEffect(() => {
-    // Check for existing AWS integration
+    // Check for existing AWS integrations (may be multiple for Scale tier)
     api.integrations.list().then(integrations => {
-      const aws = integrations.find(i => i.type === 'aws' && i.status === 'connected')
-      if (aws) setExisting(aws)
+      const awsList = integrations.filter((i: any) => i.type === 'aws' && i.status === 'connected')
+      if (awsList.length > 0) setExisting(awsList)
     }).catch(() => {})
 
     // Get CloudFormation URL
@@ -40,7 +42,8 @@ export default function AwsIntegrationPage() {
       await api.integrations.connectAws({
         roleArn: roleArn.trim(),
         externalId: cfnData?.externalId || `ghara-${Date.now()}`,
-        product: 'ghara'
+        product: 'ghara',
+        accountLabel: accountLabel.trim() || undefined,
       })
       setSuccess(true)
     } catch (err: any) {
@@ -64,48 +67,65 @@ export default function AwsIntegrationPage() {
     )
   }
 
-  if (existing) {
+  if (existing.length > 0 && !showAddForm) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
         <h1 className="text-2xl font-semibold text-ink mb-2">AWS Integration</h1>
-        <div className="bg-card rounded-xl border border-border p-6 mt-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-green-light rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green" />
+        <p className="text-sm text-muted mb-4">
+          {existing.length === 1 ? '1 AWS account connected.' : `${existing.length} AWS accounts connected.`}
+        </p>
+
+        <div className="space-y-3">
+          {existing.map((aws: any) => (
+            <div key={aws.id} className="bg-card rounded-xl border border-border p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-green-light rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-green" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-ink">
+                    {aws.accountLabel || aws.metadata?.alias || 'AWS Account'}
+                  </p>
+                  <p className="text-sm text-muted font-mono">{aws.metadata?.accountId || 'Unknown'}</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted mb-3">
+                Both compliance and cost engines are reading from this connection.
+                {aws.lastSyncAt && ` Last synced: ${new Date(aws.lastSyncAt).toLocaleString()}`}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={async () => {
+                    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+                    await fetch(`${API_URL}/api/v1/integrations/${aws.id}/sync`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+                    alert('Scan triggered. Results will appear on your dashboard in 2-5 minutes.')
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-brand text-white hover:bg-brand-dark transition-colors"
+                >
+                  Re-sync
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Disconnect AWS account ${aws.metadata?.accountId}? This will stop scans for this account.`)) return
+                    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+                    await fetch(`${API_URL}/api/v1/integrations/${aws.id}`, { method: 'DELETE', credentials: 'include' })
+                    window.location.reload()
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-danger/30 text-danger hover:bg-danger-bg transition-colors"
+                >
+                  Disconnect
+                </button>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-ink">Connected</p>
-              <p className="text-sm text-muted">Account: {existing.metadata?.accountId || 'Unknown'}</p>
-            </div>
-          </div>
-          <p className="text-sm text-muted mb-4">
-            Both compliance and cost engines are reading from this connection.
-            {existing.lastSyncAt && ` Last synced: ${new Date(existing.lastSyncAt).toLocaleString()}`}
-          </p>
-          <div className="flex gap-3">
-            <button
-              onClick={async () => {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-                await fetch(`${API_URL}/api/v1/integrations/${existing.id}/sync`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-                alert('Scan triggered. Results will appear on your dashboard in 2-5 minutes.')
-              }}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-brand text-white hover:bg-brand-dark transition-colors"
-            >
-              Re-sync now
-            </button>
-            <button
-              onClick={async () => {
-                if (!confirm('Disconnect AWS? This will stop all scans until you reconnect.')) return
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-                await fetch(`${API_URL}/api/v1/integrations/${existing.id}`, { method: 'DELETE', credentials: 'include' })
-                window.location.reload()
-              }}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-danger/30 text-danger hover:bg-danger-bg transition-colors"
-            >
-              Disconnect
-            </button>
-          </div>
+          ))}
         </div>
+
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="mt-4 px-4 py-2 text-sm font-medium rounded-lg border border-border text-ink hover:bg-surface transition-colors"
+        >
+          + Add another AWS account
+        </button>
       </div>
     )
   }
@@ -172,22 +192,34 @@ export default function AwsIntegrationPage() {
           </div>
         )}
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={roleArn}
-            onChange={e => setRoleArn(e.target.value)}
-            placeholder="arn:aws:iam::123456789012:role/GharaReadOnlyRole"
-            className="flex-1 px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-          />
-          <button
-            onClick={handleConnect}
-            disabled={loading || !roleArn.trim()}
-            className="px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 flex items-center gap-2"
-          >
-            {loading && <Loader2 size={16} className="animate-spin" />}
-            Connect
-          </button>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-muted mb-1">Account label (optional)</label>
+            <input
+              type="text"
+              value={accountLabel}
+              onChange={e => setAccountLabel(e.target.value)}
+              placeholder="e.g. Production, Staging, Dev"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+            />
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={roleArn}
+              onChange={e => setRoleArn(e.target.value)}
+              placeholder="arn:aws:iam::123456789012:role/GharaReadOnlyRole"
+              className="flex-1 px-3 py-2 rounded-lg border border-border bg-bg text-ink text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+            />
+            <button
+              onClick={handleConnect}
+              disabled={loading || !roleArn.trim()}
+              className="px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {loading && <Loader2 size={16} className="animate-spin" />}
+              Connect
+            </button>
+          </div>
         </div>
       </div>
     </div>

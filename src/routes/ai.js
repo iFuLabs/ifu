@@ -4,6 +4,7 @@ import { eq, and, desc } from 'drizzle-orm'
 import { verifyToken, requireUser } from '../middleware/auth.js'
 import { requireAiFeatures } from '../middleware/plan.js'
 import { explainControlGap, explainControlGapStream, generateComplianceSummary } from '../services/ai.js'
+import { generateRemediation, generateRemediationStream, generateFinOpsRemediation } from '../services/ai-remediation.js'
 import { redis } from '../services/redis.js'
 import { acquire as acquireRateLimit } from '../services/rate-limit.js'
 
@@ -202,6 +203,195 @@ export default async function aiRoutes(fastify) {
     } catch (err) {
       fastify.log.error(err, 'AI summary failed')
       return reply.status(503).send({ error: 'AI Unavailable', message: 'Could not generate summary' })
+    }
+  })
+
+  // POST /api/v1/ai/remediate/:controlId
+  // Generate IaC remediation code for a failing control
+  fastify.post('/remediate/:controlId', {
+    preHandler: [verifyToken, requireUser, requireAiFeatures],
+    schema: {
+      tags: ['AI'],
+      security: [{ bearerAuth: [] }],
+      params: { type: 'object', properties: { controlId: { type: 'string' } } },
+      body: {
+        type: 'object',
+        properties: {
+          format: { type: 'string', enum: ['terraform', 'cli', 'cloudformation'], default: 'terraform' }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { controlId } = request.params
+    const format = request.body?.format || 'terraform'
+    const cacheKey = `ai:remediate:${request.orgId}:${controlId}:${format}`
+
+    // Check cache
+    const cached = await redis.get(cacheKey).catch(() => null)
+    if (cached) {
+      return reply.send({ ...JSON.parse(cached), cached: true })
+    }
+
+    // Rate limit: 5 remediation generations per org per minute
+    const limit = await acquireRateLimit(`ratelimit:ai-remediate:${request.orgId}`, 12)
+    if (!limit.ok) {
+      reply.header('Retry-After', String(limit.retryAfter))
+      return reply.status(429).send({
+        error: 'Too Many Requests',
+        message: `AI remediation is rate-limited. Try again in ${limit.retryAfter}s.`,
+        retryAfter: limit.retryAfter
+      })
+    }
+
+    // Load control + result
+    const def = await db.query.controlDefinitions.findFirst({
+      where: eq(controlDefinitions.controlId, controlId)
+    })
+    if (!def) return reply.status(404).send({ error: 'Control not found' })
+
+    const latest = await db.query.controlResults.findFirst({
+      where: and(
+        eq(controlResults.controlDefId, def.id),
+        eq(controlResults.orgId, request.orgId)
+      ),
+      orderBy: [desc(controlResults.checkedAt)]
+    })
+
+    if (!latest || latest.status === 'pass') {
+      return reply.status(400).send({ error: 'Control is passing — no remediation needed' })
+    }
+
+    const control = { ...def, ...latest, evidence: latest.evidence }
+    const org = {
+      id: request.orgId,
+      name: request.user.org?.name || 'Your Organization',
+    }
+
+    try {
+      const remediation = await generateRemediation({
+        control,
+        format,
+        org,
+        ctx: { orgId: request.orgId, userId: request.user.id }
+      })
+
+      // Cache for 12 hours
+      await redis.setex(cacheKey, 60 * 60 * 12, JSON.stringify(remediation)).catch(() => null)
+
+      return reply.send({ ...remediation, cached: false })
+    } catch (err) {
+      fastify.log.error(err, 'AI remediation generation failed')
+      return reply.status(503).send({
+        error: 'AI Unavailable',
+        message: 'Could not generate remediation code. Try again later.',
+      })
+    }
+  })
+
+  // GET /api/v1/ai/remediate/:controlId/stream
+  // Stream remediation code generation in real-time
+  fastify.get('/remediate/:controlId/stream', {
+    preHandler: [verifyToken, requireUser, requireAiFeatures],
+    schema: {
+      tags: ['AI'],
+      security: [{ bearerAuth: [] }],
+      params: { type: 'object', properties: { controlId: { type: 'string' } } },
+      querystring: {
+        type: 'object',
+        properties: {
+          format: { type: 'string', enum: ['terraform', 'cli', 'cloudformation'], default: 'terraform' }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { controlId } = request.params
+    const format = request.query.format || 'terraform'
+
+    const def = await db.query.controlDefinitions.findFirst({
+      where: eq(controlDefinitions.controlId, controlId)
+    })
+    if (!def) return reply.status(404).send({ error: 'Control not found' })
+
+    const latest = await db.query.controlResults.findFirst({
+      where: and(
+        eq(controlResults.controlDefId, def.id),
+        eq(controlResults.orgId, request.orgId)
+      ),
+      orderBy: [desc(controlResults.checkedAt)]
+    })
+
+    if (!latest || latest.status === 'pass') {
+      return reply.status(400).send({ error: 'Control is passing' })
+    }
+
+    const control = { ...def, ...latest, evidence: latest.evidence }
+    const org = { name: request.user.org?.name || 'Your Organization' }
+
+    reply.raw.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no'
+    })
+
+    try {
+      for await (const chunk of generateRemediationStream({ control, format, org })) {
+        reply.raw.write(`data: ${JSON.stringify({ text: chunk })}\n\n`)
+      }
+      reply.raw.write('data: [DONE]\n\n')
+    } catch (err) {
+      reply.raw.write(`data: ${JSON.stringify({ error: 'Stream failed' })}\n\n`)
+    } finally {
+      reply.raw.end()
+    }
+  })
+
+  // POST /api/v1/ai/remediate-finops
+  // Generate remediation for a FinOps waste finding
+  fastify.post('/remediate-finops', {
+    preHandler: [verifyToken, requireUser, requireAiFeatures],
+    schema: {
+      tags: ['AI'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['finding'],
+        properties: {
+          finding: { type: 'object', description: 'The waste/rightsizing finding object' },
+          format: { type: 'string', enum: ['cli', 'terraform'], default: 'cli' }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { finding, format } = request.body
+
+    if (!finding?.resourceId) {
+      return reply.status(400).send({ error: 'finding.resourceId is required' })
+    }
+
+    const cacheKey = `ai:remediate-finops:${request.orgId}:${finding.resourceId}:${format || 'cli'}`
+    const cached = await redis.get(cacheKey).catch(() => null)
+    if (cached) return reply.send({ ...JSON.parse(cached), cached: true })
+
+    const limit = await acquireRateLimit(`ratelimit:ai-remediate:${request.orgId}`, 12)
+    if (!limit.ok) {
+      reply.header('Retry-After', String(limit.retryAfter))
+      return reply.status(429).send({ error: 'Rate limited', retryAfter: limit.retryAfter })
+    }
+
+    try {
+      const remediation = await generateFinOpsRemediation({
+        finding,
+        format: format || 'cli',
+        org: { name: request.user.org?.name },
+        ctx: { orgId: request.orgId, userId: request.user.id }
+      })
+
+      await redis.setex(cacheKey, 60 * 60 * 12, JSON.stringify(remediation)).catch(() => null)
+      return reply.send({ ...remediation, cached: false })
+    } catch (err) {
+      fastify.log.error(err, 'FinOps remediation generation failed')
+      return reply.status(503).send({ error: 'AI Unavailable' })
     }
   })
 

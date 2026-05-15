@@ -38,9 +38,6 @@ export default function ControlDetailPage() {
   const [savingNotes, setSavingNotes] = useState(false)
   const [showEvidence, setShowEvidence] = useState(false)
   const [savingRem, setSavingRem] = useState(false)
-  const [aiExplanation, setAiExplanation] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState('')
 
   const updateRemediation = async (patch: { ownerId?: string | null; dueDate?: string | null; status?: RemediationStatus | null }) => {
     setSavingRem(true)
@@ -64,23 +61,6 @@ export default function ControlDetailPage() {
       })
       mutate()
     } finally { setSavingNotes(false) }
-  }
-
-  const fetchAiExplanation = async () => {
-    setAiLoading(true)
-    setAiError('')
-    try {
-      const res = await fetch(`${API_URL}/api/v1/ai/explain/${controlId}`, { method: 'POST', credentials: 'include' })
-      if (res.ok) {
-        const data = await res.json()
-        setAiExplanation(data.explanation || data.message || data.text || JSON.stringify(data))
-      } else {
-        const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }))
-        setAiError(err.message || err.error || 'AI suggestion failed')
-      }
-    } catch (err: any) {
-      setAiError(err.message || 'Network error')
-    } finally { setAiLoading(false) }
   }
 
   if (error) return (
@@ -155,20 +135,9 @@ export default function ControlDetailPage() {
         </div>
       )}
 
-      {/* AI Explanation */}
+      {/* AI Explanation & Remediation */}
       {control.status === 'fail' && (
-        <div className="bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-medium text-ink">AI Remediation</h2>
-            {!aiExplanation && (
-              <button onClick={fetchAiExplanation} disabled={aiLoading} className="text-xs text-accent hover:underline disabled:opacity-50">
-                {aiLoading ? 'Generating...' : 'Get AI suggestion'}
-              </button>
-            )}
-          </div>
-          {aiExplanation && <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">{aiExplanation}</p>}
-          {aiError && <p className="text-sm text-danger mt-2">{aiError}</p>}
-        </div>
+        <AiRemediationSection controlId={controlId} apiUrl={API_URL} />
       )}
 
       {/* Evidence */}
@@ -227,6 +196,169 @@ export default function ControlDetailPage() {
           <Save size={12} /> {savingNotes ? 'Saving...' : 'Save notes'}
         </button>
       </div>
+    </div>
+  )
+}
+
+function AiRemediationSection({ controlId, apiUrl }: { controlId: string; apiUrl: string }) {
+  const [explanation, setExplanation] = useState<any>(null)
+  const [remediation, setRemediation] = useState<any>(null)
+  const [format, setFormat] = useState<'terraform' | 'cli' | 'cloudformation'>('terraform')
+  const [loading, setLoading] = useState(false)
+  const [remLoading, setRemLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  const fetchExplanation = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch(`${apiUrl}/api/v1/ai/explain/${controlId}`, { method: 'POST', credentials: 'include' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Failed' }))
+        throw new Error(err.message)
+      }
+      setExplanation(await res.json())
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchRemediation = async () => {
+    setRemLoading(true)
+    setError('')
+    try {
+      const res = await fetch(`${apiUrl}/api/v1/ai/remediate/${controlId}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Failed' }))
+        throw new Error(err.message)
+      }
+      setRemediation(await res.json())
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setRemLoading(false)
+    }
+  }
+
+  const handleCopy = () => {
+    if (!remediation?.code) return
+    navigator.clipboard.writeText(remediation.code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium text-ink flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-accent inline-block" />
+          AI Remediation
+        </h2>
+        <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-accent/10 text-accent">Growth+</span>
+      </div>
+
+      {/* Explanation section */}
+      {!explanation && !loading && (
+        <button onClick={fetchExplanation} className="text-xs text-accent hover:underline">
+          Analyze this failure with AI →
+        </button>
+      )}
+      {loading && <p className="text-xs text-muted animate-pulse">Analyzing control failure...</p>}
+
+      {explanation && (
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm text-ink leading-relaxed">{explanation.summary}</p>
+            {explanation.businessImpact && (
+              <p className="text-xs text-muted mt-1">Impact: {explanation.businessImpact}</p>
+            )}
+          </div>
+
+          {explanation.steps?.length > 0 && (
+            <div className="space-y-1.5">
+              <h3 className="text-xs font-medium text-muted uppercase tracking-wider">Steps to fix</h3>
+              {explanation.steps.map((step: any) => (
+                <div key={step.order} className="flex gap-2 text-sm">
+                  <span className="font-mono text-xs text-accent flex-shrink-0 mt-0.5">{step.order}.</span>
+                  <div>
+                    <span className="font-medium text-ink">{step.title}</span>
+                    <span className="text-muted"> — {step.detail}</span>
+                    {step.effort && <span className="text-xs text-muted ml-1">({step.effort})</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Generate code button */}
+          <div className="pt-3 border-t border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-xs font-medium text-ink">Generate fix code</h3>
+              <select
+                value={format}
+                onChange={e => { setFormat(e.target.value as any); setRemediation(null) }}
+                className="text-xs border border-border rounded px-2 py-1 bg-bg text-ink"
+              >
+                <option value="terraform">Terraform</option>
+                <option value="cli">AWS CLI</option>
+                <option value="cloudformation">CloudFormation</option>
+              </select>
+              <button
+                onClick={fetchRemediation}
+                disabled={remLoading}
+                className="text-xs px-3 py-1 bg-accent text-white rounded hover:bg-accent/90 disabled:opacity-50"
+              >
+                {remLoading ? 'Generating...' : 'Generate'}
+              </button>
+            </div>
+
+            {remediation && (
+              <div className="space-y-2">
+                {remediation.explanation && (
+                  <p className="text-xs text-muted">{remediation.explanation}</p>
+                )}
+                <div className="relative">
+                  <pre className="bg-bg border border-border rounded-lg p-4 text-xs font-mono text-ink overflow-x-auto max-h-80 overflow-y-auto whitespace-pre-wrap">
+                    {remediation.code}
+                  </pre>
+                  <button
+                    onClick={handleCopy}
+                    className="absolute top-2 right-2 text-xs px-2 py-1 bg-card border border-border rounded text-muted hover:text-ink"
+                  >
+                    {copied ? '✓ Copied' : 'Copy'}
+                  </button>
+                </div>
+                {remediation.verifyCommand && (
+                  <div className="text-xs text-muted">
+                    <span className="font-medium">Verify: </span>
+                    <code className="bg-bg px-1.5 py-0.5 rounded font-mono">{remediation.verifyCommand}</code>
+                  </div>
+                )}
+                {remediation.warnings?.length > 0 && (
+                  <div className="bg-warn/5 border border-warn/20 rounded-lg p-3">
+                    <h4 className="text-xs font-medium text-warn mb-1">⚠️ Warnings</h4>
+                    <ul className="text-xs text-muted space-y-0.5">
+                      {remediation.warnings.map((w: string, i: number) => (
+                        <li key={i}>• {w}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {error && <p className="text-xs text-danger">{error}</p>}
     </div>
   )
 }

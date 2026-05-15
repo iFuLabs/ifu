@@ -85,6 +85,7 @@ export const integrations = pgTable('integrations', {
   // require their own AWS role with their own IAM policy; storing them on
   // separate rows prevents the products from overwriting each other.
   product:        text('product').notNull().default('comply'), // 'comply' | 'finops'
+  accountLabel:   text('account_label'),                       // Human-readable label (e.g. "Production", "Staging")
   status:         integrationStatusEnum('status').notNull().default('disconnected'),
   // Encrypted credentials stored as JSONB
   // AWS: { roleArn, externalId }
@@ -456,6 +457,34 @@ export const slackWorkspaces = pgTable('slack_workspaces', {
   index('idx_slack_workspaces_org_id').on(table.orgId)
 ])
 
+// ── SSO Connections ────────────────────────────────────────────────────────
+export const ssoConnections = pgTable('sso_connections', {
+  id:                       uuid('id').primaryKey().defaultRandom(),
+  orgId:                    uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  provider:                 text('provider').notNull().default('saml'),
+  displayName:              text('display_name').notNull(),
+  domain:                   text('domain').notNull(),
+  idpEntityId:              text('idp_entity_id'),
+  idpSsoUrl:                text('idp_sso_url'),
+  idpCertificate:           text('idp_certificate'),
+  idpMetadataUrl:           text('idp_metadata_url'),
+  spEntityId:               text('sp_entity_id').notNull(),
+  spAcsUrl:                 text('sp_acs_url').notNull(),
+  status:                   text('status').notNull().default('pending'),
+  domainVerified:           boolean('domain_verified').notNull().default(false),
+  domainVerificationToken:  text('domain_verification_token'),
+  enforceSso:               boolean('enforce_sso').notNull().default(false),
+  jitProvisioning:          boolean('jit_provisioning').notNull().default(true),
+  defaultRole:              text('default_role').notNull().default('member'),
+  lastUsedAt:               timestamp('last_used_at'),
+  createdAt:                timestamp('created_at').notNull().defaultNow(),
+  updatedAt:                timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('idx_sso_connections_org_id').on(table.orgId),
+  index('idx_sso_connections_domain').on(table.domain),
+  index('idx_sso_connections_status').on(table.status),
+])
+
 // ── Kubernetes Integrations (Phase 3) ──────────────────────────────────────
 export const kubernetesIntegrations = pgTable('kubernetes_integrations', {
   id:                uuid('id').primaryKey().defaultRandom(),
@@ -479,10 +508,15 @@ export const kubernetesIntegrations = pgTable('kubernetes_integrations', {
 
 // ── ALL Relations (after all table definitions) ────────────────────────────
 
+export const ssoConnectionsRelations = relations(ssoConnections, ({ one }) => ({
+  org: one(organizations, { fields: [ssoConnections.orgId], references: [organizations.id] })
+}))
+
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   users: many(users), integrations: many(integrations), controlResults: many(controlResults),
   scans: many(scans), evidenceItems: many(evidenceItems), vendors: many(vendors),
-  auditLogs: many(auditLog), invitations: many(invitations), subscriptions: many(subscriptions)
+  auditLogs: many(auditLog), invitations: many(invitations), subscriptions: many(subscriptions),
+  ssoConnections: many(ssoConnections)
 }))
 export const usersRelations = relations(users, ({ one, many }) => ({
   org: one(organizations, { fields: [users.orgId], references: [organizations.id] }),

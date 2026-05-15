@@ -98,6 +98,10 @@ export default async function integrationRoutes(fastify) {
             enum: ['comply', 'finops', 'ghara'],
             description: 'Which product this AWS role is for.',
             default: 'comply'
+          },
+          accountLabel: {
+            type: 'string',
+            description: 'Human-readable label for this account (e.g. "Production", "Staging")'
           }
         }
       }
@@ -105,16 +109,26 @@ export default async function integrationRoutes(fastify) {
   }, async (request, reply) => {
     const { roleArn, externalId } = request.body
     const product = request.body.product || 'comply'
+    const accountLabel = request.body.accountLabel || null
 
-    // Check for existing AWS integration for THIS product. Comply and FinOps
-    // each have their own row; we only update the row that matches this product.
-    const existing = await db.query.integrations.findFirst({
+    // Check for existing AWS integrations for THIS product.
+    // Scale-tier orgs can have multiple AWS accounts (multi-account).
+    const existingAll = await db.query.integrations.findMany({
       where: and(
         eq(integrations.orgId, request.orgId),
         eq(integrations.type, 'aws'),
-        eq(integrations.product, product)
+        eq(integrations.product, product),
+        eq(integrations.status, 'connected')
       )
     })
+
+    // Check tier for multi-account support
+    const { productEntitlements } = await import('../middleware/plan.js')
+    const entitlements = await productEntitlements(request.orgId)
+    const isScaleTier = entitlements.tier === 'scale'
+
+    // Non-scale orgs: update existing if one exists
+    const existing = (!isScaleTier && existingAll.length > 0) ? existingAll[0] : null
 
     // Validate that we can actually assume this role before saving
     const validation = await validateAwsRole(roleArn, externalId)
@@ -171,13 +185,14 @@ export default async function integrationRoutes(fastify) {
           status: 'connected',
           credentials: encryptedCredentials,
           metadata: { accountId: validation.accountId, alias: validation.accountAlias, externalId },
+          accountLabel: accountLabel || existing.accountLabel,
           lastError: null,
           lastErrorAt: null,
           disconnectedAt: null,
           updatedAt: new Date()
         })
         .where(eq(integrations.id, existing.id))
-        .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
+        .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata, accountLabel: integrations.accountLabel })
     } else {
       // Create new
       ;[integration] = await db
@@ -186,11 +201,12 @@ export default async function integrationRoutes(fastify) {
           orgId: request.orgId,
           type: 'aws',
           product,
+          accountLabel,
           status: 'connected',
           credentials: encryptedCredentials,
           metadata: { accountId: validation.accountId, alias: validation.accountAlias, externalId }
         })
-        .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata })
+        .returning({ id: integrations.id, type: integrations.type, status: integrations.status, metadata: integrations.metadata, accountLabel: integrations.accountLabel })
     }
 
     // Kick off an immediate scan for compliance + cost

@@ -559,6 +559,27 @@ export default async function authRoutes(fastify) {
     // Normalize email
     const normalizedEmail = body.email.trim().toLowerCase()
 
+    // Check if SSO is enforced for this email domain
+    const emailDomain = normalizedEmail.split('@')[1]
+    if (emailDomain) {
+      const { ssoConnections } = await import('../db/schema.js')
+      const { and: andOp } = await import('drizzle-orm')
+      const ssoConn = await db.query.ssoConnections.findFirst({
+        where: andOp(
+          eq(ssoConnections.domain, emailDomain),
+          eq(ssoConnections.status, 'active')
+        )
+      })
+      if (ssoConn?.enforceSso) {
+        return reply.status(403).send({
+          error: 'SSO Required',
+          message: `Your organization requires SSO login. Use "Sign in with SSO" instead.`,
+          code: 'SSO_ENFORCED',
+          provider: ssoConn.displayName,
+        })
+      }
+    }
+
     // Find user by email
     const user = await db.query.users.findFirst({
       where: eq(users.email, normalizedEmail),

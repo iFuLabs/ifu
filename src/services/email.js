@@ -31,24 +31,22 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
           <head>
             <meta charset="utf-8">
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #33063D; margin: 0; padding: 0; background-color: #F4F4F4; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .logo { margin-bottom: 10px; }
-              .logo img { height: 40px; width: auto; display: inline-block; }
-              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
-              .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .button:hover { background: #15402F; }
-              .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+              .header { background: #33063D; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 8px 0 0 0; }
+              .content { background: #ffffff; padding: 40px 30px; border: 1px solid #E5E5E5; border-top: none; border-radius: 0 0 8px 8px; }
+              .button { display: inline-block; background: #33063D; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 13px; }
               ul { padding-left: 20px; }
-              li { margin: 8px 0; }
+              li { margin: 8px 0; color: #33063D; }
+              .highlight { background: #DAC0FD; padding: 16px; border-radius: 6px; margin: 20px 0; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo"><span style="font-size: 22px; font-weight: 600; color: #FFFFFF; margin-right: 8px;">Ghara</span> <span style="font-size: 12px; color: rgba(255,255,255,0.7);">by</span> <img src="https://www.ifulabs.com/logos/white.svg" alt="iFU Labs" style="height: 24px; width: auto; vertical-align: middle; margin-left: 6px;" /></div>
+                <span style="font-size: 24px; font-weight: 600; color: #FFFFFF;">Ghara</span>
                 <p class="tagline">Cloud compliance and cost in one dashboard</p>
               </div>
               <div class="content">
@@ -56,25 +54,26 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
                 
                 <p>Thanks for signing up! Your organization <strong>${orgName}</strong> is now set up and ready to go.</p>
                 
-                <p><strong>What's next?</strong></p>
-                <ul>
-                  <li>Connect your AWS account to start automated compliance scanning</li>
-                  <li>Invite your team members to collaborate</li>
-                  <li>Explore your compliance dashboard</li>
-                </ul>
+                <div class="highlight">
+                  <p style="margin: 0; font-weight: 500;">What's next?</p>
+                  <ul style="margin: 10px 0 0 0;">
+                    <li>Connect your AWS account to start automated compliance scanning</li>
+                    <li>Invite your team members to collaborate</li>
+                    <li>Explore your compliance and cost dashboards</li>
+                  </ul>
+                </div>
                 
-                <p>You're on a 3-day free trial with full access to all features. Your card on file will be charged automatically when the trial ends — we'll email you a reminder the day before so there are no surprises. You can cancel any time from the billing dashboard.</p>
+                <p>You're on a <strong>7-day free trial</strong> with full access to all Growth features. Your card on file will be charged automatically when the trial ends — we'll email you a reminder the day before.</p>
 
-                <a href="${PORTAL_URL}" class="button">Go to Dashboard</a>
+                <a href="${PORTAL_URL}/dashboard" class="button">Go to Dashboard →</a>
                 
-                <p>If you have any questions, just reply to this email. We're here to help!</p>
+                <p style="color: #6b7280; font-size: 14px;">If you have any questions, just reply to this email. We're here to help.</p>
                 
-                <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
+                <p>Regards,<br>The Ghara Team</p>
               </div>
               <div class="footer">
-                <p><strong>Ghara by iFU Labs</strong></p>
-                <p style="margin: 5px 0;">Cloud compliance and cost in one dashboard</p>
-                <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
+                <p><strong>Ghara</strong> by iFU Labs</p>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 10px;">This email was sent to ${to}</p>
               </div>
             </div>
           </body>
@@ -120,24 +119,21 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
           <head>
             <meta charset="utf-8">
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #33063D; margin: 0; padding: 0; background-color: #F4F4F4; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .logo { margin-bottom: 10px; }
-              .logo img { height: 40px; width: auto; display: inline-block; }
-              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
-              .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .button:hover { background: #15402F; }
-              .info-box { background: #E8F2EE; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #1A4D3C; }
-              .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
-              .warning { color: #dc2626; font-size: 14px; margin-top: 20px; padding: 15px; background: #fef2f2; border-radius: 6px; border-left: 4px solid #dc2626; }
+              .header { background: #33063D; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 8px 0 0 0; }
+              .content { background: #ffffff; padding: 40px 30px; border: 1px solid #E5E5E5; border-top: none; border-radius: 0 0 8px 8px; }
+              .button { display: inline-block; background: #33063D; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .info-box { background: #DAC0FD; padding: 20px; border-radius: 6px; margin: 20px 0; }
+              .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 13px; }
+              .warning { color: #B42318; font-size: 14px; margin-top: 20px; padding: 15px; background: #FEF3F2; border-radius: 6px; border-left: 4px solid #B42318; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo"><span style="font-size: 22px; font-weight: 600; color: #FFFFFF; margin-right: 8px;">Ghara</span> <span style="font-size: 12px; color: rgba(255,255,255,0.7);">by</span> <img src="https://www.ifulabs.com/logos/white.svg" alt="iFU Labs" style="height: 24px; width: auto; vertical-align: middle; margin-left: 6px;" /></div>
+                <span style="font-size: 24px; font-weight: 600; color: #FFFFFF;">Ghara</span>
                 <p class="tagline">${productTagline}</p>
               </div>
               <div class="content">
@@ -153,7 +149,7 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
                 
                 <p>Click the button below to accept the invitation and create your account:</p>
                 
-                <a href="${inviteUrl}" class="button">Accept Invitation</a>
+                <a href="${inviteUrl}" class="button">Accept Invitation →</a>
                 
                 <div class="warning">
                   ⚠️ This invitation link will expire on ${expiryDate}.
@@ -161,12 +157,11 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
                 
                 <p>If you weren't expecting this invitation, you can safely ignore this email.</p>
                 
-                <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
+                <p>Regards,<br>The Ghara Team</p>
               </div>
               <div class="footer">
-                <p><strong>${productName}</strong></p>
-                <p style="margin: 5px 0;">${productTagline}</p>
-                <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This invitation was sent to ${to}</p>
+                <p><strong>Ghara</strong> by iFU Labs</p>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 10px;">This invitation was sent to ${to}</p>
               </div>
             </div>
           </body>
@@ -203,23 +198,20 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
           <head>
             <meta charset="utf-8">
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9fafb; }
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #33063D; margin: 0; padding: 0; background-color: #F4F4F4; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #1A4D3C; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .logo { margin-bottom: 10px; }
-              .logo img { height: 40px; width: auto; display: inline-block; }
-              .tagline { font-size: 14px; color: #E8F2EE; opacity: 0.9; margin: 0; }
-              .content { background: #ffffff; padding: 40px 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #1A4D3C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .button:hover { background: #15402F; }
-              .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
-              .warning { color: #dc2626; font-size: 14px; margin-top: 20px; padding: 15px; background: #fef2f2; border-radius: 6px; border-left: 4px solid #dc2626; }
+              .header { background: #33063D; color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+              .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 8px 0 0 0; }
+              .content { background: #ffffff; padding: 40px 30px; border: 1px solid #E5E5E5; border-top: none; border-radius: 0 0 8px 8px; }
+              .button { display: inline-block; background: #33063D; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
+              .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 13px; }
+              .warning { color: #B42318; font-size: 14px; margin-top: 20px; padding: 15px; background: #FEF3F2; border-radius: 6px; border-left: 4px solid #B42318; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo"><span style="font-size: 22px; font-weight: 600; color: #FFFFFF; margin-right: 8px;">Ghara</span> <span style="font-size: 12px; color: rgba(255,255,255,0.7);">by</span> <img src="https://www.ifulabs.com/logos/white.svg" alt="iFU Labs" style="height: 24px; width: auto; vertical-align: middle; margin-left: 6px;" /></div>
+                <span style="font-size: 24px; font-weight: 600; color: #FFFFFF;">Ghara</span>
                 <p class="tagline">Cloud compliance and cost in one dashboard</p>
               </div>
               <div class="content">
@@ -229,7 +221,7 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
                 
                 <p>Click the button below to reset your password:</p>
                 
-                <a href="${resetUrl}" class="button">Reset Password</a>
+                <a href="${resetUrl}" class="button">Reset Password →</a>
                 
                 <div class="warning">
                   ⚠️ This link will expire in 1 hour for security reasons.
@@ -237,12 +229,11 @@ export async function sendPasswordResetEmail({ to, name, resetUrl }) {
                 
                 <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
                 
-                <p>Best regards,<br>The ${COMPANY_NAME} Team</p>
+                <p>Regards,<br>The Ghara Team</p>
               </div>
               <div class="footer">
-                <p><strong>Ghara by iFU Labs</strong></p>
-                <p style="margin: 5px 0;">Cloud compliance and cost in one dashboard</p>
-                <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">This email was sent to ${to}</p>
+                <p><strong>Ghara</strong> by iFU Labs</p>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 10px;">This email was sent to ${to}</p>
               </div>
             </div>
           </body>
@@ -299,7 +290,8 @@ export async function sendControlDriftEmail({ to, orgName, drifted, scanId }) {
                 <ul style="padding-left: 20px;">${controlList}</ul>
                 ${moreText}
                 <a href="${PORTAL_URL}" style="display: inline-block; background: #33063D; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0; font-weight: 500;">View in Dashboard</a>
-                <p style="color: #6b7280; font-size: 13px; margin-top: 20px;">Scan ID: ${scanId}</p>
+                <p style="margin-top: 20px;">Regards,<br>The Ghara Team</p>
+                <p style="color: #6b7280; font-size: 13px; margin-top: 12px;">Scan ID: ${scanId}</p>
               </div>
             </div>
           </body>
@@ -372,7 +364,7 @@ export async function sendTrialChargeReminderEmail({ to, name, orgName, planName
           <div class="header"><h1>Your trial ends tomorrow</h1></div>
           <div class="content">
             <p>Hi ${name || 'there'},</p>
-            <p>This is a friendly reminder that <strong>${orgName}</strong>'s 3-day free trial of ${planName} ends tomorrow. Your payment method on file will be charged automatically — no action needed if you'd like to continue.</p>
+            <p>This is a friendly reminder that <strong>${orgName}</strong>'s free trial of ${planName} ends tomorrow. Your payment method on file will be charged automatically — no action needed if you'd like to continue.</p>
 
             <div class="summary">
               <div class="summary-row"><span>Plan</span><strong>${planName}</strong></div>
@@ -384,6 +376,7 @@ export async function sendTrialChargeReminderEmail({ to, name, orgName, planName
             <p>If you'd like to cancel before the charge, you can do so from the billing dashboard.</p>
             <a href="${cancelUrl}" class="button">Manage subscription</a>
 
+            <p>Regards,<br>The Ghara Team</p>
             <p class="meta">This is a billing notification you cannot opt out of while you have an active subscription. Reply to this email if you need help.</p>
           </div>
           <div class="footer"><p><strong>Ghara by iFU Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
@@ -423,6 +416,7 @@ export async function sendChargeReceiptEmail({ to, name, orgName, planName, amou
             </div>
 
             <a href="${billingUrl}" class="button">View billing</a>
+            <p>Regards,<br>The Ghara Team</p>
             <p class="meta">Need a tax invoice? Reply and we'll send one over.</p>
           </div>
           <div class="footer"><p><strong>Ghara by iFU Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
@@ -455,6 +449,7 @@ export async function sendPaymentFailedEmail({ to, name, orgName, planName, amou
             <p>We weren't able to process the latest payment of <strong>${formatCurrency(amount, currency)}</strong> for <strong>${orgName}</strong>'s ${planName} subscription${last4 ? ` on card •••• ${last4}` : ''}.</p>
             <p>Paystack will automatically retry the charge over the next few days. To avoid interruption to your scans and dashboards, please update your payment method now.</p>
             <a href="${billingUrl}" class="button">Update payment method</a>
+            <p>Regards,<br>The Ghara Team</p>
             <p class="meta">If your card is fine and this looks like a mistake, reply to this email and we'll investigate.</p>
           </div>
           <div class="footer"><p><strong>Ghara by iFU Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>
@@ -494,6 +489,7 @@ export async function sendIntegrationFailureEmail({ to, name, orgName, integrati
             <p>Until this is resolved, your dashboards will show stale data and scheduled scans will keep failing.</p>
             <a href="${url}" class="button">Reconnect ${typeLabel}</a>
 
+            <p>Regards,<br>The Ghara Team</p>
             <p class="meta">You'll receive at most one of these per day. If the next scan succeeds, you won't hear from us again.</p>
           </div>
           <div class="footer"><p><strong>Ghara by iFU Labs</strong></p><p style="font-size: 12px; color: #9ca3af;">${to}</p></div>

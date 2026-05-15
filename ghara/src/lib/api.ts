@@ -42,7 +42,7 @@ export const api = {
   integrations: {
     list: () => apiFetch<Integration[]>('/api/v1/integrations'),
     getAwsSetupInfo: () => apiFetch<AwsSetupInfo>('/api/v1/integrations/aws/setup-info'),
-    connectAws: (body: { roleArn: string; externalId: string; product?: string }) =>
+    connectAws: (body: { roleArn: string; externalId: string; product?: string; accountLabel?: string }) =>
       apiFetch<Integration>('/api/v1/integrations/aws', { method: 'POST', body: JSON.stringify(body) }),
     disconnect: (id: string) =>
       apiFetch<void>(`/api/v1/integrations/${id}`, { method: 'DELETE' }),
