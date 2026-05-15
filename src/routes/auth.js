@@ -421,7 +421,7 @@ export default async function authRoutes(fastify) {
         role: 'owner'
       }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
 
-      reply.setCookie('token', token, COOKIE_OPTIONS)
+      reply.setCookie('auth_token', token, COOKIE_OPTIONS)
 
       await auditAction({
         orgId: result.org.id,
