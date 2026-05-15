@@ -531,6 +531,16 @@ export default async function authRoutes(fastify) {
       }
     })
 
+    // Send welcome email now that signup is fully complete
+    const welcomeResult = await sendWelcomeEmail({
+      to: txn.customer?.email || request.user?.email,
+      name: request.user?.name || metadata.name || '',
+      orgName: request.user?.org?.name || metadata.orgName || ''
+    })
+    if (!welcomeResult.success) {
+      fastify.log.warn({ error: welcomeResult.error }, 'Failed to send welcome email after card capture')
+    }
+
     return reply.send({
       status: 'success',
       subscriptionCode: subResult.subscriptionCode,
