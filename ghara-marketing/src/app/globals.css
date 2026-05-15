@@ -184,6 +184,17 @@ img { max-width: 100%; display: block; }
 .mobile-nav .mobile-nav-actions {
   margin-top: 20px; display: flex; flex-direction: column; gap: 10px;
 }
+.mobile-nav .mobile-nav-actions a {
+  display: flex; padding: 14px 24px; border-bottom: none;
+  text-align: center; justify-content: center; border-radius: 8px;
+  font-size: 15px; font-weight: 500;
+}
+.mobile-nav .mobile-nav-actions .btn-primary {
+  background: var(--plum); color: #FFFFFF;
+}
+.mobile-nav .mobile-nav-actions .btn-secondary {
+  background: var(--lavender); color: var(--plum); border-radius: 8px;
+}
 
 /* ── Buttons ───────────────────────────────────────────────────── */
 .btn-primary {
@@ -205,6 +216,16 @@ img { max-width: 100%; display: block; }
   font-family: var(--sans);
 }
 .btn-secondary:hover { background: var(--lavender-deep); }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; background: transparent; color: var(--plum);
+  font-size: 14px; font-weight: 500; border-radius: 8px;
+  text-decoration: none; border: 1px solid var(--border-strong);
+  cursor: pointer; transition: background 0.2s;
+  font-family: var(--sans);
+}
+.btn-ghost:hover { background: var(--surface); }
 
 /* ── Brand gradients (per iFU Labs brand book) ─────────────────── */
 .gradient-plum-iris    { background: linear-gradient(135deg, #33063D 0%, #8A63E6 100%); }
