@@ -162,8 +162,6 @@ export default function InvitePage() {
               </div>
             )}
           </div>
-            />
-          </div>
 
           {error && (
             <div style={{ padding: '12px 16px', background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 10, fontSize: 14, color: '#B91C1C', marginBottom: 20 }}>
