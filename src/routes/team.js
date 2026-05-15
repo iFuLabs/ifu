@@ -11,7 +11,7 @@ import { getMaxTeamMembers } from '../middleware/plan.js'
 const inviteSchema = z.object({
   email: z.string().email(),
   role: z.enum(['admin', 'member', 'auditor']),
-  product: z.enum(['comply', 'finops']).optional().default('comply')
+  product: z.enum(['comply', 'finops', 'ghara']).optional().default('ghara')
 })
 
 export default async function teamRoutes(fastify) {
@@ -139,7 +139,7 @@ export default async function teamRoutes(fastify) {
       orgId: request.orgId,
       email: body.email,
       role: body.role,
-      product: body.product || 'comply',
+      product: body.product || 'ghara',
       invitedBy: request.user.id,
       token,
       expiresAt
@@ -162,7 +162,7 @@ export default async function teamRoutes(fastify) {
         where: eq(organizations.id, request.orgId) 
       })).name,
       role: body.role,
-      product: body.product || 'comply',
+      product: body.product || 'ghara',
       inviteUrl,
       expiresAt: invitation.expiresAt
     })
@@ -309,7 +309,7 @@ export default async function teamRoutes(fastify) {
     return reply.send({
       email: invitation.email,
       role: invitation.role,
-      product: invitation.product || 'comply',
+      product: invitation.product || 'ghara',
       organization: invitation.org,
       invitedBy: invitation.inviter,
       expiresAt: invitation.expiresAt
@@ -431,7 +431,7 @@ export default async function teamRoutes(fastify) {
         name: newUser.name,
         role: newUser.role
       },
-      product: invitation.product || 'comply',
+      product: invitation.product || 'ghara',
       message: 'Invitation accepted successfully'
     })
   })

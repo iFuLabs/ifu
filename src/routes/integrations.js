@@ -97,7 +97,7 @@ export default async function integrationRoutes(fastify) {
             type: 'string',
             enum: ['comply', 'finops', 'ghara'],
             description: 'Which product this AWS role is for.',
-            default: 'comply'
+            default: 'ghara'
           },
           accountLabel: {
             type: 'string',
@@ -108,7 +108,7 @@ export default async function integrationRoutes(fastify) {
     }
   }, async (request, reply) => {
     const { roleArn, externalId } = request.body
-    const product = request.body.product || 'comply'
+    const product = request.body.product || 'ghara'
     const accountLabel = request.body.accountLabel || null
 
     // Check for existing AWS integrations for THIS product.

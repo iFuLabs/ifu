@@ -286,7 +286,7 @@ export default async function billingRoutes(fastify) {
     }).where(eq(organizations.id, request.orgId))
 
     // Create or update subscription in the new subscriptions table
-    const product = PLAN_TO_PRODUCT[plan] || 'comply'
+    const product = PLAN_TO_PRODUCT[plan] || 'ghara'
     await upsertSubscription({
       orgId: request.orgId,
       product,

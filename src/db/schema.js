@@ -67,7 +67,7 @@ export const invitations = pgTable('invitations', {
   invitedBy:      uuid('invited_by').references(() => users.id, { onDelete: 'set null' }),
   token:          text('token').notNull().unique(),         // unique invite token
   status:         invitationStatusEnum('status').notNull().default('pending'),
-  product:        text('product').default('comply'),        // comply | finops
+  product:        text('product').default('ghara'),        // comply | finops | ghara
   expiresAt:      timestamp('expires_at').notNull(),
   acceptedAt:     timestamp('accepted_at'),
   createdAt:      timestamp('created_at').notNull().defaultNow()
@@ -84,7 +84,7 @@ export const integrations = pgTable('integrations', {
   // Which iFu product this integration belongs to. Comply and FinOps each
   // require their own AWS role with their own IAM policy; storing them on
   // separate rows prevents the products from overwriting each other.
-  product:        text('product').notNull().default('comply'), // 'comply' | 'finops'
+  product:        text('product').notNull().default('ghara'), // 'comply' | 'finops' | 'ghara'
   accountLabel:   text('account_label'),                       // Human-readable label (e.g. "Production", "Staging")
   status:         integrationStatusEnum('status').notNull().default('disconnected'),
   // Encrypted credentials stored as JSONB
