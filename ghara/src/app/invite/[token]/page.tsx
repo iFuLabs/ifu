@@ -38,6 +38,22 @@ export default function InvitePage() {
       setError('Password must be at least 8 characters')
       return
     }
+    if (!/[A-Z]/.test(password)) {
+      setError('Password must include an uppercase letter')
+      return
+    }
+    if (!/[a-z]/.test(password)) {
+      setError('Password must include a lowercase letter')
+      return
+    }
+    if (!/[0-9]/.test(password)) {
+      setError('Password must include a number')
+      return
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      setError('Password must include a special character')
+      return
+    }
 
     setAccepting(true)
     setError('')
@@ -128,6 +144,24 @@ export default function InvitePage() {
               style={{ width: '100%', padding: '14px 16px', fontSize: 15, background: '#FFFFFF', border: `1px solid ${BORDER}`, borderRadius: 10, color: PLUM, outline: 'none', transition: 'all 0.2s', fontFamily: "'Aeonik', sans-serif" }}
               onFocus={e => { e.target.style.borderColor = IRIS; e.target.style.boxShadow = '0 0 0 3px rgba(138,99,230,0.15)' }}
               onBlur={e => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = 'none' }}
+            />
+            {password && (
+              <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
+                {[
+                  { label: '8+ characters', met: password.length >= 8 },
+                  { label: 'Uppercase', met: /[A-Z]/.test(password) },
+                  { label: 'Lowercase', met: /[a-z]/.test(password) },
+                  { label: 'Number', met: /[0-9]/.test(password) },
+                  { label: 'Special char', met: /[^A-Za-z0-9]/.test(password) },
+                ].map(r => (
+                  <span key={r.label} style={{ fontSize: 11, color: r.met ? '#067647' : 'rgba(51,6,61,0.4)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: r.met ? '#067647' : 'rgba(51,6,61,0.15)' }} />
+                    {r.label}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
             />
           </div>
 
