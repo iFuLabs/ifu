@@ -13,6 +13,7 @@ import { auditAction } from '../services/audit.js'
 import { dispatchWebhook } from '../services/webhooks.js'
 import { logger } from '../services/logger.js'
 import { notifyIntegrationFailure } from '../services/integration-failure-notify.js'
+import { sendK8sAlertEmail } from '../services/email.js'
 
 const CACHE_TTL = 60 * 60 * 6
 
@@ -95,11 +96,19 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
           // Cache K8s data
           const k8sCacheKey = `finops:k8s:${orgId}:${k8s.clusterName}`
           await redis.setex(k8sCacheKey, CACHE_TTL, JSON.stringify(k8sData)).catch(() => null)
+
+          // ── K8s alerts ────────────────────────────────────────────────────
+          await sendK8sAlerts({ orgId, k8s, k8sData, redis, db }).catch(e =>
+            logger.warn({ err: e.message }, 'K8s alert dispatch failed — non-fatal')
+          )
         } catch (k8sErr) {
           logger.warn({ err: k8sErr.message, cluster: k8s.clusterName, orgId }, 'K8s scan failed for cluster')
           await db.update(kubernetesIntegrations)
             .set({ lastError: k8sErr.message, lastErrorAt: new Date(), updatedAt: new Date() })
             .where(eq(kubernetesIntegrations.id, k8s.id))
+
+          // Alert on connection failure
+          await sendK8sConnectionFailureAlert({ orgId, k8s, errorMessage: k8sErr.message, db }).catch(() => {})
         }
       }
       // EKS Container Insights — pull cost data via CloudWatch
@@ -143,11 +152,18 @@ export const finopsWorker = new Worker('finops-scans', async (job) => {
           // Cache K8s data
           const k8sCacheKey = `finops:k8s:${orgId}:${k8s.clusterName}`
           await redis.setex(k8sCacheKey, CACHE_TTL, JSON.stringify(k8sData)).catch(() => null)
+
+          // ── K8s alerts ────────────────────────────────────────────────────
+          await sendK8sAlerts({ orgId, k8s, k8sData, redis, db }).catch(e =>
+            logger.warn({ err: e.message }, 'K8s alert dispatch failed — non-fatal')
+          )
         } catch (k8sErr) {
           logger.warn({ err: k8sErr.message, cluster: k8s.clusterName, orgId }, 'Container Insights scan failed for cluster')
           await db.update(kubernetesIntegrations)
             .set({ lastError: k8sErr.message, lastErrorAt: new Date(), updatedAt: new Date() })
             .where(eq(kubernetesIntegrations.id, k8s.id))
+
+          await sendK8sConnectionFailureAlert({ orgId, k8s, errorMessage: k8sErr.message, db }).catch(() => {})
         }
       }
     }
@@ -329,4 +345,108 @@ async function assumeRole(roleArn, externalId) {
     secretAccessKey: Credentials.SecretAccessKey,
     sessionToken: Credentials.SessionToken
   }
+}
+
+// ── K8s Alert Helpers ──────────────────────────────────────────────────────
+
+/**
+ * After a successful K8s scan, check for:
+ * 1. New high-severity findings (not seen in previous scan)
+ * 2. Cost spike vs previous cached total
+ * If any alerts, email all org admins/owners.
+ */
+async function sendK8sAlerts({ orgId, k8s, k8sData, redis, db }) {
+  const alerts = []
+
+  // 1. New high-severity findings
+  const prevCacheKey = `finops:k8s:prev:${orgId}:${k8s.clusterName}`
+  const prevRaw = await redis.get(prevCacheKey).catch(() => null)
+  const prevFindings = prevRaw ? (JSON.parse(prevRaw).findings || []) : []
+  const prevKeys = new Set(prevFindings.map(f => `${f.type}:${f.resource}`))
+
+  const newHighFindings = (k8sData.findings || []).filter(f =>
+    (f.severity === 'high' || f.severity === 'medium') &&
+    !prevKeys.has(`${f.type}:${f.resource}`)
+  )
+
+  for (const f of newHighFindings) {
+    alerts.push({ type: 'new_finding', severity: f.severity, detail: f.detail })
+  }
+
+  // 2. Cost spike — compare total estimated cost vs previous scan
+  const currentTotal = (k8sData.namespaces || []).reduce((sum, window) => {
+    return sum + Object.values(window || {}).reduce((s, alloc) => {
+      return s + (alloc.cpuCost || 0) + (alloc.ramCost || 0) + (alloc.pvCost || 0)
+    }, 0)
+  }, 0)
+
+  const prevTotalRaw = await redis.get(`finops:k8s:total:${orgId}:${k8s.clusterName}`).catch(() => null)
+  const prevTotal = prevTotalRaw ? parseFloat(prevTotalRaw) : null
+
+  if (prevTotal !== null && prevTotal > 0) {
+    const spikePct = ((currentTotal - prevTotal) / prevTotal) * 100
+    if (spikePct > 30) { // >30% increase triggers alert
+      alerts.push({
+        type: 'cost_spike',
+        detail: `Cluster cost jumped ${spikePct.toFixed(0)}% vs previous scan ($${prevTotal.toFixed(2)} → $${currentTotal.toFixed(2)} over 7d)`
+      })
+    }
+  }
+
+  // Store current total for next comparison
+  await redis.setex(`finops:k8s:total:${orgId}:${k8s.clusterName}`, 60 * 60 * 24 * 8, String(currentTotal)).catch(() => null)
+  // Store current findings snapshot for next comparison
+  await redis.setex(prevCacheKey, 60 * 60 * 24 * 8, JSON.stringify(k8sData)).catch(() => null)
+
+  if (alerts.length === 0) return
+
+  // Get org admins/owners to notify
+  const { users, organizations } = await import('../db/schema.js')
+  const { eq: eqOp, inArray: inArrayOp } = await import('drizzle-orm')
+  const admins = await db.query.users.findMany({
+    where: eqOp(users.orgId, orgId),
+    columns: { email: true, name: true, role: true }
+  })
+  const recipients = admins.filter(u => ['owner', 'admin'].includes(u.role)).map(u => u.email)
+  if (recipients.length === 0) return
+
+  const org = await db.query.organizations.findFirst({ where: eqOp(organizations.id, orgId) })
+
+  await sendK8sAlertEmail({
+    to: recipients,
+    orgName: org?.name || orgId,
+    clusterName: k8s.clusterName,
+    alerts
+  })
+}
+
+/**
+ * Send a connection failure alert — debounced to once per 24h per cluster.
+ */
+async function sendK8sConnectionFailureAlert({ orgId, k8s, errorMessage, db }) {
+  const debounceKey = `k8s:alert:conn:${orgId}:${k8s.clusterName}`
+  // Use the existing redis instance from the module scope
+  const alreadySent = await redis.get(debounceKey).catch(() => null)
+  if (alreadySent) return
+
+  const { users, organizations } = await import('../db/schema.js')
+  const { eq: eqOp } = await import('drizzle-orm')
+  const admins = await db.query.users.findMany({
+    where: eqOp(users.orgId, orgId),
+    columns: { email: true, role: true }
+  })
+  const recipients = admins.filter(u => ['owner', 'admin'].includes(u.role)).map(u => u.email)
+  if (recipients.length === 0) return
+
+  const org = await db.query.organizations.findFirst({ where: eqOp(organizations.id, orgId) })
+
+  await sendK8sAlertEmail({
+    to: recipients,
+    orgName: org?.name || orgId,
+    clusterName: k8s.clusterName,
+    alerts: [{ type: 'connection_failure', detail: `Could not reach cluster: ${errorMessage}` }]
+  })
+
+  // Debounce — don't send again for 24h
+  await redis.setex(debounceKey, 60 * 60 * 24, '1').catch(() => null)
 }

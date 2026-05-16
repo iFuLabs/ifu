@@ -34,10 +34,15 @@ export default function ControlDetailPage() {
   const controlId = params.controlId as string
   const { data: control, error, mutate } = useSWR(['control', controlId], () => fetchControl(controlId))
   const { data: members } = useSWR('team-members', fetchMembers)
+  const { data: me } = useSWR('me', () =>
+    fetch(`${API_URL}/api/v1/auth/me`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+  )
   const [notes, setNotes] = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
   const [showEvidence, setShowEvidence] = useState(false)
   const [savingRem, setSavingRem] = useState(false)
+
+  const isAuditor = me?.user?.role === 'auditor'
 
   const updateRemediation = async (patch: { ownerId?: string | null; dueDate?: string | null; status?: RemediationStatus | null }) => {
     setSavingRem(true)
@@ -156,6 +161,7 @@ export default function ControlDetailPage() {
       )}
 
       {/* Remediation */}
+      {!isAuditor && (
       <div className="bg-card border border-border rounded-xl p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-ink">Remediation</h2>
@@ -187,8 +193,10 @@ export default function ControlDetailPage() {
           <button onClick={() => updateRemediation({ status: 'completed' })} disabled={savingRem || control.remediationStatus === 'completed'} className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent text-white rounded hover:bg-accent/90 disabled:opacity-50"><CheckCheck size={12} /> Mark complete</button>
         </div>
       </div>
+      )}
 
       {/* Notes */}
+      {!isAuditor && (
       <div className="bg-card border border-border rounded-xl p-5">
         <h2 className="text-sm font-medium text-ink mb-3">Notes</h2>
         <textarea value={notes || control.notes || ''} onChange={e => setNotes(e.target.value)} placeholder="Add context, remediation steps, or exemption reasons..." rows={4} className="w-full text-sm border border-border rounded p-3 text-ink placeholder:text-muted focus:outline-none focus:border-accent/50 resize-none bg-bg" />
@@ -196,6 +204,7 @@ export default function ControlDetailPage() {
           <Save size={12} /> {savingNotes ? 'Saving...' : 'Save notes'}
         </button>
       </div>
+      )}
     </div>
   )
 }

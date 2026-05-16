@@ -343,3 +343,43 @@ export async function sendIntegrationFailureEmail({ to, name, orgName, integrati
     return { success: true, data }
   } catch (err) { console.error('integration failure email error:', err); return { success: false, error: err.message } }
 }
+
+/**
+ * K8s cost alert email — sent when new high-severity findings, cost spikes,
+ * or connection failures are detected during a scheduled K8s scan.
+ */
+export async function sendK8sAlertEmail({ to, orgName, clusterName, alerts }) {
+  try {
+    const alertList = alerts.map(a => {
+      if (a.type === 'connection_failure') {
+        return `<li style="margin:8px 0;color:#B42318;"><strong>Connection failure</strong> — ${a.detail}</li>`
+      }
+      if (a.type === 'cost_spike') {
+        return `<li style="margin:8px 0;"><strong>Cost spike</strong> — ${a.detail}</li>`
+      }
+      return `<li style="margin:8px 0;"><strong>${a.severity?.toUpperCase() || 'HIGH'}</strong> — ${a.detail}</li>`
+    }).join('')
+
+    const { data, error } = await resend.emails.send({
+      ...getEmailConfig('alerts'),
+      to: Array.isArray(to) ? to : [to],
+      subject: `⚠️ Kubernetes alert — ${clusterName} (${orgName})`,
+      html: emailWrap(
+        emailHeader(),
+        `
+        <div style="background:#FEF3F2;border-left:4px solid #B42318;padding:16px;border-radius:6px;margin-bottom:20px;">
+          <p style="margin:0;color:#B42318;font-weight:600;">${alerts.length} alert${alerts.length > 1 ? 's' : ''} detected on cluster "${clusterName}"</p>
+        </div>
+        <p>Hi team,</p>
+        <p>Ghara detected the following issues on the <strong>${clusterName}</strong> cluster for <strong>${orgName}</strong>:</p>
+        <ul style="padding-left:20px;">${alertList}</ul>
+        <a href="${PORTAL_URL}/cost" class="button">View in Dashboard →</a>
+        <p style="margin-top:20px;">Regards,<br>The Ghara Team</p>
+        `,
+        `<div class="footer"><p><strong>Ghara</strong> by iFU Labs</p></div>`
+      )
+    })
+    if (error) { console.error('K8s alert email failed:', error); return { success: false, error } }
+    return { success: true, data }
+  } catch (err) { console.error('K8s alert email error:', err); return { success: false, error: err.message } }
+}
