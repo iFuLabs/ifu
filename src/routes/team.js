@@ -133,6 +133,15 @@ export default async function teamRoutes(fastify) {
       })
     }
 
+    // Remove any old accepted/expired invitation for this email+org so the
+    // unique index (org_id, email) doesn't block re-inviting the same address
+    await db.delete(invitations).where(
+      and(
+        eq(invitations.email, body.email),
+        eq(invitations.orgId, request.orgId)
+      )
+    )
+
     // Generate unique token
     const token = crypto.randomBytes(32).toString('hex')
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
@@ -258,6 +267,14 @@ export default async function teamRoutes(fastify) {
     }
 
     await db.delete(users).where(and(eq(users.id, id), eq(users.orgId, request.orgId)))
+
+    // Also clean up their invitation row so they can be re-invited later
+    await db.delete(invitations).where(
+      and(
+        eq(invitations.email, member.email),
+        eq(invitations.orgId, request.orgId)
+      )
+    )
 
     await auditAction({
       orgId: request.orgId,
