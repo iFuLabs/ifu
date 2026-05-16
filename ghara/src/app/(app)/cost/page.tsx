@@ -84,9 +84,14 @@ export default function CostPage() {
   const [progress, setProgress] = useState(0)
   const [statusMsg, setStatusMsg] = useState('')
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'waste' | 'rightsizing' | 'commitments' | 'alerts'>('waste')
+  const [activeTab, setActiveTab] = useState<'waste' | 'rightsizing' | 'commitments' | 'alerts' | 'kubernetes'>('waste')
   const [states, setStates] = useState<Map<string, RecommendationStateData>>(new Map())
   const [stateFilter, setStateFilter] = useState<RecommendationState | 'all'>('all')
+
+  // Kubernetes state
+  const [k8sData, setK8sData] = useState<any>(null)
+  const [selectedCluster, setSelectedCluster] = useState<string>('')
+  const [k8sLoading, setK8sLoading] = useState(false)
   const esRef = useRef<EventSource | null>(null)
 
   // F-A3: Anomalies and budgets state
@@ -138,6 +143,24 @@ export default function CostPage() {
       }
     }).catch(() => {})
   }, [])
+
+  // Load Kubernetes data when tab is selected
+  useEffect(() => {
+    if (activeTab !== 'kubernetes') return
+    setK8sLoading(true)
+    fetch(`${API_URL}/api/v1/finops/kubernetes`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setK8sData(data)
+          if (!selectedCluster && data.clusters?.length > 0) {
+            setSelectedCluster(data.clusters[0].clusterName)
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setK8sLoading(false))
+  }, [activeTab])
 
   const runScan = () => {
     setScanning(true)
@@ -471,7 +494,7 @@ export default function CostPage() {
           {/* Tabs and filter */}
           <div className="flex items-center justify-between">
             <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
-              {(['waste', 'rightsizing', 'commitments', 'alerts'] as const).map(tab => (
+              {(['waste', 'rightsizing', 'commitments', 'alerts', 'kubernetes'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -486,6 +509,7 @@ export default function CostPage() {
                   {tab === 'rightsizing' && `Rightsizing (${filterItems(findings.rightsizing, 'rightsizing').length})`}
                   {tab === 'commitments' && `Commitments`}
                   {tab === 'alerts' && `Alerts (${alertAnomalies.length})`}
+                  {tab === 'kubernetes' && `Kubernetes`}
                 </button>
               ))}
             </div>
@@ -748,6 +772,149 @@ export default function CostPage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Kubernetes tab */}
+          {activeTab === 'kubernetes' && (
+            <div className="space-y-4">
+              {k8sLoading ? (
+                <div className="bg-card border border-border rounded-xl px-6 py-12 text-center">
+                  <RefreshCw size={20} className="animate-spin text-muted mx-auto mb-2" />
+                  <p className="text-sm text-muted">Loading cluster data...</p>
+                </div>
+              ) : !k8sData || k8sData.clusters.length === 0 ? (
+                <div className="bg-card border border-border rounded-xl px-6 py-12 text-center">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(51,6,61,0.06)' }}>
+                    <BarChart2 size={22} style={{ color: '#33063D' }} />
+                  </div>
+                  <p className="text-sm font-medium text-ink mb-1">No Kubernetes clusters connected</p>
+                  <p className="text-xs text-muted mb-4">Connect a cluster to see per-namespace cost breakdown</p>
+                  <a href="/integrations/kubernetes" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-white" style={{ background: '#33063D' }}>
+                    Connect cluster
+                  </a>
+                </div>
+              ) : (
+                <>
+                  {/* Cluster selector */}
+                  {k8sData.clusters.length > 1 && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium text-muted">Cluster:</span>
+                      <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
+                        {k8sData.clusters.map((c: any) => (
+                          <button
+                            key={c.clusterName}
+                            onClick={() => setSelectedCluster(c.clusterName)}
+                            className={clsx(
+                              'px-3 py-1.5 text-xs font-medium rounded transition-all',
+                              selectedCluster === c.clusterName ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink'
+                            )}
+                          >
+                            {c.clusterName}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Per-cluster view */}
+                  {k8sData.clusters
+                    .filter((c: any) => !selectedCluster || c.clusterName === selectedCluster)
+                    .map((cluster: any) => (
+                      <div key={cluster.clusterName} className="space-y-3">
+                        {/* Cluster header */}
+                        <div className="bg-card border border-border rounded-xl p-5">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-ink">{cluster.clusterName}</span>
+                              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface text-muted">{cluster.connectionType === 'eks_container_insights' ? 'Container Insights' : 'OpenCost'}</span>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-mono text-lg font-semibold text-ink">
+                                ${cluster.totalEstimatedCost.toFixed(2)}
+                                <span className="text-xs text-muted font-normal ml-1">/ 7d</span>
+                              </div>
+                              <div className="text-xs text-muted">~${(cluster.totalEstimatedCost * 30 / 7).toFixed(0)}/mo estimated</div>
+                            </div>
+                          </div>
+                          {cluster.lastSyncedAt && (
+                            <p className="text-xs text-muted">
+                              Last synced {new Date(cluster.lastSyncedAt).toLocaleString()}
+                            </p>
+                          )}
+                          {cluster.lastError && (
+                            <p className="text-xs text-danger mt-1">⚠ {cluster.lastError}</p>
+                          )}
+                          {!cluster.hasData && !cluster.lastError && (
+                            <p className="text-xs text-muted mt-1">No data yet — waiting for first scan</p>
+                          )}
+                        </div>
+
+                        {/* Namespace breakdown */}
+                        {cluster.namespaces.length > 0 && (
+                          <div className="bg-card border border-border rounded-xl overflow-hidden">
+                            <div className="px-5 py-3 border-b border-border">
+                              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">Cost by namespace</h3>
+                            </div>
+                            <div className="divide-y divide-border">
+                              {cluster.namespaces.map((ns: any) => (
+                                <div key={ns.namespace} className="flex items-center gap-4 px-5 py-3">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-ink font-mono">{ns.namespace}</p>
+                                    <div className="flex gap-3 mt-0.5 text-xs text-muted font-mono">
+                                      <span>{ns.cpuCores.toFixed(2)} CPU cores</span>
+                                      <span>{ns.memGb.toFixed(2)} GB RAM</span>
+                                      {ns.cpuUsagePct > 0 && (
+                                        <span className={clsx(ns.cpuUsagePct < 20 ? 'text-danger' : ns.cpuUsagePct < 50 ? 'text-warn' : 'text-green')}>
+                                          {ns.cpuUsagePct}% utilization
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="text-right flex-shrink-0">
+                                    <div className="font-mono text-sm font-medium text-ink">${ns.estimatedCost.toFixed(2)}</div>
+                                    <div className="text-xs text-muted">7d</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* K8s waste findings */}
+                        {cluster.findings.length > 0 && (
+                          <div className="space-y-2">
+                            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted px-1">Findings</h3>
+                            {cluster.findings.map((f: any, i: number) => (
+                              <div key={i} className="bg-card border border-border rounded-xl p-4">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className={clsx(
+                                        'font-mono text-[10px] px-1.5 py-0.5 rounded capitalize',
+                                        f.severity === 'high' ? 'text-danger bg-danger/10' :
+                                        f.severity === 'medium' ? 'text-warn bg-warn/10' : 'text-muted bg-border'
+                                      )}>{f.severity}</span>
+                                      <span className="text-xs font-mono text-muted">{f.type?.replace(/_/g, ' ')}</span>
+                                    </div>
+                                    <p className="text-sm text-ink">{f.detail}</p>
+                                    <p className="text-xs text-muted mt-1">{f.recommendation}</p>
+                                  </div>
+                                  {f.monthlySavings > 0 && (
+                                    <div className="text-right flex-shrink-0">
+                                      <div className="font-mono text-sm font-medium text-green">${f.monthlySavings.toFixed(0)}/mo</div>
+                                      <div className="text-xs text-muted">potential savings</div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </>
+              )}
             </div>
           )}
         </>

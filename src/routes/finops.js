@@ -635,6 +635,98 @@ export default async function finopsRoutes(fastify) {
 
     return reply.send(result)
   })
+
+  // GET /api/v1/finops/kubernetes
+  // Returns cached Kubernetes cost data for all connected clusters (or a specific one)
+  fastify.get('/kubernetes', {
+    preHandler: [verifyToken, requireUser],
+    schema: {
+      tags: ['FinOps'],
+      security: [{ bearerAuth: [] }],
+      querystring: {
+        type: 'object',
+        properties: {
+          cluster: { type: 'string', description: 'Filter by cluster name' }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { kubernetesIntegrations } = await import('../db/schema.js')
+
+    // Get all connected K8s integrations for this org
+    const k8sList = await db.query.kubernetesIntegrations.findMany({
+      where: and(
+        eq(kubernetesIntegrations.orgId, request.orgId),
+        eq(kubernetesIntegrations.status, 'connected')
+      ),
+      columns: {
+        id: true,
+        clusterName: true,
+        connectionType: true,
+        lastSyncedAt: true,
+        lastError: true,
+      }
+    })
+
+    if (k8sList.length === 0) {
+      return reply.send({ clusters: [], total: 0 })
+    }
+
+    // Filter by cluster name if requested
+    const targetClusters = request.query.cluster
+      ? k8sList.filter(k => k.clusterName === request.query.cluster)
+      : k8sList
+
+    // Fetch cached data for each cluster from Redis
+    const results = await Promise.all(
+      targetClusters.map(async (k8s) => {
+        const cacheKey = `finops:k8s:${request.orgId}:${k8s.clusterName}`
+        const cached = await redis.get(cacheKey).catch(() => null)
+        const data = cached ? JSON.parse(cached) : null
+
+        // Summarise namespace costs from raw data
+        let namespaceSummary = []
+        let totalEstimatedCost = 0
+
+        if (data?.namespaces) {
+          for (const window of data.namespaces) {
+            for (const [name, alloc] of Object.entries(window || {})) {
+              if (name === '__idle__' || name === '__unallocated__') continue
+              const cost = (alloc.cpuCost || 0) + (alloc.ramCost || 0) + (alloc.pvCost || 0) + (alloc.networkCost || 0)
+              totalEstimatedCost += cost
+              namespaceSummary.push({
+                namespace: name,
+                estimatedCost: Math.round(cost * 100) / 100,
+                cpuCores: alloc.cpuCoreRequestAverage || 0,
+                cpuUsagePct: alloc.cpuCoreRequestAverage > 0
+                  ? Math.round(((alloc.cpuCoreUsageAverage || 0) / alloc.cpuCoreRequestAverage) * 100)
+                  : 0,
+                memGb: Math.round(((alloc.ramByteRequestAverage || 0) / (1024 ** 3)) * 100) / 100,
+              })
+            }
+          }
+          namespaceSummary.sort((a, b) => b.estimatedCost - a.estimatedCost)
+        }
+
+        return {
+          clusterName: k8s.clusterName,
+          connectionType: k8s.connectionType,
+          lastSyncedAt: k8s.lastSyncedAt,
+          lastError: k8s.lastError,
+          hasData: !!data,
+          totalEstimatedCost: Math.round(totalEstimatedCost * 100) / 100,
+          namespaces: namespaceSummary,
+          findings: data?.findings || [],
+          fetchedAt: data?.fetchedAt || null,
+        }
+      })
+    )
+
+    return reply.send({
+      clusters: results,
+      total: results.length,
+    })
+  })
 }
 
 // ── Helper ─────────────────────────────────────────────────────────────────
