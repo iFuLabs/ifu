@@ -61,13 +61,20 @@ export default function BillingPage() {
   const [billing, setBilling] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [upgrading, setUpgrading] = useState<string | null>(null)
+  const [me, setMe] = useState<any>(null)
 
   useEffect(() => {
-    fetch(`${API_URL}/api/v1/billing`, { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { setBilling(data); setLoading(false) })
-      .catch(() => setLoading(false))
+    Promise.all([
+      fetch(`${API_URL}/api/v1/billing`, { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+      fetch(`${API_URL}/api/v1/auth/me`, { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+    ]).then(([billingData, meData]) => {
+      setBilling(billingData)
+      setMe(meData)
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [])
+
+  const isOwner = me?.user?.role === 'owner'
 
   const handleUpgrade = async (planId: string) => {
     if (planId === 'ghara-scale') {
@@ -137,7 +144,7 @@ export default function BillingPage() {
                 </p>
               )}
             </div>
-            {billing.status === 'active' && (
+            {billing.status === 'active' && isOwner && (
               <button
                 onClick={async () => {
                   if (!confirm('Are you sure you want to cancel your subscription? You will lose access at the end of the current billing period.')) return
@@ -197,7 +204,7 @@ export default function BillingPage() {
                 >
                   Talk to us
                 </button>
-              ) : (
+              ) : isOwner ? (
                 <button
                   onClick={() => handleUpgrade(plan.id)}
                   disabled={upgrading === plan.id}
@@ -207,6 +214,10 @@ export default function BillingPage() {
                   {upgrading === plan.id && <Loader2 size={14} className="animate-spin" />}
                   {billing?.status === 'trialing' || billing?.status === 'expired' ? 'Upgrade' : 'Switch plan'}
                 </button>
+              ) : (
+                <div className="py-2.5 rounded-lg text-center text-xs text-muted border border-border">
+                  Contact your owner to upgrade
+                </div>
               )}
             </div>
           )

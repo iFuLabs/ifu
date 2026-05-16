@@ -1,28 +1,44 @@
 'use client'
 import { useState } from 'react'
 import useSWR from 'swr'
-import { Users, UserPlus, Mail, Shield, MoreVertical, X, Trash2, Copy, Check } from 'lucide-react'
+import { Users, UserPlus, Mail, Shield, X, Trash2, Copy, Check, ChevronDown } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
+const ROLE_LABELS: Record<string, string> = {
+  owner:   'Owner',
+  admin:   'Admin',
+  member:  'Member',
+  auditor: 'Auditor',
+}
+
+const ROLE_STYLES: Record<string, string> = {
+  owner:   'bg-accent-light text-accent',
+  admin:   'bg-warn/10 text-warn',
+  member:  'bg-border text-muted',
+  auditor: 'bg-border text-muted',
+}
+
 export default function TeamPage() {
+  const { data: me } = useSWR('me', () =>
+    fetch(`${API_URL}/api/v1/auth/me`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+  )
+
   const { data: members, mutate: mutateMembers } = useSWR('/api/v1/team/members', () =>
-    fetch(`${API_URL}/api/v1/team/members`, {
-      credentials: 'include'
-    }).then(r => r.json())
+    fetch(`${API_URL}/api/v1/team/members`, { credentials: 'include' }).then(r => r.json())
   )
 
   const { data: invitations, mutate: mutateInvitations } = useSWR('/api/v1/team/invitations', () =>
-    fetch(`${API_URL}/api/v1/team/invitations`, {
-      credentials: 'include'
-    }).then(r => r.json())
+    fetch(`${API_URL}/api/v1/team/invitations`, { credentials: 'include' }).then(r => r.json())
   )
 
   const { data: planFeatures } = useSWR('/api/v1/plan/features', () =>
-    fetch(`${API_URL}/api/v1/plan/features`, {
-      credentials: 'include'
-    }).then(r => r.json())
+    fetch(`${API_URL}/api/v1/plan/features`, { credentials: 'include' }).then(r => r.json())
   )
+
+  const currentUser = me?.user
+  const isOwner = currentUser?.role === 'owner'
+  const isAdmin = isOwner || currentUser?.role === 'admin'
 
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
@@ -31,40 +47,25 @@ export default function TeamPage() {
   const [error, setError] = useState('')
   const [inviteUrl, setInviteUrl] = useState('')
   const [copied, setCopied] = useState(false)
+  const [changingRole, setChangingRole] = useState<string | null>(null)
 
   const handleInvite = async () => {
-    if (!inviteEmail.trim()) {
-      setError('Email is required')
-      return
-    }
-
-    setInviting(true)
-    setError('')
-
+    if (!inviteEmail.trim()) { setError('Email is required'); return }
+    setInviting(true); setError('')
     try {
       const response = await fetch(`${API_URL}/api/v1/team/invite`, {
-        method: 'POST',
-        credentials: 'include',
+        method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: inviteEmail,
-          role: inviteRole,
-          product: 'ghara'
-        })
+        body: JSON.stringify({ email: inviteEmail, role: inviteRole, product: 'ghara' })
       })
-
       if (!response.ok) {
         const err = await response.json()
-        
-        // Check for plan upgrade required
         if (err.code === 'PLAN_UPGRADE_REQUIRED') {
           setError(`${err.message} You have ${err.currentMembers} of ${err.maxMembers} members.`)
           return
         }
-        
         throw new Error(err.message || 'Failed to send invitation')
       }
-
       const data = await response.json()
       setInviteUrl(data.inviteUrl)
       mutateInvitations()
@@ -84,28 +85,35 @@ export default function TeamPage() {
 
   const handleRemoveMember = async (memberId: string) => {
     if (!confirm('Are you sure you want to remove this team member?')) return
-
     try {
-      await fetch(`${API_URL}/api/v1/team/members/${memberId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
+      await fetch(`${API_URL}/api/v1/team/members/${memberId}`, { method: 'DELETE', credentials: 'include' })
       mutateMembers()
-    } catch (err) {
-      alert('Failed to remove member')
-    }
+    } catch { alert('Failed to remove member') }
   }
 
   const handleCancelInvite = async (inviteId: string) => {
     try {
-      await fetch(`${API_URL}/api/v1/team/invitations/${inviteId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
+      await fetch(`${API_URL}/api/v1/team/invitations/${inviteId}`, { method: 'DELETE', credentials: 'include' })
       mutateInvitations()
-    } catch (err) {
-      alert('Failed to cancel invitation')
-    }
+    } catch { alert('Failed to cancel invitation') }
+  }
+
+  const handleRoleChange = async (memberId: string, newRole: 'admin' | 'member') => {
+    setChangingRole(memberId)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/organizations/members/${memberId}/role`, {
+        method: 'PATCH', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole })
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(err.message || 'Failed to change role')
+        return
+      }
+      mutateMembers()
+    } catch { alert('Failed to change role') }
+    finally { setChangingRole(null) }
   }
 
   return (
@@ -115,13 +123,15 @@ export default function TeamPage() {
           <h1 className="font-serif text-2xl font-normal text-ink">Team</h1>
           <p className="text-sm text-muted mt-0.5">Manage team members and their access</p>
         </div>
-        <button
-          onClick={() => setShowInviteModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent-mid transition-all"
-        >
-          <UserPlus size={15} />
-          Invite member
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent-mid transition-all"
+          >
+            <UserPlus size={15} />
+            Invite member
+          </button>
+        )}
       </div>
 
       {/* Plan limit warning */}
@@ -132,13 +142,10 @@ export default function TeamPage() {
             <div className="flex-1">
               <p className="text-sm font-medium text-ink mb-1">Team member limit reached</p>
               <p className="text-xs text-muted mb-3">
-                Your {planFeatures.plan} plan is limited to {planFeatures.features.maxTeamMembers} team members. 
+                Your {planFeatures.plan} plan is limited to {planFeatures.features.maxTeamMembers} team members.
                 Upgrade to Growth for unlimited members.
               </p>
-              <a 
-                href="/billing"
-                className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-white text-xs rounded-lg hover:bg-accent-mid transition-all"
-              >
+              <a href="/billing" className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-white text-xs rounded-lg hover:bg-accent-mid transition-all">
                 Upgrade to Growth
               </a>
             </div>
@@ -160,44 +167,66 @@ export default function TeamPage() {
         </div>
 
         <div className="divide-y divide-border">
-          {members?.map((member: any) => (
-            <div key={member.id} className="flex items-center gap-4 px-5 py-4">
-              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white font-medium flex-shrink-0">
-                {member.email[0].toUpperCase()}
+          {members?.map((member: any) => {
+            const isSelf = member.id === currentUser?.id
+            const canChangeRole = isOwner && !isSelf && member.role !== 'owner'
+            const canRemove = isAdmin && !isSelf && member.role !== 'owner' &&
+              !(member.role === 'admin' && !isOwner)
+
+            return (
+              <div key={member.id} className="flex items-center gap-4 px-5 py-4">
+                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white font-medium flex-shrink-0">
+                  {(member.name || member.email)[0].toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-ink">
+                    {member.name || member.email.split('@')[0]}
+                    {isSelf && <span className="ml-1.5 text-xs text-muted">(you)</span>}
+                  </div>
+                  <div className="text-xs text-muted">{member.email}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Role badge / dropdown for owner */}
+                  {canChangeRole ? (
+                    <div className="relative">
+                      <select
+                        value={member.role}
+                        disabled={changingRole === member.id}
+                        onChange={e => handleRoleChange(member.id, e.target.value as 'admin' | 'member')}
+                        className="appearance-none text-xs px-2 py-1 pr-6 rounded font-mono border border-border bg-bg text-ink focus:outline-none focus:border-accent cursor-pointer disabled:opacity-50"
+                      >
+                        <option value="admin">admin</option>
+                        <option value="member">member</option>
+                      </select>
+                      <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                    </div>
+                  ) : (
+                    <span className={`text-xs px-2 py-1 rounded font-mono ${ROLE_STYLES[member.role] || ROLE_STYLES.member}`}>
+                      {ROLE_LABELS[member.role] || member.role}
+                    </span>
+                  )}
+                  {canRemove && (
+                    <button
+                      onClick={() => handleRemoveMember(member.id)}
+                      className="p-1 text-muted hover:text-danger transition-colors"
+                      title="Remove member"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-ink">{member.name || member.email.split('@')[0]}</div>
-                <div className="text-xs text-muted">{member.email}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs px-2 py-1 rounded font-mono ${
-                  member.role === 'owner' ? 'bg-accent-light text-accent' :
-                  member.role === 'admin' ? 'bg-warn/10 text-warn' :
-                  'bg-border text-muted'
-                }`}>
-                  {member.role}
-                </span>
-                {member.role !== 'owner' && (
-                  <button
-                    onClick={() => handleRemoveMember(member.id)}
-                    className="p-1 text-muted hover:text-danger transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
-      {/* Pending invitations */}
-      {invitations && invitations.length > 0 && (
+      {/* Pending invitations — only visible to admins */}
+      {isAdmin && invitations && invitations.length > 0 && (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-border">
             <h2 className="text-sm font-medium text-ink">Pending invitations ({invitations.length})</h2>
           </div>
-
           <div className="divide-y divide-border">
             {invitations.map((invite: any) => (
               <div key={invite.id} className="flex items-center gap-4 px-5 py-4">
@@ -209,13 +238,8 @@ export default function TeamPage() {
                   <div className="text-xs text-muted">Invited {new Date(invite.createdAt).toLocaleDateString()}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-1 bg-warn/10 text-warn rounded font-mono">
-                    {invite.role}
-                  </span>
-                  <button
-                    onClick={() => handleCancelInvite(invite.id)}
-                    className="p-1 text-muted hover:text-danger transition-colors"
-                  >
+                  <span className="text-xs px-2 py-1 bg-warn/10 text-warn rounded font-mono">{invite.role}</span>
+                  <button onClick={() => handleCancelInvite(invite.id)} className="p-1 text-muted hover:text-danger transition-colors">
                     <X size={14} />
                   </button>
                 </div>
@@ -242,19 +266,16 @@ export default function TeamPage() {
                   <div>
                     <label className="block text-sm font-medium text-ink mb-2">Email address</label>
                     <input
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
+                      type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
                       placeholder="colleague@company.com"
                       className="w-full px-3 py-2 bg-bg border border-border rounded-lg text-sm text-ink focus:outline-none focus:border-accent"
                     />
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-ink mb-2">Role</label>
                     <select
                       value={inviteRole}
-                      onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member' | 'auditor')}
+                      onChange={e => setInviteRole(e.target.value as 'admin' | 'member' | 'auditor')}
                       className="w-full px-3 py-2 bg-bg border border-border rounded-lg text-sm text-ink focus:outline-none focus:border-accent"
                     >
                       <option value="member">Member — Can view and manage controls</option>
@@ -262,26 +283,15 @@ export default function TeamPage() {
                       <option value="auditor">Auditor — Read-only access to all data</option>
                     </select>
                   </div>
-
                   {error && (
-                    <div className="px-3 py-2 bg-danger/10 border border-danger/20 rounded-lg text-xs text-danger">
-                      {error}
-                    </div>
+                    <div className="px-3 py-2 bg-danger/10 border border-danger/20 rounded-lg text-xs text-danger">{error}</div>
                   )}
                 </div>
-
                 <div className="flex gap-2 mt-6">
-                  <button
-                    onClick={() => { setShowInviteModal(false); setError('') }}
-                    className="flex-1 px-4 py-2 border border-border rounded-lg text-sm text-muted hover:text-ink transition-colors"
-                  >
+                  <button onClick={() => { setShowInviteModal(false); setError('') }} className="flex-1 px-4 py-2 border border-border rounded-lg text-sm text-muted hover:text-ink transition-colors">
                     Cancel
                   </button>
-                  <button
-                    onClick={handleInvite}
-                    disabled={inviting}
-                    className="flex-1 px-4 py-2 bg-accent text-white rounded-lg text-sm hover:bg-accent-mid transition-colors disabled:opacity-50"
-                  >
+                  <button onClick={handleInvite} disabled={inviting} className="flex-1 px-4 py-2 bg-accent text-white rounded-lg text-sm hover:bg-accent-mid transition-colors disabled:opacity-50">
                     {inviting ? 'Sending...' : 'Send invitation'}
                   </button>
                 </div>
@@ -294,22 +304,14 @@ export default function TeamPage() {
                   </div>
                   <p className="text-sm text-ink mb-2">Invitation sent!</p>
                   <p className="text-xs text-muted mb-4">Share this link with {inviteEmail}</p>
-
                   <div className="flex items-center gap-2 p-3 bg-bg border border-border rounded-lg mb-4">
                     <code className="flex-1 text-xs text-muted truncate">{inviteUrl}</code>
-                    <button
-                      onClick={handleCopyLink}
-                      className="flex-shrink-0 p-1 text-accent hover:text-accent-mid transition-colors"
-                    >
+                    <button onClick={handleCopyLink} className="flex-shrink-0 p-1 text-accent hover:text-accent-mid transition-colors">
                       {copied ? <Check size={16} /> : <Copy size={16} />}
                     </button>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => { setShowInviteModal(false); setInviteUrl(''); setInviteEmail('') }}
-                  className="w-full px-4 py-2 bg-accent text-white rounded-lg text-sm hover:bg-accent-mid transition-colors"
-                >
+                <button onClick={() => { setShowInviteModal(false); setInviteUrl(''); setInviteEmail('') }} className="w-full px-4 py-2 bg-accent text-white rounded-lg text-sm hover:bg-accent-mid transition-colors">
                   Done
                 </button>
               </>

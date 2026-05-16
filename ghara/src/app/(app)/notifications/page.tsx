@@ -19,22 +19,26 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [prefs, setPrefs] = useState<Record<string, { email: boolean; slack: boolean }>>({})
+  const [me, setMe] = useState<any>(null)
 
   useEffect(() => {
     Promise.all([
       fetch(`${API_URL}/api/v1/slack`, { credentials: 'include' }).then(r => r.ok ? r.json() : null),
       fetch(`${API_URL}/api/v1/slack/channels`, { credentials: 'include' }).then(r => r.ok ? r.json() : []),
-    ]).then(([slackData, channelData]) => {
+      fetch(`${API_URL}/api/v1/auth/me`, { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+    ]).then(([slackData, channelData, meData]) => {
       setSlack(slackData)
       setChannels(channelData || [])
+      setMe(meData)
       if (slackData?.channelId) setSelectedChannel(slackData.channelId)
-      // Default all events to email=true, slack=true if connected
       const defaults: Record<string, { email: boolean; slack: boolean }> = {}
       EVENTS.forEach(e => { defaults[e.key] = { email: true, slack: !!slackData?.active } })
       setPrefs(defaults)
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
+
+  const isAdmin = me?.user?.role === 'owner' || me?.user?.role === 'admin'
 
   const handleSlackInstall = async () => {
     try {
@@ -100,7 +104,7 @@ export default function NotificationsPage() {
             <span className="flex items-center gap-1 text-xs font-medium" style={{ color: '#067647' }}>
               <CheckCircle size={12} /> Connected
             </span>
-          ) : (
+          ) : isAdmin ? (
             <button
               onClick={handleSlackInstall}
               className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-border hover:bg-surface transition-colors"
@@ -108,6 +112,8 @@ export default function NotificationsPage() {
               <ExternalLink size={12} />
               Connect Slack
             </button>
+          ) : (
+            <span className="text-xs text-muted">Admin only</span>
           )}
         </div>
 

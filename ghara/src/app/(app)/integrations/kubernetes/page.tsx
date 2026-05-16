@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Box, CheckCircle, AlertCircle, Loader2, Copy, Terminal } from 'lucide-react'
+import { Box, CheckCircle, AlertCircle, Loader2, Copy, Terminal, Lock } from 'lucide-react'
+import useSWR from 'swr'
 
 export default function KubernetesIntegrationPage() {
   const [connectionType, setConnectionType] = useState<'opencost' | 'eks_container_insights'>('opencost')
@@ -13,6 +14,11 @@ export default function KubernetesIntegrationPage() {
   const [existing, setExisting] = useState<any[]>([])
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+
+  const { data: me } = useSWR('me', () =>
+    fetch(`${API_URL}/api/v1/auth/me`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+  )
+  const isAdmin = me?.user?.role === 'owner' || me?.user?.role === 'admin'
 
   useEffect(() => {
     fetch(`${API_URL}/api/v1/integrations/kubernetes`, { credentials: 'include' })
@@ -69,6 +75,18 @@ helm install opencost opencost/opencost \\
           <p className="text-muted text-sm">
             Kubernetes cost data will appear in your Cost dashboard after the next scan cycle.
           </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="p-6 max-w-2xl mx-auto">
+        <h1 className="text-2xl font-semibold text-ink mb-2">Kubernetes Integration</h1>
+        <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-4 py-3 text-sm text-muted">
+          <Lock size={14} className="flex-shrink-0" />
+          Only admins and owners can connect or manage integrations.
         </div>
       </div>
     )

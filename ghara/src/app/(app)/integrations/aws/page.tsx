@@ -1,7 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Cloud, ExternalLink, CheckCircle, AlertCircle, Loader2, Copy } from 'lucide-react'
+import { Cloud, ExternalLink, CheckCircle, AlertCircle, Loader2, Copy, Lock } from 'lucide-react'
 import { api } from '@/lib/api'
+import useSWR from 'swr'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 export default function AwsIntegrationPage() {
   const [step, setStep] = useState<'connect' | 'verify'>('connect')
@@ -13,6 +16,11 @@ export default function AwsIntegrationPage() {
   const [success, setSuccess] = useState(false)
   const [existing, setExisting] = useState<any[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
+
+  const { data: me } = useSWR('me', () =>
+    fetch(`${API_URL}/api/v1/auth/me`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+  )
+  const isAdmin = me?.user?.role === 'owner' || me?.user?.role === 'admin'
 
   useEffect(() => {
     // Check for existing AWS integrations (may be multiple for Scale tier)
@@ -75,6 +83,13 @@ export default function AwsIntegrationPage() {
           {existing.length === 1 ? '1 AWS account connected.' : `${existing.length} AWS accounts connected.`}
         </p>
 
+        {!isAdmin && (
+          <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-4 py-3 mb-4 text-sm text-muted">
+            <Lock size={14} className="flex-shrink-0" />
+            You have read-only access. Contact an admin to make changes.
+          </div>
+        )}
+
         <div className="space-y-3">
           {existing.map((aws: any) => (
             <div key={aws.id} className="bg-card rounded-xl border border-border p-5">
@@ -93,39 +108,53 @@ export default function AwsIntegrationPage() {
                 Both compliance and cost engines are reading from this connection.
                 {aws.lastSyncAt && ` Last synced: ${new Date(aws.lastSyncAt).toLocaleString()}`}
               </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={async () => {
-                    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-                    await fetch(`${API_URL}/api/v1/integrations/${aws.id}/sync`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-                    alert('Scan triggered. Results will appear on your dashboard in 2-5 minutes.')
-                  }}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-brand text-white hover:bg-brand-dark transition-colors"
-                >
-                  Re-sync
-                </button>
-                <button
-                  onClick={async () => {
-                    if (!confirm(`Disconnect AWS account ${aws.metadata?.accountId}? This will stop scans for this account.`)) return
-                    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-                    await fetch(`${API_URL}/api/v1/integrations/${aws.id}`, { method: 'DELETE', credentials: 'include' })
-                    window.location.reload()
-                  }}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-danger/30 text-danger hover:bg-danger-bg transition-colors"
-                >
-                  Disconnect
-                </button>
-              </div>
+              {isAdmin && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={async () => {
+                      await fetch(`${API_URL}/api/v1/integrations/${aws.id}/sync`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+                      alert('Scan triggered. Results will appear on your dashboard in 2-5 minutes.')
+                    }}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg bg-brand text-white hover:bg-brand-dark transition-colors"
+                  >
+                    Re-sync
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Disconnect AWS account ${aws.metadata?.accountId}? This will stop scans for this account.`)) return
+                      await fetch(`${API_URL}/api/v1/integrations/${aws.id}`, { method: 'DELETE', credentials: 'include' })
+                      window.location.reload()
+                    }}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-danger/30 text-danger hover:bg-danger-bg transition-colors"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
 
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="mt-4 px-4 py-2 text-sm font-medium rounded-lg border border-border text-ink hover:bg-surface transition-colors"
-        >
-          + Add another AWS account
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="mt-4 px-4 py-2 text-sm font-medium rounded-lg border border-border text-ink hover:bg-surface transition-colors"
+          >
+            + Add another AWS account
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="p-6 max-w-2xl mx-auto">
+        <h1 className="text-2xl font-semibold text-ink mb-2">AWS Integration</h1>
+        <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-4 py-3 text-sm text-muted">
+          <Lock size={14} className="flex-shrink-0" />
+          Only admins and owners can connect or manage integrations.
+        </div>
       </div>
     )
   }

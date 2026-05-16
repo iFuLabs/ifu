@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Github, CheckCircle, ExternalLink, AlertCircle } from 'lucide-react'
+import { Github, CheckCircle, ExternalLink, AlertCircle, Lock } from 'lucide-react'
+import useSWR from 'swr'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 const GITHUB_APP_URL = 'https://github.com/apps/ifu-labs'
@@ -11,6 +12,11 @@ export default function GithubIntegrationPage() {
   const [connecting, setConnecting] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+
+  const { data: me } = useSWR('me', () =>
+    fetch(`${API_URL}/api/v1/auth/me`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+  )
+  const isAdmin = me?.user?.role === 'owner' || me?.user?.role === 'admin'
 
   useEffect(() => {
     fetch(`${API_URL}/api/v1/integrations`, { credentials: 'include' })
@@ -62,6 +68,18 @@ export default function GithubIntegrationPage() {
   }
 
   if (loading) return null
+
+  if (!isAdmin && !integration) {
+    return (
+      <div style={{ padding: '32px', maxWidth: 640, margin: '0 auto' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 600, color: '#33063D', marginBottom: 8 }}>GitHub Integration</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#F9F9F9', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 10, padding: '14px 18px', fontSize: 13, color: 'rgba(51,6,61,0.6)' }}>
+          <Lock size={14} style={{ flexShrink: 0 }} />
+          Only admins and owners can connect or manage integrations.
+        </div>
+      </div>
+    )
+  }
 
   if (integration) {
     return (
