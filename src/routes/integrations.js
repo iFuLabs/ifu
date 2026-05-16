@@ -383,7 +383,7 @@ export default async function integrationRoutes(fastify) {
       return reply.status(400).send({
         error: 'Integration Error',
         message: validation.error,
-        hint: 'Install the iFu Labs GitHub App in your organisation first: https://github.com/apps/ifu-labs-comply'
+        hint: 'Install the Ghara GitHub App in your organisation first: https://github.com/apps/ghara-by-ifu-labs'
       })
     }
 

@@ -2,7 +2,7 @@ import { db } from '../db/client.js'
 import { evidenceItems, controlResults, controlDefinitions, organizations, scans } from '../db/schema.js'
 import { eq, and, desc } from 'drizzle-orm'
 import { verifyToken, requireUser, requireAdmin } from '../middleware/auth.js'
-import { getAllowedFrameworks } from '../middleware/plan.js'
+import { getAllowedFrameworks, productEntitlements } from '../middleware/plan.js'
 import { generateEvidencePdf } from '../services/pdf/evidenceReport.js'
 import { auditAction } from '../services/audit.js'
 
@@ -110,17 +110,18 @@ export default async function evidenceRoutes(fastify) {
   }, async (request, reply) => {
     const framework = request.query.framework || 'soc2'
 
-    // Check if user has access to this framework
-    const plan = request.user.org?.plan || 'starter'
-    const allowedFrameworks = getAllowedFrameworks(plan)
-    
+    // Check if user has access to this framework (use entitlements so trial → growth works)
+    const entitlements = await productEntitlements(request.orgId)
+    const effectivePlan = entitlements.compliance || entitlements.tier || 'starter'
+    const allowedFrameworks = getAllowedFrameworks(effectivePlan)
+
     if (!allowedFrameworks.includes(framework)) {
       return reply.status(403).send({
         error: 'Upgrade Required',
         message: `PDF export for ${framework.toUpperCase()} is only available on the Growth plan`,
         code: 'PLAN_UPGRADE_REQUIRED',
         requiredPlan: 'growth',
-        currentPlan: plan
+        currentPlan: effectivePlan
       })
     }
 

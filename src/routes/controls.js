@@ -2,7 +2,7 @@ import { db } from '../db/client.js'
 import { controlDefinitions, controlResults, users, complianceScoreSnapshots, controlComments } from '../db/schema.js'
 import { eq, and, desc, sql, count, inArray, isNotNull, asc, gte } from 'drizzle-orm'
 import { verifyToken, requireUser } from '../middleware/auth.js'
-import { getAllowedFrameworks } from '../middleware/plan.js'
+import { getAllowedFrameworks, productEntitlements } from '../middleware/plan.js'
 import { auditAction } from '../services/audit.js'
 import { dispatchWebhook } from '../services/webhooks.js'
 
@@ -28,9 +28,10 @@ export default async function controlRoutes(fastify) {
   }, async (request, reply) => {
     const { framework, status } = request.query
 
-    // Get allowed frameworks for this org's plan
-    const plan = request.user.org?.plan || 'starter'
-    const allowedFrameworks = getAllowedFrameworks(plan)
+    // Use productEntitlements to compute effective tier (handles trial → growth correctly)
+    const entitlements = await productEntitlements(request.orgId)
+    const effectivePlan = entitlements.compliance || entitlements.tier || 'starter'
+    const allowedFrameworks = getAllowedFrameworks(effectivePlan)
 
     // Build where clause with plan restrictions
     let whereClause
@@ -42,7 +43,7 @@ export default async function controlRoutes(fastify) {
           message: `${framework.toUpperCase()} framework is only available on the Growth plan`,
           code: 'PLAN_UPGRADE_REQUIRED',
           requiredPlan: 'growth',
-          currentPlan: plan
+          currentPlan: effectivePlan
         })
       }
       whereClause = eq(controlDefinitions.framework, framework)
@@ -105,9 +106,10 @@ export default async function controlRoutes(fastify) {
     preHandler: [verifyToken, requireUser],
     schema: { tags: ['Controls'], security: [{ bearerAuth: [] }] }
   }, async (request, reply) => {
-    // Get allowed frameworks for this org's plan
-    const plan = request.user.org?.plan || 'starter'
-    const allowedFrameworks = getAllowedFrameworks(plan)
+    // Use productEntitlements to compute effective tier (handles trial → growth correctly)
+    const entitlements = await productEntitlements(request.orgId)
+    const effectivePlan = entitlements.compliance || entitlements.tier || 'starter'
+    const allowedFrameworks = getAllowedFrameworks(effectivePlan)
 
     // Count total controls per framework (single query) - only allowed frameworks
     const defCounts = await db

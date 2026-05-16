@@ -15,7 +15,9 @@ export default async function planRoutes(fastify) {
       security: [{ bearerAuth: [] }]
     }
   }, async (request, reply) => {
-    const plan = request.user.org?.plan || 'starter'
+    // Use entitlements to compute effective tier (trial → growth)
+    const entitlements = await productEntitlements(request.orgId)
+    const plan = entitlements.tier || 'starter'
     const features = PLAN_FEATURES[plan] || PLAN_FEATURES.starter
 
     // Get current team member count
@@ -58,7 +60,8 @@ export default async function planRoutes(fastify) {
     }
   }, async (request, reply) => {
     const { feature } = request.params
-    const plan = request.user.org?.plan || 'starter'
+    const entitlements = await productEntitlements(request.orgId)
+    const plan = entitlements.tier || 'starter'
     const features = PLAN_FEATURES[plan] || PLAN_FEATURES.starter
 
     return reply.send({

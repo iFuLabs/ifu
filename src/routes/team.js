@@ -8,7 +8,7 @@ import { eq, and, count } from 'drizzle-orm'
 import { verifyToken, requireUser, requireAdmin } from '../middleware/auth.js'
 import { auditAction } from '../services/audit.js'
 import { sendTeamInvitationEmail } from '../services/email.js'
-import { getMaxTeamMembers } from '../middleware/plan.js'
+import { getMaxTeamMembers, productEntitlements } from '../middleware/plan.js'
 import { JWT_SECRET, JWT_EXPIRES_IN, COOKIE_OPTIONS } from '../services/config.js'
 
 const inviteSchema = z.object({
@@ -78,10 +78,11 @@ export default async function teamRoutes(fastify) {
   }, async (request, reply) => {
     const body = inviteSchema.parse(request.body)
 
-    // Check team member limit based on plan
-    const plan = request.user.org?.plan || 'starter'
-    const maxMembers = getMaxTeamMembers(plan)
-    
+    // Check team member limit based on entitlements (trial → growth = unlimited)
+    const entitlements = await productEntitlements(request.orgId)
+    const effectivePlan = entitlements.tier || 'starter'
+    const maxMembers = getMaxTeamMembers(effectivePlan)
+
     if (maxMembers !== null) {
       // Count current members
       const [{ value: currentCount }] = await db
@@ -92,10 +93,10 @@ export default async function teamRoutes(fastify) {
       if (currentCount >= maxMembers) {
         return reply.status(403).send({
           error: 'Upgrade Required',
-          message: `Your ${plan} plan is limited to ${maxMembers} team members. Upgrade to Growth for unlimited members.`,
+          message: `Your ${effectivePlan} plan is limited to ${maxMembers} team members. Upgrade to Growth for unlimited members.`,
           code: 'PLAN_UPGRADE_REQUIRED',
           requiredPlan: 'growth',
-          currentPlan: plan,
+          currentPlan: effectivePlan,
           currentMembers: currentCount,
           maxMembers
         })
