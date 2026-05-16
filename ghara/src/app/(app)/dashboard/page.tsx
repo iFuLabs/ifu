@@ -18,6 +18,12 @@ export default function DashboardPage() {
   const { data: scans } = useSWR('scans', api.scans.list, { refreshInterval: 10000 })
   const { data: integrations } = useSWR('integrations', api.integrations.list)
   const { data: me } = useSWR('me', api.auth.me)
+  const { data: planFeatures } = useSWR('plan-features', () =>
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/plan/features`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+  )
+  const { data: k8sData } = useSWR('k8s-dashboard', () =>
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/finops/kubernetes`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+  )
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
@@ -25,6 +31,8 @@ export default function DashboardPage() {
   const hasData = latestScan?.status === 'complete'
   const hasAwsConnected = integrations?.some((i: any) => i.type === 'aws' && i.status === 'connected')
   const userName = me?.user?.name?.split(' ')[0] || ''
+  const hasK8s = planFeatures?.features?.kubernetes === true
+  const hasK8sConnected = k8sData?.clusters?.length > 0
 
   // Scores
   const complianceScore = hasData ? (score?.overall || 0) : null
@@ -36,7 +44,7 @@ export default function DashboardPage() {
   const healthScore = (complianceScore !== null && costScore !== null && securityScore !== null)
     ? Math.round(complianceScore * 0.4 + costScore * 0.3 + securityScore * 0.3) : null
 
-  const actionQueue = hasData ? buildActionQueue(failingControls, finops) : []
+  const actionQueue = hasData ? buildActionQueue(failingControls, finops, k8sData, hasK8s, hasK8sConnected) : []
 
   // Empty state
   if (!hasData) {
@@ -262,13 +270,48 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* K8s CTA — shown below action queue */}
+      {hasData && !hasK8s && (
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 16, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, boxShadow: '0 4px 16px rgba(51,6,61,0.03)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(138,99,230,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Zap size={16} style={{ color: IRIS }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: PLUM }}>Unlock Kubernetes cost analysis</p>
+              <p style={{ fontSize: 12, color: 'rgba(51,6,61,0.5)', marginTop: 2 }}>See per-namespace cost, idle workloads, and AI-powered fixes. Available on Growth.</p>
+            </div>
+          </div>
+          <Link href="/billing" style={{ flexShrink: 0, padding: '8px 16px', background: PLUM, color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Upgrade →
+          </Link>
+        </div>
+      )}
+
+      {hasData && hasK8s && !hasK8sConnected && (
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 16, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, boxShadow: '0 4px 16px rgba(51,6,61,0.03)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(138,99,230,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Zap size={16} style={{ color: IRIS }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: PLUM }}>Connect a Kubernetes cluster</p>
+              <p style={{ fontSize: 12, color: 'rgba(51,6,61,0.5)', marginTop: 2 }}>You're on Growth — connect a cluster to see per-namespace cost and waste findings here.</p>
+            </div>
+          </div>
+          <Link href="/integrations/kubernetes" style={{ flexShrink: 0, padding: '8px 16px', background: PLUM, color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Connect →
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function buildActionQueue(failingControls: any[], finops: any) {
+function buildActionQueue(failingControls: any[], finops: any, k8sData?: any, hasK8s?: boolean, hasK8sConnected?: boolean) {
   const items: any[] = []
   for (const control of failingControls) {
     items.push({ type: 'Compliance', severity: control.severity || 'medium', title: control.title, detail: control.controlId, dollarValue: null, href: '/compliance' })
@@ -283,6 +326,25 @@ function buildActionQueue(failingControls: any[], finops: any) {
       items.push({ type: 'Cost', severity: 'medium', title: `Rightsize ${r.instanceId || r.resourceId}`, detail: r.instanceType ? `${r.instanceType} → ${r.recommendedType}` : r.resourceId, dollarValue: r.estimatedMonthlySavings, href: '/cost' })
     }
   }
+
+  // K8s findings — Growth/Scale tier only
+  if (hasK8s && hasK8sConnected && k8sData?.clusters) {
+    for (const cluster of k8sData.clusters) {
+      for (const f of (cluster.findings || [])) {
+        if (f.severity === 'high' || f.severity === 'medium') {
+          items.push({
+            type: 'Kubernetes',
+            severity: f.severity,
+            title: f.detail,
+            detail: `${cluster.clusterName} · ${f.type?.replace(/_/g, ' ')}`,
+            dollarValue: f.monthlySavings || null,
+            href: '/cost',
+          })
+        }
+      }
+    }
+  }
+
   const rank: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 }
   items.sort((a, b) => (rank[b.severity] || 0) - (rank[a.severity] || 0) || (b.dollarValue || 0) - (a.dollarValue || 0))
   return items
@@ -401,6 +463,7 @@ function ActionRow({ item, index }: { item: any; index: number }) {
   const typeColors: Record<string, { bg: string; text: string }> = {
     Compliance: { bg: 'rgba(138,99,230,0.06)', text: IRIS },
     Cost: { bg: 'rgba(6,118,71,0.06)', text: GREEN },
+    Kubernetes: { bg: 'rgba(51,6,61,0.06)', text: PLUM },
   }
   const sev = sevColors[item.severity] || sevColors.medium
   const typ = typeColors[item.type] || typeColors.Compliance
