@@ -1,8 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 
-const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || 'http://localhost:3003'
-
 const SECONDARY_SERVICES = [
   { slug: 'compliance-security', label: 'Compliance', name: 'Compliance & Security', desc: 'SOC 2, ISO 27001, GDPR, and HIPAA readiness — evidence collection, gap remediation, and audit preparation end-to-end.' },
   { slug: 'cloud-migration',     label: 'Migration',  name: 'Cloud Migration',       desc: 'On-premise to AWS, workload re-platforming, or cross-cloud migrations. Zero surprise downtime.' },
@@ -75,7 +73,7 @@ export function SiteNav() {
             </a>
           </div>
           <div className="info-bar-right">
-            <a href={PORTAL_URL} className="info-bar-item">Client portal →</a>
+            <a href="https://app.ghara.ifulabs.com" className="info-bar-item">Sign in to Ghara →</a>
           </div>
         </div>
       </div>
