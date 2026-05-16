@@ -97,7 +97,7 @@ export async function sendWelcomeEmail({ to, name, orgName }) {
 /**
  * Send team invitation email
  */
-export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, product = 'comply', inviteUrl, expiresAt }) {
+export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, product = 'ghara', inviteUrl, expiresAt }) {
   try {
     const expiryDate = new Date(expiresAt).toLocaleDateString('en-US', { 
       month: 'long', 
@@ -105,14 +105,11 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
       year: 'numeric' 
     })
 
-    const productName = product === 'ghara' ? 'Ghara' : product === 'finops' ? 'iFu Labs FinOps' : 'iFu Labs Comply'
-    const productTagline = product === 'finops' ? 'Cloud Cost Optimization' : 'Compliance Automation'
-
     const emailConfig = getEmailConfig('team')
     const { data, error } = await resend.emails.send({
       ...emailConfig,
       to,
-      subject: `${inviterName} invited you to join ${orgName} on ${productName}`,
+      subject: `${inviterName} invited you to join ${orgName} on Ghara`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -125,7 +122,7 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
               .tagline { font-size: 14px; color: #DAC0FD; opacity: 0.9; margin: 8px 0 0 0; }
               .content { background: #ffffff; padding: 40px 30px; border: 1px solid #E5E5E5; border-top: none; border-radius: 0 0 8px 8px; }
               .button { display: inline-block; background: #33063D; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: 500; }
-              .info-box { background: #DAC0FD; padding: 20px; border-radius: 6px; margin: 20px 0; }
+              .highlight { background: #DAC0FD; padding: 16px; border-radius: 6px; margin: 20px 0; }
               .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 13px; }
               .warning { color: #B42318; font-size: 14px; margin-top: 20px; padding: 15px; background: #FEF3F2; border-radius: 6px; border-left: 4px solid #B42318; }
             </style>
@@ -134,29 +131,29 @@ export async function sendTeamInvitationEmail({ to, inviterName, orgName, role, 
             <div class="container">
               <div class="header">
                 <span style="font-size: 24px; font-weight: 600; color: #FFFFFF;">Ghara</span>
-                <p class="tagline">${productTagline}</p>
+                <p class="tagline">Cloud compliance and cost in one dashboard</p>
               </div>
               <div class="content">
                 <p>Hi there,</p>
-                
-                <p><strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on <strong>${productName}</strong>.</p>
-                
-                <div class="info-box">
-                  <p style="margin: 0;"><strong>Product:</strong> ${productName}</p>
+
+                <p><strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on Ghara.</p>
+
+                <div class="highlight">
+                  <p style="margin: 0;"><strong>Organization:</strong> ${orgName}</p>
                   <p style="margin: 10px 0 0 0;"><strong>Role:</strong> ${role.charAt(0).toUpperCase() + role.slice(1)}</p>
                   <p style="margin: 10px 0 0 0;"><strong>Expires:</strong> ${expiryDate}</p>
                 </div>
-                
+
                 <p>Click the button below to accept the invitation and create your account:</p>
-                
+
                 <a href="${inviteUrl}" class="button">Accept Invitation →</a>
-                
+
                 <div class="warning">
                   ⚠️ This invitation link will expire on ${expiryDate}.
                 </div>
-                
+
                 <p>If you weren't expecting this invitation, you can safely ignore this email.</p>
-                
+
                 <p>Regards,<br>The Ghara Team</p>
               </div>
               <div class="footer">
