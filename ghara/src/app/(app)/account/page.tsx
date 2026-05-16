@@ -88,7 +88,7 @@ export default function SettingsPage() {
   const handleProfileSave = async () => {
     setProfileSaving(true); setProfileSaved(false)
     try {
-      await fetch(`${API_URL}/api/v1/auth/profile`, {
+      await fetch(`${API_URL}/api/v1/auth/me`, {
         method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: profileName.trim() }),

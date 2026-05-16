@@ -169,7 +169,7 @@ export default function TeamPage() {
         <div className="divide-y divide-border">
           {members?.map((member: any) => {
             const isSelf = member.id === currentUser?.id
-            const canChangeRole = isOwner && !isSelf && member.role !== 'owner'
+            const canChangeRole = isOwner && !isSelf && member.role !== 'owner' && member.role !== 'auditor'
             const canRemove = isAdmin && !isSelf && member.role !== 'owner' &&
               !(member.role === 'admin' && !isOwner)
 
