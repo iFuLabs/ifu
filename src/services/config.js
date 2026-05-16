@@ -46,3 +46,17 @@ export const COOKIE_OPTIONS = {
 // after the trial.
 export const TRIAL_DURATION_DAYS = 7
 export const TRIAL_DURATION_MS = TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000
+
+// AWS spend caps per tier, in USD/month. These are soft caps — when a
+// customer's tracked monthly cost exceeds their tier's cap for two
+// consecutive scans, they get an upgrade banner on the billing page.
+// Scale tier has no cap (custom contract).
+export const TIER_SPEND_CAPS_USD = {
+  starter: 10000,
+  growth: 100000,
+  scale: null,
+}
+
+// How much above the cap before we surface the banner. 1.10 = 10% over.
+// Keeps brief month-end spikes from triggering a false alarm.
+export const SPEND_CAP_TOLERANCE = 1.10

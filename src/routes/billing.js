@@ -15,7 +15,8 @@ import {
 import { upsertSubscription } from '../services/subscriptions.js'
 import { logger } from '../services/logger.js'
 import { auditAction } from '../services/audit.js'
-import { TRIAL_DURATION_MS } from '../services/config.js'
+import { TRIAL_DURATION_MS, TIER_SPEND_CAPS_USD, SPEND_CAP_TOLERANCE } from '../services/config.js'
+import { redis } from '../services/redis.js'
 import { sendChargeReceiptEmail, sendPaymentFailedEmail } from '../services/email.js'
 import { users as usersTable } from '../db/schema.js'
 
@@ -103,6 +104,36 @@ export default async function billingRoutes(fastify) {
     const paystackActive = subscription?.status === 'active'
     const subTableActive = activeSub?.status === 'active' || activeSub?.status === 'trialing'
 
+    // Soft AWS spend cap evaluation. Read latest cached scan total and
+    // compare to the customer's tier cap. We only flag when the customer
+    // has actually exceeded their cap by SPEND_CAP_TOLERANCE — brief
+    // month-end spikes won't trigger a banner.
+    let spendWarning = null
+    try {
+      const effectiveTier = activeSub?.status === 'trialing'
+        ? 'growth' // trial = full Growth, don't nag them about spend during trial
+        : (activeSub?.tier || activeSub?.selectedTier || org.plan || 'starter')
+      const cap = TIER_SPEND_CAPS_USD[effectiveTier]
+      if (cap !== null && cap !== undefined) {
+        const cached = await redis.get(`finops:findings:${request.orgId}:current-month`).catch(() => null)
+        if (cached) {
+          const findings = JSON.parse(cached)
+          const monthlyCost = findings?.monthlyCost || 0
+          if (monthlyCost > cap * SPEND_CAP_TOLERANCE) {
+            spendWarning = {
+              monthlyCost: Math.round(monthlyCost),
+              cap,
+              tier: effectiveTier,
+              suggestedTier: effectiveTier === 'starter' ? 'growth' : 'scale',
+              overagePct: Math.round(((monthlyCost - cap) / cap) * 100)
+            }
+          }
+        }
+      }
+    } catch (err) {
+      logger.warn({ err: err.message }, 'Failed to evaluate spend cap')
+    }
+
     return reply.send({
       plan: activeSub?.plan || org.plan,
       product: activeSub?.product || null,
@@ -114,6 +145,7 @@ export default async function billingRoutes(fastify) {
       trialEndsAt: activeSub?.trialEndsAt || org.trialEndsAt,
       trialDaysLeft,
       hasPaymentMethod: !!org.paystackAuthCode,
+      spendWarning,
       subscription: subscription ? {
         code: subscription.subscription_code,
         status: subscription.status,
@@ -341,11 +373,24 @@ export default async function billingRoutes(fastify) {
   })
 
   // POST /api/v1/billing/charge-now — end trial early by charging the existing
-  // tokenized card immediately. Useful for "Pay now" on the billing page.
+  // tokenized card immediately. Used for both:
+  //   1. "Pay now" on the customer's selected tier (no body / plan = current)
+  //   2. "Upgrade" from a trial Starter to Growth (body: { plan: 'ghara-growth' })
+  // Reuses the existing card authorization — never re-tokenizes.
   fastify.post('/charge-now', {
     preHandler: [verifyToken, requireUser, requireOwner],
-    schema: { tags: ['Billing'], security: [{ bearerAuth: [] }] }
+    schema: {
+      tags: ['Billing'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        properties: {
+          plan: { type: 'string', enum: ['ghara-starter', 'ghara-growth'] }
+        }
+      }
+    }
   }, async (request, reply) => {
+    const requestedPlan = request.body?.plan
     const org = await db.query.organizations.findFirst({
       where: eq(organizations.id, request.orgId)
     })
@@ -374,12 +419,27 @@ export default async function billingRoutes(fastify) {
       })
     }
 
+    // Resolve the target plan: requested plan (for upgrades) or the trial sub's plan
+    const targetPaystackPlanCode = requestedPlan
+      ? PLAN_MAP[requestedPlan]
+      : trialSub.paystackPlanCode
+    const targetPlanSlug = requestedPlan || trialSub.plan
+    const targetTier = requestedPlan ? PLAN_TIERS[requestedPlan] : (trialSub.selectedTier || trialSub.tier)
+    const targetProduct = requestedPlan ? PLAN_TO_PRODUCT[requestedPlan] : (trialSub.product || 'ghara')
+
+    if (requestedPlan && !targetPaystackPlanCode) {
+      return reply.status(400).send({
+        error: 'Plan not configured',
+        message: `Paystack plan code is not configured for ${requestedPlan}`
+      })
+    }
+
     // Get the Paystack plan to know the amount to charge
     let plan
     try {
-      plan = await getPlan(trialSub.paystackPlanCode)
+      plan = await getPlan(targetPaystackPlanCode)
     } catch (err) {
-      logger.error({ err: err.message, planCode: trialSub.paystackPlanCode },
+      logger.error({ err: err.message, planCode: targetPaystackPlanCode },
         'Failed to fetch Paystack plan for charge-now')
       return reply.status(500).send({ error: 'Failed to fetch plan details' })
     }
@@ -394,8 +454,8 @@ export default async function billingRoutes(fastify) {
         currency: plan.currency || 'ZAR',
         metadata: {
           orgId: request.orgId,
-          plan: trialSub.plan,
-          source: 'charge_now',
+          plan: targetPlanSlug,
+          source: requestedPlan ? 'trial_upgrade' : 'charge_now',
           userId: request.user.id
         }
       })
@@ -432,7 +492,7 @@ export default async function billingRoutes(fastify) {
       const nextStart = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
       newSubscription = await createSubscription({
         customer: org.paystackCustomerCode,
-        plan: trialSub.paystackPlanCode,
+        plan: targetPaystackPlanCode,
         authorization: org.paystackAuthCode,
         startDate: nextStart.toISOString()
       })
@@ -442,15 +502,17 @@ export default async function billingRoutes(fastify) {
       // still flip trialing→active. Just log.
     }
 
-    // Flip the subscription row to active immediately. The charge.success
-    // webhook will also do this, but doing it here ensures the UI updates
-    // right away without waiting for the webhook.
+    // Flip the subscription row to active and (for upgrades) update tier/plan.
+    // The charge.success webhook will also flip trialing→active, but doing
+    // it here ensures the UI updates right away without waiting for the webhook.
     await db.update(subscriptionsTable)
       .set({
         status: 'active',
-        ...(trialSub.selectedTier && trialSub.selectedTier !== trialSub.tier
-          ? { tier: trialSub.selectedTier }
-          : {}),
+        plan: targetPlanSlug,
+        tier: targetTier,
+        product: targetProduct,
+        ...(requestedPlan ? { selectedTier: targetTier } : {}),
+        paystackPlanCode: targetPaystackPlanCode,
         ...(newSubscription?.subscription_code
           ? { paystackSubscriptionCode: newSubscription.subscription_code }
           : {}),
@@ -462,6 +524,7 @@ export default async function billingRoutes(fastify) {
       await db.update(organizations)
         .set({
           paystackSubscriptionCode: newSubscription.subscription_code,
+          plan: targetTier,
           updatedAt: new Date()
         })
         .where(eq(organizations.id, request.orgId))
@@ -470,9 +533,10 @@ export default async function billingRoutes(fastify) {
     await auditAction({
       orgId: request.orgId,
       userId: request.user.id,
-      action: 'billing.charge_now',
+      action: requestedPlan ? 'billing.trial_upgrade' : 'billing.charge_now',
       metadata: {
-        plan: trialSub.plan,
+        plan: targetPlanSlug,
+        tier: targetTier,
         amount: charge.amount,
         currency: charge.currency,
         reference: charge.reference,
@@ -482,13 +546,17 @@ export default async function billingRoutes(fastify) {
 
     logger.info({
       orgId: request.orgId,
+      plan: targetPlanSlug,
+      tier: targetTier,
       amount: charge.amount,
-      reference: charge.reference
-    }, 'Trial ended early via Pay Now')
+      reference: charge.reference,
+      upgrade: !!requestedPlan
+    }, requestedPlan ? 'Trial upgraded to higher tier' : 'Trial ended early via Pay Now')
 
     return reply.send({
       status: 'success',
-      message: 'Payment successful',
+      message: requestedPlan ? `Upgraded to ${targetTier}` : 'Payment successful',
+      tier: targetTier,
       charge: {
         amount: charge.amount,
         currency: charge.currency,

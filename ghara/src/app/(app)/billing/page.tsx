@@ -76,13 +76,19 @@ export default function BillingPage() {
 
   const isOwner = me?.user?.role === 'owner'
 
-  const handlePayNow = async () => {
-    if (!confirm('Charge your card now and end your trial early? Your card will be billed for the current plan immediately.')) return
-    setUpgrading('pay-now')
+  const handlePayNow = async (planOverride?: string) => {
+    const isUpgrade = !!planOverride
+    const confirmMsg = isUpgrade
+      ? 'Charge your card now and switch to this plan? Your card will be billed for the new plan immediately.'
+      : 'Charge your card now and end your trial early? Your card will be billed for the current plan immediately.'
+    if (!confirm(confirmMsg)) return
+    setUpgrading(planOverride || 'pay-now')
     try {
       const res = await fetch(`${API_URL}/api/v1/billing/charge-now`, {
         method: 'POST',
         credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(planOverride ? { plan: planOverride } : {}),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -137,6 +143,26 @@ export default function BillingPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-semibold text-ink mb-2">Billing</h1>
+
+      {/* AWS spend cap banner — soft enforcement only, suggests upgrade */}
+      {billing?.spendWarning && billing.status !== 'trialing' && (
+        <div
+          className="rounded-xl border p-4 mb-4 flex items-start gap-3"
+          style={{ borderColor: '#FCD34D', background: '#FFFBEB' }}
+        >
+          <AlertCircle size={18} className="mt-0.5 flex-shrink-0" style={{ color: '#92400E' }} />
+          <div className="flex-1">
+            <p className="text-sm font-medium" style={{ color: '#92400E' }}>
+              Your AWS spend (${billing.spendWarning.monthlyCost.toLocaleString()}/mo) is{' '}
+              {billing.spendWarning.overagePct}% above the {billing.spendWarning.tier} plan limit
+              (${billing.spendWarning.cap.toLocaleString()}/mo)
+            </p>
+            <p className="text-xs mt-1" style={{ color: 'rgba(146,64,14,0.8)' }}>
+              Consider upgrading to {billing.spendWarning.suggestedTier === 'scale' ? 'Scale' : 'Growth'} for the right level of support and scan capacity.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Current status */}
       {billing && (
@@ -261,7 +287,15 @@ export default function BillingPage() {
                 </button>
               ) : isOwner ? (
                 <button
-                  onClick={() => isCurrent && isTrialing ? handlePayNow() : handleUpgrade(plan.id)}
+                  onClick={() => {
+                    // Trial customer with card on file → use charge-now
+                    // (paying their current tier or switching tier without re-tokenizing).
+                    if (isTrialing && billing?.hasPaymentMethod) {
+                      handlePayNow(isCurrent ? undefined : plan.id)
+                    } else {
+                      handleUpgrade(plan.id)
+                    }
+                  }}
                   disabled={upgrading === plan.id || (isCurrent && isTrialing && upgrading === 'pay-now')}
                   className={clsx(
                     'py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2',
