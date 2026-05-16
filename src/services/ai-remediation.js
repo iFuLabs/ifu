@@ -204,6 +204,83 @@ Respond in JSON:
 Return only valid JSON.`
 }
 
+/**
+ * Generate remediation for a Kubernetes cost finding.
+ */
+export async function generateK8sRemediation({ finding, clusterName, format = 'kubectl', ctx = {} }) {
+  const prompt = buildK8sRemediationPrompt(finding, clusterName, format)
+
+  const response = await bedrock.send(new InvokeModelCommand({
+    modelId: MODEL_ID,
+    contentType: 'application/json',
+    accept: 'application/json',
+    body: JSON.stringify({
+      anthropic_version: 'bedrock-2023-05-31',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: prompt }],
+      system: 'You are a Kubernetes cost optimization engineer. Generate precise kubectl commands, Helm values, or YAML manifests to fix cost waste in Kubernetes clusters. Be direct and specific. Return only valid JSON.',
+    })
+  }))
+
+  const raw = JSON.parse(Buffer.from(response.body).toString('utf-8'))
+  const text = raw.content?.[0]?.text || ''
+
+  recordUsage({
+    orgId: ctx.orgId,
+    userId: ctx.userId,
+    service: 'finops',
+    operation: 'k8s.remediation',
+    model: MODEL_ID,
+    inputTokens: raw.usage?.input_tokens || 0,
+    outputTokens: raw.usage?.output_tokens || 0,
+  }).catch(() => {})
+
+  try {
+    const cleaned = text.replace(/```json|```/g, '').trim()
+    return JSON.parse(cleaned)
+  } catch {
+    return { code: text, language: 'bash', explanation: 'Generated remediation', warnings: [] }
+  }
+}
+
+function buildK8sRemediationPrompt(finding, clusterName, format) {
+  const formatLabel = format === 'yaml' ? 'Kubernetes YAML manifest' : format === 'helm' ? 'Helm values override' : 'kubectl commands'
+
+  return `Generate a fix for this Kubernetes cost optimization finding.
+
+Cluster: ${clusterName}
+Finding Type: ${finding.type}
+Resource: ${finding.resource}
+Severity: ${finding.severity}
+Detail: ${finding.detail}
+Current Recommendation: ${finding.recommendation}
+Estimated Monthly Savings: $${finding.monthlySavings?.toFixed(0) || '0'}
+
+Format: ${formatLabel}
+
+Context:
+- idle_namespace: namespace has near-zero utilization, scale down or remove
+- oversized_cpu: CPU requests far exceed usage, reduce requests
+- oversized_memory: memory requests far exceed usage, reduce requests
+- idle_workload: workload has no activity, remove or scale to zero
+- unused_pvc: PVCs exist but no workloads use them
+- off_hours_waste: non-prod namespace running 24/7, add scheduling
+- over_replicated: too many replicas for the actual load
+
+Respond in JSON:
+{
+  "code": "the commands or YAML to fix this (use \\n for newlines)",
+  "language": "${format === 'yaml' ? 'yaml' : format === 'helm' ? 'yaml' : 'bash'}",
+  "explanation": "what this does in 2-3 sentences",
+  "verifyCommand": "kubectl command to verify the fix worked",
+  "warnings": ["any risks or things to check before applying"],
+  "estimatedSavings": "$${finding.monthlySavings?.toFixed(0) || '0'}/month",
+  "rollbackCommand": "command to undo if something goes wrong"
+}
+
+Return only valid JSON.`
+}
+
 // ── Response Parser ────────────────────────────────────────────────────────
 
 function parseRemediationResponse(text, control, format) {

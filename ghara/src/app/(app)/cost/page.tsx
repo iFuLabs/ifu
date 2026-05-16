@@ -886,28 +886,7 @@ export default function CostPage() {
                           <div className="space-y-2">
                             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted px-1">Findings</h3>
                             {cluster.findings.map((f: any, i: number) => (
-                              <div key={i} className="bg-card border border-border rounded-xl p-4">
-                                <div className="flex items-start justify-between gap-4">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className={clsx(
-                                        'font-mono text-[10px] px-1.5 py-0.5 rounded capitalize',
-                                        f.severity === 'high' ? 'text-danger bg-danger/10' :
-                                        f.severity === 'medium' ? 'text-warn bg-warn/10' : 'text-muted bg-border'
-                                      )}>{f.severity}</span>
-                                      <span className="text-xs font-mono text-muted">{f.type?.replace(/_/g, ' ')}</span>
-                                    </div>
-                                    <p className="text-sm text-ink">{f.detail}</p>
-                                    <p className="text-xs text-muted mt-1">{f.recommendation}</p>
-                                  </div>
-                                  {f.monthlySavings > 0 && (
-                                    <div className="text-right flex-shrink-0">
-                                      <div className="font-mono text-sm font-medium text-green">${f.monthlySavings.toFixed(0)}/mo</div>
-                                      <div className="text-xs text-muted">potential savings</div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+                              <K8sFindingCard key={i} finding={f} clusterName={cluster.clusterName} />
                             ))}
                           </div>
                         )}
@@ -1291,6 +1270,141 @@ function StateButtons({ currentState, onChange }: {
           >
             Confirm
           </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function K8sFindingCard({ finding, clusterName }: { finding: any; clusterName: string }) {
+  const [expanded, setExpanded] = useState(false)
+  const [remediation, setRemediation] = useState<any>(null)
+  const [remLoading, setRemLoading] = useState(false)
+  const [format, setFormat] = useState<'kubectl' | 'yaml' | 'helm'>('kubectl')
+  const [copied, setCopied] = useState(false)
+
+  const fetchRemediation = async () => {
+    setRemLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/ai/remediate-k8s`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ finding, clusterName, format }),
+      })
+      if (res.ok) {
+        setRemediation(await res.json())
+      }
+    } catch {}
+    finally { setRemLoading(false) }
+  }
+
+  const handleCopy = () => {
+    if (remediation?.code) {
+      navigator.clipboard.writeText(remediation.code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div
+        className="flex items-start gap-4 p-4 cursor-pointer hover:bg-bg transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={clsx(
+              'font-mono text-[10px] px-1.5 py-0.5 rounded capitalize',
+              finding.severity === 'high' ? 'text-danger bg-danger/10' :
+              finding.severity === 'medium' ? 'text-warn bg-warn/10' : 'text-muted bg-border'
+            )}>{finding.severity}</span>
+            <span className="text-xs font-mono text-muted">{finding.type?.replace(/_/g, ' ')}</span>
+          </div>
+          <p className="text-sm text-ink">{finding.detail}</p>
+          <p className="text-xs text-muted mt-1">{finding.recommendation}</p>
+        </div>
+        {finding.monthlySavings > 0 && (
+          <div className="text-right flex-shrink-0">
+            <div className="font-mono text-sm font-medium text-green">${finding.monthlySavings.toFixed(0)}/mo</div>
+            <div className="text-xs text-muted">potential savings</div>
+          </div>
+        )}
+        {expanded ? <ChevronUp size={14} className="text-muted flex-shrink-0 mt-1" /> : <ChevronDown size={14} className="text-muted flex-shrink-0 mt-1" />}
+      </div>
+
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-border bg-bg space-y-3">
+          {/* AI Remediation */}
+          <div className="pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-ink flex items-center gap-1.5">
+                <Zap size={11} className="text-accent" /> AI Remediation
+              </span>
+              <div className="flex gap-1">
+                {(['kubectl', 'yaml', 'helm'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={(e) => { e.stopPropagation(); setFormat(f); setRemediation(null) }}
+                    className={clsx(
+                      'px-2 py-0.5 text-[10px] font-medium rounded transition-all',
+                      format === f ? 'bg-accent text-white' : 'bg-surface text-muted hover:text-ink'
+                    )}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {!remediation && !remLoading && (
+              <button
+                onClick={(e) => { e.stopPropagation(); fetchRemediation() }}
+                className="text-xs text-accent hover:underline"
+              >
+                Generate fix with AI →
+              </button>
+            )}
+
+            {remLoading && (
+              <p className="text-xs text-muted animate-pulse">Generating remediation...</p>
+            )}
+
+            {remediation && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted">{remediation.explanation}</p>
+                <div className="relative">
+                  <pre className="text-xs font-mono bg-ink text-white p-3 rounded-lg overflow-x-auto whitespace-pre-wrap">
+                    {remediation.code}
+                  </pre>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleCopy() }}
+                    className="absolute top-2 right-2 px-2 py-1 text-[10px] font-medium rounded bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-all"
+                  >
+                    {copied ? 'Copied ✓' : 'Copy'}
+                  </button>
+                </div>
+                {remediation.verifyCommand && (
+                  <div>
+                    <span className="text-[10px] text-muted uppercase tracking-wider">Verify:</span>
+                    <code className="block text-xs font-mono text-muted mt-0.5">{remediation.verifyCommand}</code>
+                  </div>
+                )}
+                {remediation.warnings?.length > 0 && (
+                  <div className="text-xs text-warn">
+                    ⚠ {remediation.warnings.join(' · ')}
+                  </div>
+                )}
+                {remediation.rollbackCommand && (
+                  <div>
+                    <span className="text-[10px] text-muted uppercase tracking-wider">Rollback:</span>
+                    <code className="block text-xs font-mono text-muted mt-0.5">{remediation.rollbackCommand}</code>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

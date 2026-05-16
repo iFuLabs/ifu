@@ -4,7 +4,7 @@ import { eq, and, desc } from 'drizzle-orm'
 import { verifyToken, requireUser } from '../middleware/auth.js'
 import { requireAiFeatures } from '../middleware/plan.js'
 import { explainControlGap, explainControlGapStream, generateComplianceSummary } from '../services/ai.js'
-import { generateRemediation, generateRemediationStream, generateFinOpsRemediation } from '../services/ai-remediation.js'
+import { generateRemediation, generateRemediationStream, generateFinOpsRemediation, generateK8sRemediation } from '../services/ai-remediation.js'
 import { redis } from '../services/redis.js'
 import { acquire as acquireRateLimit } from '../services/rate-limit.js'
 
@@ -392,6 +392,56 @@ export default async function aiRoutes(fastify) {
       return reply.send({ ...remediation, cached: false })
     } catch (err) {
       fastify.log.error(err, 'FinOps remediation generation failed')
+      return reply.status(503).send({ error: 'AI Unavailable' })
+    }
+  })
+
+  // POST /api/v1/ai/remediate-k8s
+  // Generate remediation for a Kubernetes cost finding
+  fastify.post('/remediate-k8s', {
+    preHandler: [verifyToken, requireUser, requireAiFeatures],
+    schema: {
+      tags: ['AI'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['finding', 'clusterName'],
+        properties: {
+          finding: { type: 'object' },
+          clusterName: { type: 'string' },
+          format: { type: 'string', enum: ['kubectl', 'yaml', 'helm'], default: 'kubectl' }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const { finding, clusterName, format } = request.body
+
+    if (!finding?.type || !finding?.resource) {
+      return reply.status(400).send({ error: 'finding.type and finding.resource are required' })
+    }
+
+    const cacheKey = `ai:remediate-k8s:${request.orgId}:${clusterName}:${finding.resource}:${format || 'kubectl'}`
+    const cached = await redis.get(cacheKey).catch(() => null)
+    if (cached) return reply.send({ ...JSON.parse(cached), cached: true })
+
+    const limit = await acquireRateLimit(`ratelimit:ai-remediate:${request.orgId}`, 12)
+    if (!limit.ok) {
+      reply.header('Retry-After', String(limit.retryAfter))
+      return reply.status(429).send({ error: 'Rate limited', retryAfter: limit.retryAfter })
+    }
+
+    try {
+      const remediation = await generateK8sRemediation({
+        finding,
+        clusterName,
+        format: format || 'kubectl',
+        ctx: { orgId: request.orgId, userId: request.user.id }
+      })
+
+      await redis.setex(cacheKey, 60 * 60 * 12, JSON.stringify(remediation)).catch(() => null)
+      return reply.send({ ...remediation, cached: false })
+    } catch (err) {
+      fastify.log.error(err, 'K8s remediation generation failed')
       return reply.status(503).send({ error: 'AI Unavailable' })
     }
   })

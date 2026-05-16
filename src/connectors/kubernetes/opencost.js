@@ -110,23 +110,62 @@ function analyzeKubernetesFindings(namespaceData, workloadData) {
         if (totalCost > 1 && cpuEfficiency < 0.05 && ramEfficiency < 0.05) {
           findings.push({
             type: 'idle_namespace',
-            severity: 'medium',
+            severity: 'high',
             resource: name,
-            monthlySavings: totalCost * 30 / 7, // extrapolate from 7d window
-            detail: `Namespace "${name}" has <5% CPU and RAM utilization`,
-            recommendation: `Consider scaling down or removing workloads in namespace "${name}"`,
+            monthlySavings: totalCost * 30 / 7,
+            detail: `Namespace "${name}" has <5% CPU and RAM utilization — likely idle or abandoned`,
+            recommendation: `Scale down or remove workloads in namespace "${name}". If this is a dev/staging environment, consider scheduling it to scale to zero outside business hours.`,
           })
         }
 
-        // Oversized requests: high request, low actual usage
+        // Oversized CPU requests: high request, low actual usage
         if (totalCost > 5 && cpuEfficiency < 0.2 && alloc.cpuCoreRequestAverage > 0.5) {
           findings.push({
-            type: 'oversized_requests',
+            type: 'oversized_cpu',
             severity: 'medium',
             resource: name,
             monthlySavings: totalCost * (1 - cpuEfficiency) * 0.5 * 30 / 7,
             detail: `Namespace "${name}" requests ${alloc.cpuCoreRequestAverage.toFixed(1)} CPU cores but uses only ${(cpuEfficiency * 100).toFixed(0)}%`,
-            recommendation: `Right-size CPU requests in namespace "${name}" to match actual usage`,
+            recommendation: `Right-size CPU requests in namespace "${name}". Set requests to 1.5x average usage and limits to 3x. Use VPA (Vertical Pod Autoscaler) for automatic tuning.`,
+          })
+        }
+
+        // Oversized memory requests
+        if (totalCost > 5 && ramEfficiency < 0.25 && alloc.ramByteRequestAverage > 512 * 1024 * 1024) {
+          const ramRequestGb = (alloc.ramByteRequestAverage / (1024 ** 3)).toFixed(1)
+          const ramUsageGb = ((alloc.ramByteUsageAverage || 0) / (1024 ** 3)).toFixed(1)
+          findings.push({
+            type: 'oversized_memory',
+            severity: 'medium',
+            resource: name,
+            monthlySavings: (alloc.ramCost || 0) * (1 - ramEfficiency) * 0.5 * 30 / 7,
+            detail: `Namespace "${name}" requests ${ramRequestGb} GB RAM but uses only ${ramUsageGb} GB (${(ramEfficiency * 100).toFixed(0)}% utilization)`,
+            recommendation: `Reduce memory requests in namespace "${name}". Current usage suggests ${(parseFloat(ramUsageGb) * 1.5).toFixed(1)} GB would be sufficient with headroom.`,
+          })
+        }
+
+        // Unused PVCs (high PV cost but near-zero other activity)
+        if ((alloc.pvCost || 0) > 2 && cpuEfficiency < 0.01 && ramEfficiency < 0.01) {
+          findings.push({
+            type: 'unused_pvc',
+            severity: 'medium',
+            resource: name,
+            monthlySavings: (alloc.pvCost || 0) * 30 / 7,
+            detail: `Namespace "${name}" has $${((alloc.pvCost || 0) * 30 / 7).toFixed(0)}/mo in persistent volume costs but no active workloads`,
+            recommendation: `Check for orphaned PersistentVolumeClaims in namespace "${name}". Run: kubectl get pvc -n ${name} — delete any that are no longer needed.`,
+          })
+        }
+
+        // Off-hours waste: dev/staging/uat namespaces with significant cost
+        const isNonProd = /dev|staging|uat|test|sandbox|preview/i.test(name)
+        if (isNonProd && totalCost > 10) {
+          findings.push({
+            type: 'off_hours_waste',
+            severity: 'low',
+            resource: name,
+            monthlySavings: totalCost * 0.6 * 30 / 7, // assume 60% savings from scaling to zero off-hours
+            detail: `Non-production namespace "${name}" costs ~$${(totalCost * 30 / 7).toFixed(0)}/mo running 24/7`,
+            recommendation: `Schedule namespace "${name}" to scale to zero outside business hours (evenings + weekends). Use KEDA or a CronJob-based scaler. Potential 60% savings.`,
           })
         }
       }
@@ -142,16 +181,29 @@ function analyzeKubernetesFindings(namespaceData, workloadData) {
         const totalCost = (alloc.cpuCost || 0) + (alloc.ramCost || 0)
         const cpuUsage = alloc.cpuCoreUsageAverage || 0
         const ramUsage = alloc.ramByteUsageAverage || 0
+        const cpuRequest = alloc.cpuCoreRequestAverage || 0
 
         // Idle workload: near-zero usage
         if (totalCost > 0.5 && cpuUsage < 0.01 && ramUsage < 1024 * 1024 * 10) {
           findings.push({
             type: 'idle_workload',
-            severity: 'low',
+            severity: 'medium',
             resource: name,
             monthlySavings: totalCost * 30 / 7,
-            detail: `Workload "${name}" has near-zero CPU and <10MB RAM usage`,
-            recommendation: `Consider removing or scaling to zero: "${name}"`,
+            detail: `Workload "${name}" has near-zero CPU and <10MB RAM usage over 7 days`,
+            recommendation: `Remove or scale to zero: "${name}". If it's a CronJob that ran once, consider reducing its resource requests. Run: kubectl get deploy,sts -A | grep "${name.split('/').pop()}"`,
+          })
+        }
+
+        // Workload with high replica count but low per-pod usage
+        if (cpuRequest > 2 && cpuUsage < 0.3 && totalCost > 3) {
+          findings.push({
+            type: 'over_replicated',
+            severity: 'low',
+            resource: name,
+            monthlySavings: totalCost * 0.4 * 30 / 7,
+            detail: `Workload "${name}" requests ${cpuRequest.toFixed(1)} CPU cores total but uses only ${(cpuUsage * 100 / cpuRequest).toFixed(0)}% — may have too many replicas`,
+            recommendation: `Consider reducing replica count or enabling HPA (Horizontal Pod Autoscaler) for "${name}" to scale based on actual load.`,
           })
         }
       }
