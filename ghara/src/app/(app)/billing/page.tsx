@@ -76,6 +76,27 @@ export default function BillingPage() {
 
   const isOwner = me?.user?.role === 'owner'
 
+  const handlePayNow = async () => {
+    if (!confirm('Charge your card now and end your trial early? Your card will be billed for the current plan immediately.')) return
+    setUpgrading('pay-now')
+    try {
+      const res = await fetch(`${API_URL}/api/v1/billing/charge-now`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert(data.message || 'Payment failed')
+        return
+      }
+      window.location.reload()
+    } catch (err: any) {
+      alert(err.message || 'Something went wrong')
+    } finally {
+      setUpgrading(null)
+    }
+  }
+
   const handleUpgrade = async (planId: string) => {
     if (planId === 'ghara-scale') {
       // Scale tier = sales-led
@@ -163,7 +184,41 @@ export default function BillingPage() {
       {/* Plan cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {PLANS.map(plan => {
-          const isCurrent = billing?.plan === plan.id.replace('ghara-', '')
+          // Resolve the customer's tier:
+          // - During trial: use selectedTier (what they picked at signup)
+          // - When active/expired: use tier from subscription (what they're paying for)
+          const customerTier = billing?.status === 'trialing'
+            ? (billing?.selectedTier || 'starter')
+            : (billing?.tier || billing?.plan || null)
+
+          const planTier = plan.id.replace('ghara-', '') // 'starter' | 'growth' | 'scale'
+          const tierRank: Record<string, number> = { starter: 1, growth: 2, scale: 3 }
+          const customerRank = customerTier ? (tierRank[customerTier] || 0) : 0
+          const planRank = tierRank[planTier] || 0
+
+          const isCurrent = customerTier === planTier
+          const isUpgrade = planRank > customerRank
+          const isDowngrade = planRank < customerRank && customerRank > 0
+
+          // Trial Starter on Growth = "Upgrade", Trial Starter on Starter = "Pay now"
+          // Trial Growth on Starter = "Downgrade", Trial Growth on Growth = "Pay now"
+          // Active anything on same tier = "Current plan"
+          const isTrialing = billing?.status === 'trialing'
+          let ctaLabel: string
+          if (isCurrent && isTrialing) {
+            ctaLabel = 'Pay now'
+          } else if (isCurrent) {
+            ctaLabel = 'Current plan'
+          } else if (plan.id === 'ghara-scale') {
+            ctaLabel = 'Talk to us'
+          } else if (isUpgrade) {
+            ctaLabel = 'Upgrade'
+          } else if (isDowngrade) {
+            ctaLabel = 'Downgrade'
+          } else {
+            ctaLabel = 'Switch plan'
+          }
+
           return (
             <div
               key={plan.id}
@@ -193,7 +248,7 @@ export default function BillingPage() {
                 ))}
               </ul>
 
-              {isCurrent ? (
+              {isCurrent && !isTrialing ? (
                 <div className="py-2.5 rounded-lg text-center text-sm font-medium" style={{ background: 'rgba(138,99,230,0.08)', color: '#8A63E6' }}>
                   Current plan
                 </div>
@@ -202,17 +257,22 @@ export default function BillingPage() {
                   onClick={() => handleUpgrade(plan.id)}
                   className="py-2.5 rounded-lg border border-border text-sm font-medium text-ink hover:bg-surface transition-colors"
                 >
-                  Talk to us
+                  {ctaLabel}
                 </button>
               ) : isOwner ? (
                 <button
-                  onClick={() => handleUpgrade(plan.id)}
-                  disabled={upgrading === plan.id}
-                  className="py-2.5 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{ background: '#33063D' }}
+                  onClick={() => isCurrent && isTrialing ? handlePayNow() : handleUpgrade(plan.id)}
+                  disabled={upgrading === plan.id || (isCurrent && isTrialing && upgrading === 'pay-now')}
+                  className={clsx(
+                    'py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2',
+                    isDowngrade
+                      ? 'border border-border text-ink hover:bg-surface'
+                      : 'text-white'
+                  )}
+                  style={isDowngrade ? undefined : { background: '#33063D' }}
                 >
-                  {upgrading === plan.id && <Loader2 size={14} className="animate-spin" />}
-                  {billing?.status === 'trialing' || billing?.status === 'expired' ? 'Upgrade' : 'Switch plan'}
+                  {(upgrading === plan.id || (isCurrent && isTrialing && upgrading === 'pay-now')) && <Loader2 size={14} className="animate-spin" />}
+                  {ctaLabel}
                 </button>
               ) : (
                 <div className="py-2.5 rounded-lg text-center text-xs text-muted border border-border">

@@ -26,6 +26,7 @@ export default function DashboardPage() {
   )
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
+  const [actionFilter, setActionFilter] = useState<'all' | 'Compliance' | 'Cost'>('all')
 
   const latestScan = scans?.[0]
   const hasData = latestScan?.status === 'complete'
@@ -243,32 +244,43 @@ export default function DashboardPage() {
             )}
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
-            <FilterPill label="All" active />
-            <FilterPill label="Compliance" />
-            <FilterPill label="Cost" />
+            <FilterPill label="All" active={actionFilter === 'all'} onClick={() => setActionFilter('all')} />
+            <FilterPill label="Compliance" active={actionFilter === 'Compliance'} onClick={() => setActionFilter('Compliance')} />
+            <FilterPill label="Cost" active={actionFilter === 'Cost'} onClick={() => setActionFilter('Cost')} />
           </div>
         </div>
 
-        {actionQueue.length === 0 ? (
-          <div style={{ padding: '56px 24px', textAlign: 'center' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(6,118,71,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <CheckCircle size={22} style={{ color: GREEN }} />
+        {(() => {
+          // K8s findings show under "Cost" since they are cost optimisations
+          const filteredQueue = actionFilter === 'all'
+            ? actionQueue
+            : actionFilter === 'Cost'
+              ? actionQueue.filter((i) => i.type === 'Cost' || i.type === 'Kubernetes')
+              : actionQueue.filter((i) => i.type === actionFilter)
+
+          return filteredQueue.length === 0 ? (
+            <div style={{ padding: '56px 24px', textAlign: 'center' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(6,118,71,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <CheckCircle size={22} style={{ color: GREEN }} />
+              </div>
+              <p style={{ fontSize: 15, fontWeight: 500, color: PLUM }}>All clear</p>
+              <p style={{ fontSize: 13, color: 'rgba(51,6,61,0.5)', marginTop: 4 }}>
+                {actionFilter === 'all' ? 'No open findings. Your cloud is in good shape.' : `No ${actionFilter.toLowerCase()} findings.`}
+              </p>
             </div>
-            <p style={{ fontSize: 15, fontWeight: 500, color: PLUM }}>All clear</p>
-            <p style={{ fontSize: 13, color: 'rgba(51,6,61,0.5)', marginTop: 4 }}>No open findings. Your cloud is in good shape.</p>
-          </div>
-        ) : (
-          <div>
-            {actionQueue.slice(0, 12).map((item, i) => (
-              <ActionRow key={i} item={item} index={i} />
-            ))}
-            {actionQueue.length > 12 && (
-              <Link href="/compliance" style={{ display: 'block', padding: '14px 24px', textAlign: 'center', borderTop: '1px solid rgba(51,6,61,0.05)', fontSize: 13, color: IRIS, textDecoration: 'none', fontWeight: 500 }}>
-                View all {actionQueue.length} findings →
-              </Link>
-            )}
-          </div>
-        )}
+          ) : (
+            <div>
+              {filteredQueue.slice(0, 12).map((item, i) => (
+                <ActionRow key={i} item={item} index={i} />
+              ))}
+              {filteredQueue.length > 12 && (
+                <Link href={actionFilter === 'Cost' ? '/cost' : '/compliance'} style={{ display: 'block', padding: '14px 24px', textAlign: 'center', borderTop: '1px solid rgba(51,6,61,0.05)', fontSize: 13, color: IRIS, textDecoration: 'none', fontWeight: 500 }}>
+                  View all {filteredQueue.length} findings →
+                </Link>
+              )}
+            </div>
+          )
+        })()}
       </div>
 
       {/* K8s CTA — shown below action queue */}
@@ -418,9 +430,9 @@ function KpiCard({ label, value, icon, color, trend }: { label: string; value: s
   )
 }
 
-function FilterPill({ label, active }: { label: string; active?: boolean }) {
+function FilterPill({ label, active, onClick }: { label: string; active?: boolean; onClick?: () => void }) {
   return (
-    <button style={{
+    <button onClick={onClick} style={{
       padding: '5px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
       fontSize: 12, fontWeight: 500, transition: 'all 0.2s',
       background: active ? LAVENDER : 'transparent',

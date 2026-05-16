@@ -61,9 +61,25 @@ export async function disableSubscription({ code, token }) {
   return paystackFetch('POST', '/subscription/disable', { code, token })
 }
 
+// Charge an existing authorization (used for "Pay now" to end trial early)
+export async function chargeAuthorization({ email, amount, authorizationCode, metadata, currency = 'ZAR' }) {
+  return paystackFetch('POST', '/transaction/charge_authorization', {
+    email,
+    amount, // in cents
+    currency,
+    authorization_code: authorizationCode,
+    ...(metadata && { metadata })
+  })
+}
+
 // List plans
 export async function listPlans() {
   return paystackFetch('GET', '/plan')
+}
+
+// Get a single plan by ID or code
+export async function getPlan(idOrCode) {
+  return paystackFetch('GET', `/plan/${encodeURIComponent(idOrCode)}`)
 }
 
 // Verify webhook signature (HMAC SHA-512)

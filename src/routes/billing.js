@@ -8,6 +8,8 @@ import {
   createSubscription,
   getSubscription,
   disableSubscription,
+  chargeAuthorization,
+  getPlan,
   verifyWebhookSignature
 } from '../services/paystack.js'
 import { upsertSubscription } from '../services/subscriptions.js'
@@ -104,6 +106,8 @@ export default async function billingRoutes(fastify) {
     return reply.send({
       plan: activeSub?.plan || org.plan,
       product: activeSub?.product || null,
+      tier: activeSub?.tier || null,
+      selectedTier: activeSub?.selectedTier || null,
       status: paystackActive ? 'active'
         : (subTableActive || trialActive) ? 'trialing'
         : 'expired',
@@ -332,6 +336,164 @@ export default async function billingRoutes(fastify) {
       subscription: {
         code: subscription.subscription_code,
         nextPaymentDate: subscription.next_payment_date
+      }
+    })
+  })
+
+  // POST /api/v1/billing/charge-now — end trial early by charging the existing
+  // tokenized card immediately. Useful for "Pay now" on the billing page.
+  fastify.post('/charge-now', {
+    preHandler: [verifyToken, requireUser, requireOwner],
+    schema: { tags: ['Billing'], security: [{ bearerAuth: [] }] }
+  }, async (request, reply) => {
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, request.orgId)
+    })
+
+    if (!org) return reply.status(404).send({ error: 'Organization not found' })
+
+    if (!org.paystackAuthCode || !org.paystackCustomerCode) {
+      return reply.status(400).send({
+        error: 'No card on file',
+        message: 'Add a payment method first'
+      })
+    }
+
+    // Find the active trialing subscription
+    const trialSub = await db.query.subscriptions.findFirst({
+      where: and(
+        eq(subscriptionsTable.orgId, request.orgId),
+        eq(subscriptionsTable.status, 'trialing')
+      )
+    })
+
+    if (!trialSub) {
+      return reply.status(400).send({
+        error: 'No trial subscription found',
+        message: 'Your subscription is not in trial state'
+      })
+    }
+
+    // Get the Paystack plan to know the amount to charge
+    let plan
+    try {
+      plan = await getPlan(trialSub.paystackPlanCode)
+    } catch (err) {
+      logger.error({ err: err.message, planCode: trialSub.paystackPlanCode },
+        'Failed to fetch Paystack plan for charge-now')
+      return reply.status(500).send({ error: 'Failed to fetch plan details' })
+    }
+
+    // Charge the authorization for one billing period
+    let charge
+    try {
+      charge = await chargeAuthorization({
+        email: request.user.email,
+        amount: plan.amount,
+        authorizationCode: org.paystackAuthCode,
+        currency: plan.currency || 'ZAR',
+        metadata: {
+          orgId: request.orgId,
+          plan: trialSub.plan,
+          source: 'charge_now',
+          userId: request.user.id
+        }
+      })
+    } catch (err) {
+      logger.error({ err: err.message, orgId: request.orgId }, 'charge-now: chargeAuthorization failed')
+      return reply.status(502).send({
+        error: 'Payment failed',
+        message: err.message || 'Could not charge your card'
+      })
+    }
+
+    if (charge.status !== 'success') {
+      logger.warn({ orgId: request.orgId, status: charge.status }, 'charge-now: charge not successful')
+      return reply.status(402).send({
+        error: 'Payment declined',
+        message: charge.gateway_response || 'Your card was declined'
+      })
+    }
+
+    // Disable the future-dated trial subscription and create a fresh one
+    // that bills monthly starting today. This avoids the customer waiting
+    // until the original trialEndsAt for their next renewal.
+    if (trialSub.paystackSubscriptionCode) {
+      try {
+        const oldSub = await getSubscription(trialSub.paystackSubscriptionCode)
+        await disableSubscription({ code: oldSub.subscription_code, token: oldSub.email_token })
+      } catch (err) {
+        logger.warn({ err: err.message }, 'charge-now: failed to disable old trial subscription (continuing)')
+      }
+    }
+
+    let newSubscription
+    try {
+      const nextStart = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      newSubscription = await createSubscription({
+        customer: org.paystackCustomerCode,
+        plan: trialSub.paystackPlanCode,
+        authorization: org.paystackAuthCode,
+        startDate: nextStart.toISOString()
+      })
+    } catch (err) {
+      logger.error({ err: err.message }, 'charge-now: failed to create renewal subscription')
+      // Charge already succeeded, so don't fail the request — webhook will
+      // still flip trialing→active. Just log.
+    }
+
+    // Flip the subscription row to active immediately. The charge.success
+    // webhook will also do this, but doing it here ensures the UI updates
+    // right away without waiting for the webhook.
+    await db.update(subscriptionsTable)
+      .set({
+        status: 'active',
+        ...(trialSub.selectedTier && trialSub.selectedTier !== trialSub.tier
+          ? { tier: trialSub.selectedTier }
+          : {}),
+        ...(newSubscription?.subscription_code
+          ? { paystackSubscriptionCode: newSubscription.subscription_code }
+          : {}),
+        updatedAt: new Date()
+      })
+      .where(eq(subscriptionsTable.id, trialSub.id))
+
+    if (newSubscription?.subscription_code) {
+      await db.update(organizations)
+        .set({
+          paystackSubscriptionCode: newSubscription.subscription_code,
+          updatedAt: new Date()
+        })
+        .where(eq(organizations.id, request.orgId))
+    }
+
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user.id,
+      action: 'billing.charge_now',
+      metadata: {
+        plan: trialSub.plan,
+        amount: charge.amount,
+        currency: charge.currency,
+        reference: charge.reference,
+        newSubscriptionCode: newSubscription?.subscription_code
+      }
+    })
+
+    logger.info({
+      orgId: request.orgId,
+      amount: charge.amount,
+      reference: charge.reference
+    }, 'Trial ended early via Pay Now')
+
+    return reply.send({
+      status: 'success',
+      message: 'Payment successful',
+      charge: {
+        amount: charge.amount,
+        currency: charge.currency,
+        reference: charge.reference,
+        last4: charge.authorization?.last4
       }
     })
   })
