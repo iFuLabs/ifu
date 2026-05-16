@@ -218,6 +218,41 @@ const SOC2_CONTROLS = [
     severity: 'critical',
     automatable: false,
     checkFn: null
+  },
+
+  // ── Extended Security (VPC, KMS, IAM roles) ─────────────────────────────
+  {
+    controlId: 'CC7.2-VPC-FLOW-LOGS',
+    framework: 'soc2',
+    category: 'Monitoring',
+    title: 'VPC Flow Logs enabled on all VPCs',
+    description: 'VPC Flow Logs must be enabled to capture network traffic for auditing and forensics.',
+    guidance: 'For each VPC: VPC console → select VPC → Flow Logs tab → Create flow log. Send to CloudWatch Logs or S3. Enable on all VPCs including default VPCs.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'securityChecks'
+  },
+  {
+    controlId: 'CC9.1-KMS-ROTATION',
+    framework: 'soc2',
+    category: 'Data Protection',
+    title: 'KMS keys have automatic rotation enabled',
+    description: 'Customer-managed symmetric KMS keys must have annual automatic rotation enabled.',
+    guidance: 'For each customer-managed symmetric KMS key: KMS console → key → Key rotation tab → Enable. Rotation happens annually with no impact to encrypted data.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'securityChecks'
+  },
+  {
+    controlId: 'CC6.3-IAM-WILDCARD',
+    framework: 'soc2',
+    category: 'Logical Access',
+    title: 'No IAM roles with wildcard permissions',
+    description: 'Customer-managed IAM roles must not grant wildcard access (Action: *, Resource: *) to follow least-privilege.',
+    guidance: 'Review roles flagged below. Replace inline or attached AdministratorAccess policies with scoped permissions. Use AWS-managed read-only policies (ViewOnlyAccess) where broad read access is needed instead of wildcard write access.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'securityChecks'
   }
 ]
 

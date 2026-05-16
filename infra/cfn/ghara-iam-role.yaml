@@ -137,6 +137,30 @@ Resources:
                   - eks:DescribeCluster
                   - eks:ListNodegroups
                 Resource: '*'
+              - Sid: KMS
+                Effect: Allow
+                Action:
+                  - kms:ListKeys
+                  - kms:DescribeKey
+                  - kms:GetKeyRotationStatus
+                  - kms:ListAliases
+                Resource: '*'
+              - Sid: VPCFlowLogs
+                Effect: Allow
+                Action:
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeFlowLogs
+                Resource: '*'
+              - Sid: IAMRolePolicies
+                Effect: Allow
+                Action:
+                  - iam:ListRoles
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                  - iam:GetRolePolicy
+                  - iam:GetPolicy
+                  - iam:GetPolicyVersion
+                Resource: '*'
               - Sid: STS
                 Effect: Allow
                 Action:

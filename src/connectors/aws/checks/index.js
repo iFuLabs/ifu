@@ -5,6 +5,7 @@ import { rdsChecks } from './rds.js'
 import { guarddutyChecks } from './guardduty.js'
 import { ec2Checks } from './ec2.js'
 import { runIso27001Checks, runGdprChecks } from './iso-gdpr.js'
+import { securityChecks } from './security.js'
 
 /**
  * Runs all AWS checks and returns normalized results.
@@ -27,14 +28,15 @@ export async function runAwsChecks({ credentials, region, controls, onProgress }
   }
 
   const checkGroups = [
-    { name: 'IAM',        fn: iamChecks,        weight: 20 },
-    { name: 'S3',         fn: s3Checks,         weight: 20 },
-    { name: 'CloudTrail', fn: cloudtrailChecks, weight: 15 },
-    { name: 'RDS',        fn: rdsChecks,        weight: 15 },
-    { name: 'GuardDuty',  fn: guarddutyChecks,  weight: 15 },
-    { name: 'EC2',        fn: ec2Checks,        weight: 10 },
-    { name: 'ISO27001',   fn: (cfg) => runIso27001Checks({ credentials: cfg.credentials, region: cfg.region, controls, onProgress: async () => {} }), weight: 10 },
-    { name: 'GDPR',       fn: (cfg) => runGdprChecks({ credentials: cfg.credentials, region: cfg.region, controls, onProgress: async () => {} }), weight: 5 }
+    { name: 'IAM',        fn: iamChecks,        weight: 18 },
+    { name: 'S3',         fn: s3Checks,         weight: 18 },
+    { name: 'CloudTrail', fn: cloudtrailChecks, weight: 13 },
+    { name: 'RDS',        fn: rdsChecks,        weight: 13 },
+    { name: 'GuardDuty',  fn: guarddutyChecks,  weight: 13 },
+    { name: 'EC2',        fn: ec2Checks,        weight: 8 },
+    { name: 'Security',   fn: securityChecks,   weight: 10 },
+    { name: 'ISO27001',   fn: (cfg) => runIso27001Checks({ credentials: cfg.credentials, region: cfg.region, controls, onProgress: async () => {} }), weight: 5 },
+    { name: 'GDPR',       fn: (cfg) => runGdprChecks({ credentials: cfg.credentials, region: cfg.region, controls, onProgress: async () => {} }), weight: 2 }
   ]
 
   let cumulativeProgress = 0
