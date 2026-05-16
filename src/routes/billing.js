@@ -1,7 +1,7 @@
 import { verifyToken, requireUser, requireOwner } from '../middleware/auth.js'
 import { db } from '../db/client.js'
 import { organizations, subscriptions as subscriptionsTable } from '../db/schema.js'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, or } from 'drizzle-orm'
 import {
   initializeTransaction,
   verifyTransaction,
@@ -100,9 +100,31 @@ export default async function billingRoutes(fastify) {
       }
     }
 
-    // Determine status: Paystack active > subscriptions table > trial > expired
+    // Determine status: our DB's 'trialing' is authoritative while trialEndsAt is
+    // still in the future. Paystack reports such subscriptions as 'active' (it
+    // has no 'trialing' concept — it just delays the first charge via start_date),
+    // so we must check our row first to avoid mis-flagging trial customers.
+    const dbTrialing = activeSub?.status === 'trialing' && (
+      (activeSub.trialEndsAt && new Date(activeSub.trialEndsAt) > now) || trialActive
+    )
+    const dbPastDue = activeSub?.status === 'past_due'
     const paystackActive = subscription?.status === 'active'
-    const subTableActive = activeSub?.status === 'active' || activeSub?.status === 'trialing'
+    const subTableActive = activeSub?.status === 'active'
+
+    // Compute past-due grace info if applicable
+    let pastDueInfo = null
+    if (dbPastDue && activeSub.pastDueAt) {
+      const { PAST_DUE_GRACE_MS, PAST_DUE_GRACE_DAYS } = await import('../services/config.js')
+      const elapsedMs = now - new Date(activeSub.pastDueAt)
+      const remainingMs = PAST_DUE_GRACE_MS - elapsedMs
+      const inGrace = remainingMs > 0
+      pastDueInfo = {
+        pastDueAt: activeSub.pastDueAt,
+        graceDaysTotal: PAST_DUE_GRACE_DAYS,
+        graceDaysRemaining: inGrace ? Math.ceil(remainingMs / (1000 * 60 * 60 * 24)) : 0,
+        inGrace,
+      }
+    }
 
     // Soft AWS spend cap evaluation. Read latest cached scan total and
     // compare to the customer's tier cap. We only flag when the customer
@@ -110,7 +132,7 @@ export default async function billingRoutes(fastify) {
     // month-end spikes won't trigger a banner.
     let spendWarning = null
     try {
-      const effectiveTier = activeSub?.status === 'trialing'
+      const effectiveTier = dbTrialing
         ? 'growth' // trial = full Growth, don't nag them about spend during trial
         : (activeSub?.tier || activeSub?.selectedTier || org.plan || 'starter')
       const cap = TIER_SPEND_CAPS_USD[effectiveTier]
@@ -139,13 +161,16 @@ export default async function billingRoutes(fastify) {
       product: activeSub?.product || null,
       tier: activeSub?.tier || null,
       selectedTier: activeSub?.selectedTier || null,
-      status: paystackActive ? 'active'
-        : (subTableActive || trialActive) ? 'trialing'
+      status: dbTrialing ? 'trialing'
+        : dbPastDue ? 'past_due'
+        : (paystackActive || subTableActive) ? 'active'
+        : trialActive ? 'trialing'
         : 'expired',
       trialEndsAt: activeSub?.trialEndsAt || org.trialEndsAt,
       trialDaysLeft,
       hasPaymentMethod: !!org.paystackAuthCode,
       spendWarning,
+      pastDue: pastDueInfo,
       subscription: subscription ? {
         code: subscription.subscription_code,
         status: subscription.status,
@@ -566,6 +591,113 @@ export default async function billingRoutes(fastify) {
     })
   })
 
+  // POST /api/v1/billing/retry-payment — manually retry a failed charge after
+  // the customer has updated their card. Reuses the existing tokenized
+  // authorization. If they need a new card entirely, they should re-tokenize
+  // via /billing/initialize first.
+  fastify.post('/retry-payment', {
+    preHandler: [verifyToken, requireUser, requireOwner],
+    schema: { tags: ['Billing'], security: [{ bearerAuth: [] }] }
+  }, async (request, reply) => {
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, request.orgId)
+    })
+
+    if (!org) return reply.status(404).send({ error: 'Organization not found' })
+
+    if (!org.paystackAuthCode || !org.paystackCustomerCode) {
+      return reply.status(400).send({
+        error: 'No card on file',
+        message: 'Add a payment method before retrying'
+      })
+    }
+
+    const pastDueSub = await db.query.subscriptions.findFirst({
+      where: and(
+        eq(subscriptionsTable.orgId, request.orgId),
+        eq(subscriptionsTable.status, 'past_due')
+      )
+    })
+
+    if (!pastDueSub) {
+      return reply.status(400).send({
+        error: 'No past-due subscription',
+        message: 'Your subscription is not in past_due state'
+      })
+    }
+
+    // Look up plan amount from Paystack
+    let plan
+    try {
+      plan = await getPlan(pastDueSub.paystackPlanCode)
+    } catch (err) {
+      logger.error({ err: err.message }, 'retry-payment: getPlan failed')
+      return reply.status(500).send({ error: 'Failed to fetch plan details' })
+    }
+
+    let charge
+    try {
+      charge = await chargeAuthorization({
+        email: request.user.email,
+        amount: plan.amount,
+        authorizationCode: org.paystackAuthCode,
+        currency: plan.currency || 'ZAR',
+        metadata: {
+          orgId: request.orgId,
+          plan: pastDueSub.plan,
+          source: 'retry_payment',
+          userId: request.user.id
+        }
+      })
+    } catch (err) {
+      logger.error({ err: err.message, orgId: request.orgId }, 'retry-payment: chargeAuthorization failed')
+      return reply.status(502).send({
+        error: 'Payment failed',
+        message: err.message || 'Could not charge your card'
+      })
+    }
+
+    if (charge.status !== 'success') {
+      return reply.status(402).send({
+        error: 'Payment declined',
+        message: charge.gateway_response || 'Your card was declined'
+      })
+    }
+
+    // Flip past_due → active immediately. The charge.success webhook will
+    // also handle this, but doing it here updates UI without webhook lag.
+    await db.update(subscriptionsTable)
+      .set({
+        status: 'active',
+        pastDueAt: null,
+        updatedAt: new Date()
+      })
+      .where(eq(subscriptionsTable.id, pastDueSub.id))
+
+    await auditAction({
+      orgId: request.orgId,
+      userId: request.user.id,
+      action: 'billing.retry_payment',
+      metadata: {
+        plan: pastDueSub.plan,
+        amount: charge.amount,
+        currency: charge.currency,
+        reference: charge.reference
+      }
+    })
+
+    return reply.send({
+      status: 'success',
+      message: 'Payment successful',
+      charge: {
+        amount: charge.amount,
+        currency: charge.currency,
+        reference: charge.reference,
+        last4: charge.authorization?.last4
+      }
+    })
+  })
+
   // POST /api/v1/billing/cancel — cancel subscription
   fastify.post('/cancel', {
     preHandler: [verifyToken, requireUser, requireOwner],
@@ -676,14 +808,21 @@ export default async function billingRoutes(fastify) {
             .limit(1)
 
           if (org) {
-            // Flip the trialing subscription row to active. This is the moment
-            // a customer transitions from "trial" to "paying", and the row was
-            // previously stuck in 'trialing' forever.
+            // Flip trialing OR past_due → active. Trialing handles first
+            // charge after trial. past_due handles a successful retry after
+            // a previous failure (customer fixed their card).
             const [updated] = await db.update(subscriptionsTable)
-              .set({ status: 'active', updatedAt: new Date() })
+              .set({
+                status: 'active',
+                pastDueAt: null, // clear grace timer when we recover
+                updatedAt: new Date()
+              })
               .where(and(
                 eq(subscriptionsTable.orgId, org.id),
-                eq(subscriptionsTable.status, 'trialing')
+                or(
+                  eq(subscriptionsTable.status, 'trialing'),
+                  eq(subscriptionsTable.status, 'past_due')
+                )
               ))
               .returning()
             if (updated) {
@@ -789,12 +928,21 @@ export default async function billingRoutes(fastify) {
             .where(eq(organizations.paystackCustomerCode, customerCode))
             .limit(1)
           if (org) {
-            // Mark subscription as past_due
+            // Mark subscription as past_due. We flip both 'active' (renewal failed)
+            // and 'trialing' (very first charge after trial failed) — anything
+            // currently considered "in good standing".
             await db.update(subscriptionsTable)
-              .set({ status: 'past_due', updatedAt: new Date() })
+              .set({
+                status: 'past_due',
+                pastDueAt: new Date(),
+                updatedAt: new Date()
+              })
               .where(and(
                 eq(subscriptionsTable.orgId, org.id),
-                eq(subscriptionsTable.status, 'active')
+                or(
+                  eq(subscriptionsTable.status, 'active'),
+                  eq(subscriptionsTable.status, 'trialing')
+                )
               ))
 
             // Email the owner so they can fix the card before Paystack's retries

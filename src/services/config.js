@@ -60,3 +60,9 @@ export const TIER_SPEND_CAPS_USD = {
 // How much above the cap before we surface the banner. 1.10 = 10% over.
 // Keeps brief month-end spikes from triggering a false alarm.
 export const SPEND_CAP_TOLERANCE = 1.10
+
+// Past-due grace period: how long a customer keeps access after their first
+// charge fails. After this elapses, productEntitlements() drops the row and
+// they are locked out until they fix the card.
+export const PAST_DUE_GRACE_DAYS = 7
+export const PAST_DUE_GRACE_MS = PAST_DUE_GRACE_DAYS * 24 * 60 * 60 * 1000

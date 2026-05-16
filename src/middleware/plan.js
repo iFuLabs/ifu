@@ -2,6 +2,7 @@
 import { db } from '../db/client.js'
 import { subscriptions } from '../db/schema.js'
 import { eq, and, or } from 'drizzle-orm'
+import { PAST_DUE_GRACE_MS } from '../services/config.js'
 
 const PLAN_FEATURES = {
   starter: {
@@ -82,6 +83,9 @@ export async function productEntitlements(orgId) {
   const activeSubs = subs.filter(sub => {
     if (sub.status === 'active') return true
     if (sub.status === 'trialing' && sub.trialEndsAt && new Date(sub.trialEndsAt) > now) return true
+    // Past-due grace: keep access for PAST_DUE_GRACE_MS after the row went past_due.
+    // This gives the customer a window to fix their card without instantly losing access.
+    if (sub.status === 'past_due' && sub.pastDueAt && (now - new Date(sub.pastDueAt)) < PAST_DUE_GRACE_MS) return true
     return false
   })
 

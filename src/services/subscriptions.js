@@ -1,6 +1,7 @@
 import { db } from '../db/client.js'
 import { subscriptions } from '../db/schema.js'
 import { eq, and } from 'drizzle-orm'
+import { PAST_DUE_GRACE_MS } from './config.js'
 
 /**
  * Check if an organization has an active subscription for a product
@@ -18,11 +19,17 @@ export async function hasActiveSubscription(orgId, product) {
 
   if (!subscription) return false
 
-  // Check if subscription is active or trialing
+  const now = new Date()
+
   if (subscription.status === 'active') return true
-  
+
   if (subscription.status === 'trialing' && subscription.trialEndsAt) {
-    return new Date(subscription.trialEndsAt) > new Date()
+    return new Date(subscription.trialEndsAt) > now
+  }
+
+  // Past-due grace window
+  if (subscription.status === 'past_due' && subscription.pastDueAt) {
+    return (now - new Date(subscription.pastDueAt)) < PAST_DUE_GRACE_MS
   }
 
   return false
@@ -39,10 +46,11 @@ export async function getActiveSubscriptions(orgId) {
   })
 
   const now = new Date()
-  
+
   return subs.filter(sub => {
     if (sub.status === 'active') return true
     if (sub.status === 'trialing' && sub.trialEndsAt && new Date(sub.trialEndsAt) > now) return true
+    if (sub.status === 'past_due' && sub.pastDueAt && (now - new Date(sub.pastDueAt)) < PAST_DUE_GRACE_MS) return true
     return false
   })
 }
@@ -68,7 +76,7 @@ export async function getSubscription(orgId, product) {
  * @returns {Promise<Object>}
  */
 export async function upsertSubscription(data) {
-  const { orgId, product, plan, status, paystackSubscriptionCode, paystackPlanCode, trialEndsAt, tier, products, legacy } = data
+  const { orgId, product, plan, status, paystackSubscriptionCode, paystackPlanCode, trialEndsAt, tier, selectedTier, products, legacy } = data
 
   // Infer tier if not provided
   const resolvedTier = tier || _inferTier(plan)
@@ -86,6 +94,7 @@ export async function upsertSubscription(data) {
         plan,
         status,
         tier: resolvedTier,
+        ...(selectedTier !== undefined && { selectedTier }),
         products: resolvedProducts,
         ...(legacy !== undefined && { legacy }),
         paystackSubscriptionCode,
@@ -95,7 +104,7 @@ export async function upsertSubscription(data) {
       })
       .where(eq(subscriptions.id, existing.id))
       .returning()
-    
+
     return updated
   } else {
     // Create new subscription
@@ -107,6 +116,7 @@ export async function upsertSubscription(data) {
         plan,
         status,
         tier: resolvedTier,
+        ...(selectedTier !== undefined && { selectedTier }),
         products: resolvedProducts,
         ...(legacy !== undefined && { legacy }),
         paystackSubscriptionCode,
@@ -114,7 +124,7 @@ export async function upsertSubscription(data) {
         trialEndsAt
       })
       .returning()
-    
+
     return created
   }
 }

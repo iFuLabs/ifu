@@ -266,6 +266,7 @@ export const subscriptions = pgTable('subscriptions', {
   paystackSubscriptionCode: text('paystack_subscription_code'),
   paystackPlanCode:        text('paystack_plan_code'),
   trialEndsAt:             timestamp('trial_ends_at'),
+  pastDueAt:               timestamp('past_due_at'), // when the subscription went past_due — drives grace period expiry
   createdAt:               timestamp('created_at').notNull().defaultNow(),
   updatedAt:               timestamp('updated_at').notNull().defaultNow()
 }, (table) => [

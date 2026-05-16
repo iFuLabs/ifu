@@ -25,7 +25,8 @@ const onboardSchema = z.object({
     .optional(),
   orgName: z.string().min(2).max(100),
   orgDomain: z.string().optional(),
-  role: z.string().optional() // signup role: cto, engineering, compliance, founder, other
+  role: z.string().optional(), // signup role: cto, engineering, compliance, founder, other
+  plan: z.enum(['ghara-starter', 'ghara-growth']).optional() // tier user picked at signup; defaults to growth
 })
 
 const loginSchema = z.object({
@@ -222,12 +223,15 @@ export default async function authRoutes(fastify) {
     }
 
     // Create Ghara trial subscription (7-day Growth tier, no card required)
+    // selectedTier is what the customer picked at signup — drives post-trial tier
+    const selectedTier = body.plan === 'ghara-starter' ? 'starter' : 'growth'
     try {
       await upsertSubscription({
         orgId: result.org.id,
         product: 'ghara',
-        plan: 'ghara_growth_trial',
-        tier: 'growth',
+        plan: `ghara_${selectedTier}_trial`,
+        tier: 'growth', // Always Growth during trial
+        selectedTier,
         status: 'trialing',
         products: ['compliance', 'cost'],
         trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS),
@@ -391,6 +395,7 @@ export default async function authRoutes(fastify) {
         product: 'ghara',
         plan: `ghara_${selectedTier}_trial`,
         tier: 'growth', // Always Growth during trial
+        selectedTier, // What customer chose at signup — drives post-trial tier
         status: 'trialing',
         products: ['compliance', 'cost'],
         trialEndsAt,
@@ -513,6 +518,8 @@ export default async function authRoutes(fastify) {
       paystackPlanCode: planCode,
       tokenizationReference: reference,
       tokenizationRefundedAt: new Date(),
+      // Ensure selectedTier is set even if the trial row was created elsewhere
+      ...(metadata.selectedTier && { selectedTier: metadata.selectedTier }),
       updatedAt: new Date()
     }).where(andOp(
       eq(subscriptions.orgId, request.orgId),

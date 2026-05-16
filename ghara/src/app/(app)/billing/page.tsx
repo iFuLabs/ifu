@@ -103,6 +103,27 @@ export default function BillingPage() {
     }
   }
 
+  const handleRetryPayment = async () => {
+    if (!confirm('Retry charging your card?')) return
+    setUpgrading('retry')
+    try {
+      const res = await fetch(`${API_URL}/api/v1/billing/retry-payment`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert(data.message || 'Payment failed')
+        return
+      }
+      window.location.reload()
+    } catch (err: any) {
+      alert(err.message || 'Something went wrong')
+    } finally {
+      setUpgrading(null)
+    }
+  }
+
   const handleUpgrade = async (planId: string) => {
     if (planId === 'ghara-scale') {
       // Scale tier = sales-led
@@ -144,6 +165,47 @@ export default function BillingPage() {
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-semibold text-ink mb-2">Billing</h1>
 
+      {/* Past-due banner — shown when payment failed; gives the customer a clear
+          CTA to fix things before the grace window runs out. */}
+      {billing?.status === 'past_due' && (
+        <div
+          className="rounded-xl border p-4 mb-4 flex items-start gap-3"
+          style={{ borderColor: '#FCA5A5', background: '#FEF2F2' }}
+        >
+          <AlertCircle size={18} className="mt-0.5 flex-shrink-0" style={{ color: '#B91C1C' }} />
+          <div className="flex-1">
+            <p className="text-sm font-medium" style={{ color: '#B91C1C' }}>
+              Payment failed
+            </p>
+            <p className="text-xs mt-1" style={{ color: 'rgba(185,28,28,0.85)' }}>
+              {billing.pastDue?.inGrace
+                ? `We could not charge your card. You have ${billing.pastDue.graceDaysRemaining} day${billing.pastDue.graceDaysRemaining === 1 ? '' : 's'} to update your payment method before access is paused.`
+                : 'Your grace period has ended and access has been paused. Update your payment method and retry to restore access.'}
+            </p>
+            {isOwner && (
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleRetryPayment}
+                  disabled={upgrading === 'retry'}
+                  className="px-4 py-1.5 rounded-lg text-white text-xs font-medium disabled:opacity-50 flex items-center gap-2"
+                  style={{ background: '#B91C1C' }}
+                >
+                  {upgrading === 'retry' && <Loader2 size={12} className="animate-spin" />}
+                  Retry payment
+                </button>
+                <button
+                  onClick={() => handleUpgrade(billing.tier ? `ghara-${billing.tier}` : 'ghara-starter')}
+                  className="px-4 py-1.5 rounded-lg text-xs font-medium border"
+                  style={{ borderColor: '#FCA5A5', color: '#B91C1C', background: '#FFFFFF' }}
+                >
+                  Update card
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* AWS spend cap banner — soft enforcement only, suggests upgrade */}
       {billing?.spendWarning && billing.status !== 'trialing' && (
         <div
@@ -171,7 +233,11 @@ export default function BillingPage() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-medium text-ink">
-                  Current plan: <span className="capitalize">{billing.plan || 'None'}</span>
+                  Current plan: <span className="capitalize">
+                    {billing.status === 'trialing'
+                      ? `${billing.selectedTier || (typeof billing.plan === 'string' && billing.plan.includes('growth') ? 'growth' : 'starter')} (trial)`
+                      : (billing.tier || (typeof billing.plan === 'string' ? billing.plan.replace('ghara_', '').replace('_trial', '') : 'None'))}
+                  </span>
                 </span>
                 <StatusBadge status={billing.status} />
               </div>
@@ -211,10 +277,17 @@ export default function BillingPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {PLANS.map(plan => {
           // Resolve the customer's tier:
-          // - During trial: use selectedTier (what they picked at signup)
+          // - During trial: prefer selectedTier (what they picked at signup); if missing,
+          //   fall back to tier on the row (which should reflect the Paystack plan they
+          //   were assigned), then plan name parsing as a final fallback.
           // - When active/expired: use tier from subscription (what they're paying for)
+          const trialTier = billing?.selectedTier
+            || (billing?.tier && billing.tier !== 'growth' ? billing.tier : null) // tier=growth during trial isn't authoritative
+            || (typeof billing?.plan === 'string' && billing.plan.includes('growth') ? 'growth' : null)
+            || (typeof billing?.plan === 'string' && billing.plan.includes('scale') ? 'scale' : null)
+            || 'starter'
           const customerTier = billing?.status === 'trialing'
-            ? (billing?.selectedTier || 'starter')
+            ? trialTier
             : (billing?.tier || billing?.plan || null)
 
           const planTier = plan.id.replace('ghara-', '') // 'starter' | 'growth' | 'scale'
@@ -325,6 +398,7 @@ function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; label: string }> = {
     active: { bg: '#ECFDF3', text: '#067647', label: 'Active' },
     trialing: { bg: 'rgba(138,99,230,0.08)', text: '#8A63E6', label: 'Trial' },
+    past_due: { bg: '#FEF2F2', text: '#B91C1C', label: 'Past due' },
     expired: { bg: '#FEF3F2', text: '#B42318', label: 'Expired' },
     cancelled: { bg: '#F8F7FA', text: 'rgba(51,6,61,0.65)', label: 'Cancelled' },
   }
