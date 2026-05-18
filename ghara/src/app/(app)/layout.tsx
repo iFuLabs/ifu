@@ -3,7 +3,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   LayoutDashboard, Shield, TrendingDown, GitBranch,
-  Users, CreditCard, Bell, Settings, LogOut, Menu, X, ScrollText
+  Users, CreditCard, Bell, Settings, LogOut, Menu, X, ScrollText, Globe
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -13,6 +13,7 @@ const NAV = [
   { href: '/dashboard',      label: 'Dashboard',    icon: LayoutDashboard },
   { href: '/compliance',     label: 'Compliance',   icon: Shield },
   { href: '/cost',           label: 'Cost',         icon: TrendingDown },
+  { href: '/trust-center',   label: 'Trust Center', icon: Globe },
   { href: '/integrations',   label: 'Integrations', icon: GitBranch },
 ]
 
