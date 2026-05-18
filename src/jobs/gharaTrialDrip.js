@@ -17,6 +17,7 @@ import { organizations, users, subscriptions } from '../db/schema.js'
 import { eq, and, isNotNull } from 'drizzle-orm'
 import { logger } from '../services/logger.js'
 import { Resend } from 'resend'
+import { emailHeader, emailFooter, emailWrap } from '../services/email.js'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const DOMAIN = process.env.EMAIL_DOMAIN || 'resend.dev'
@@ -71,7 +72,7 @@ export async function runGharaTrialDrip() {
           to: owner.email,
           replyTo: REPLY_TO,
           subject: drip.subject,
-          html: buildDripEmail(drip.key, { name: owner.name, orgName: org.name, trialEndsAt: sub.trialEndsAt }),
+          html: buildDripEmail(drip.key, { name: owner.name, orgName: org.name, trialEndsAt: sub.trialEndsAt, to: owner.email }),
         })
 
         // Mark as sent
@@ -88,48 +89,68 @@ export async function runGharaTrialDrip() {
   }
 }
 
-function buildDripEmail(key, { name, orgName, trialEndsAt }) {
+function buildDripEmail(key, { name, orgName, trialEndsAt, to = '' }) {
   const firstName = name?.split(' ')[0] || 'there'
   const endDate = trialEndsAt ? new Date(trialEndsAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : 'soon'
+  const PORTAL_URL = process.env.PORTAL_URL || process.env.GHARA_URL || 'http://localhost:3005'
 
-  const templates = {
+  const bodies = {
     ghara_day1_tips: `
-      <h2>Hey ${firstName},</h2>
+      <p>Hey ${firstName},</p>
       <p>Welcome to Ghara! Here are a few tips to get the most from your trial:</p>
       <ul>
         <li><strong>Check your dashboard daily</strong> — new findings appear as your infrastructure changes.</li>
         <li><strong>Invite your team</strong> — compliance is a team sport. Add teammates from Settings → Team.</li>
         <li><strong>Connect GitHub</strong> — we'll check branch protection, secret scanning, and CODEOWNERS.</li>
       </ul>
-      <p><a href="${process.env.PORTAL_URL || 'http://localhost:3005'}/dashboard">Open your dashboard →</a></p>
+      <a href="${PORTAL_URL}/dashboard" class="button">Open your dashboard →</a>
+      <p>Regards,<br>The Ghara Team</p>
     `,
     ghara_day3_drift: `
-      <h2>Hey ${firstName},</h2>
-      <p>It's been 3 days since your first scan. Here's a quick check-in on ${orgName}'s cloud health.</p>
+      <p>Hey ${firstName},</p>
+      <p>It's been 3 days since your first scan. Here's a quick check-in on <strong>${orgName}</strong>'s cloud health.</p>
       <p>Log in to see if any controls have drifted since your initial scan — we track changes automatically.</p>
-      <p><a href="${process.env.PORTAL_URL || 'http://localhost:3005'}/dashboard">Check for drift →</a></p>
+      <a href="${PORTAL_URL}/dashboard" class="button">Check for drift →</a>
+      <p>Regards,<br>The Ghara Team</p>
     `,
     ghara_day5_summary: `
-      <h2>Mid-trial check-in</h2>
-      <p>Hey ${firstName}, you're halfway through your Ghara trial. Here's what we've found so far for ${orgName}:</p>
-      <p>Log in to see your full compliance score, cost savings opportunities, and security findings.</p>
-      <p><a href="${process.env.PORTAL_URL || 'http://localhost:3005'}/dashboard">View your progress →</a></p>
-      <p>Your trial ends on ${endDate}. <a href="${process.env.PORTAL_URL || 'http://localhost:3005'}/billing">Upgrade now</a> to keep full access.</p>
+      <p>Hey ${firstName},</p>
+      <p>You're halfway through your Ghara trial. Log in to see your full compliance score, cost savings opportunities, and security findings for <strong>${orgName}</strong>.</p>
+      <a href="${PORTAL_URL}/dashboard" class="button">View your progress →</a>
+      <p>Your trial ends on <strong>${endDate}</strong>. <a href="${PORTAL_URL}/billing">Upgrade now</a> to keep full access.</p>
+      <p>Regards,<br>The Ghara Team</p>
     `,
     ghara_day6_ending: `
-      <h2>Heads up — your card will be charged tomorrow</h2>
-      <p>Hey ${firstName}, your Ghara trial for ${orgName} ends tomorrow (${endDate}).</p>
+      <p>Hey ${firstName},</p>
+      <p>Your Ghara trial for <strong>${orgName}</strong> ends tomorrow (<strong>${endDate}</strong>).</p>
       <p>Your card on file will be charged automatically. If you'd like to cancel before then, you can do so with one click from your billing page — no charge.</p>
-      <p><a href="${process.env.GHARA_URL || 'http://localhost:3005'}/billing">Manage billing →</a></p>
+      <a href="${PORTAL_URL}/billing" class="button">Manage billing →</a>
+      <p>Regards,<br>The Ghara Team</p>
     `,
     ghara_day7_ended: `
-      <h2>Your subscription is now active</h2>
-      <p>Hey ${firstName}, your Ghara trial for ${orgName} has ended and your subscription is now active.</p>
+      <p>Hey ${firstName},</p>
+      <p>Your Ghara trial for <strong>${orgName}</strong> has ended and your subscription is now active.</p>
       <p>Your card has been charged. You'll continue to have full access to all features on your plan.</p>
-      <p><a href="${process.env.GHARA_URL || 'http://localhost:3005'}/dashboard">Go to dashboard →</a></p>
+      <a href="${PORTAL_URL}/dashboard" class="button">Go to dashboard →</a>
       <p>Questions? Reply to this email — we're happy to help.</p>
+      <p>Regards,<br>The Ghara Team</p>
     `,
   }
 
-  return templates[key] || ''
+  const body = bodies[key]
+  if (!body) return ''
+
+  const subjectMap = {
+    ghara_day1_tips: 'Quick tips to get the most from Ghara',
+    ghara_day3_drift: "What changed in your AWS since day 1",
+    ghara_day5_summary: 'Your mid-trial progress report',
+    ghara_day6_ending: 'Heads up — your card will be charged tomorrow',
+    ghara_day7_ended: 'Your subscription is now active',
+  }
+
+  return emailWrap(
+    emailHeader(subjectMap[key] || ''),
+    body,
+    emailFooter(to)
+  )
 }

@@ -35,7 +35,7 @@ const BASE_STYLES = `
   li { margin: 8px 0; color: #33063D; }
 `
 
-function emailHeader(subjectLine = '', bgColor = '#33063D') {
+export function emailHeader(subjectLine = '', bgColor = '#33063D') {
   return `
     <div class="header" style="background: ${bgColor};">
       <span style="font-size: 20px; font-weight: 600; color: #FFFFFF; margin-right: 6px;">Ghara</span>
@@ -46,7 +46,7 @@ function emailHeader(subjectLine = '', bgColor = '#33063D') {
   `
 }
 
-function emailFooter(to) {
+export function emailFooter(to) {
   return `
     <div class="footer">
       <p><strong>Ghara</strong> by iFU Labs</p>
@@ -55,7 +55,7 @@ function emailFooter(to) {
   `
 }
 
-function emailWrap(header, content, footer) {
+export function emailWrap(header, content, footer) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${BASE_STYLES}</style></head><body>
     <div class="container">
       ${header}
