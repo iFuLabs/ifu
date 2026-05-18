@@ -168,8 +168,25 @@ export default function TrustCenterAdminPage() {
             </div>
           </div>
 
-          {/* Headline + description */}
+          {/* Headline + description + logo */}
           <div style={{ background: '#fff', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 14, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(51,6,61,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Company Logo URL</label>
+              <p style={{ fontSize: 11, color: 'rgba(51,6,61,0.4)', marginTop: 3, marginBottom: 8 }}>Link to your logo image (PNG or SVG). Shown in the header of your public Trust Center page.</p>
+              <input
+                value={currentForm.logoUrl || ''}
+                onChange={e => setForm({ ...currentForm, logoUrl: e.target.value })}
+                placeholder="https://yourcompany.com/logo.png"
+                style={{ display: 'block', width: '100%', padding: '8px 12px', border: '1px solid rgba(51,6,61,0.15)', borderRadius: 8, fontSize: 13, color: PLUM, outline: 'none', boxSizing: 'border-box' }}
+              />
+              {currentForm.logoUrl && (
+                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <img src={currentForm.logoUrl} alt="Logo preview" style={{ height: 32, objectFit: 'contain', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 6, padding: 4, background: '#f9f9f9' }}
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  <span style={{ fontSize: 11, color: 'rgba(51,6,61,0.4)' }}>Preview</span>
+                </div>
+              )}
+            </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(51,6,61,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Headline</label>
               <input
