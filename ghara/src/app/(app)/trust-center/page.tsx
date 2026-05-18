@@ -285,44 +285,125 @@ export default function TrustCenterAdminPage() {
       )}
 
       {activeTab === 'requests' && (
-        <div>
-          {requests.length === 0 ? (
-            <div style={{ background: '#fff', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 16, padding: '64px 24px', textAlign: 'center', boxShadow: '0 2px 12px rgba(51,6,61,0.04)' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(51,6,61,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <Users size={22} style={{ color: 'rgba(51,6,61,0.3)' }} />
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: PLUM }}>No access requests yet</p>
-              <p style={{ fontSize: 13, color: 'rgba(51,6,61,0.45)', marginTop: 6 }}>When someone requests access to your Trust Center, they'll appear here.</p>
-            </div>
-          ) : (
-            <div style={{ background: '#fff', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(51,6,61,0.04)' }}>
-              {requests.map((req: any, i: number) => (
-                <div key={req.id} style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 16, borderTop: i > 0 ? '1px solid rgba(51,6,61,0.06)' : 'none' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(138,99,230,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14, fontWeight: 700, color: IRIS }}>
-                    {req.name?.[0]?.toUpperCase() || '?'}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: PLUM, margin: 0 }}>{req.name}</p>
-                    <p style={{ fontSize: 12, color: 'rgba(51,6,61,0.5)', marginTop: 2 }}>{req.email}{req.company ? ` · ${req.company}` : ''}</p>
-                    {req.message && <p style={{ fontSize: 12, color: 'rgba(51,6,61,0.4)', marginTop: 4, fontStyle: 'italic' }}>"{req.message}"</p>}
-                  </div>
-                  <span style={{ fontSize: 11, color: 'rgba(51,6,61,0.3)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    {new Date(req.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </span>
-                  {req.status === 'pending' ? (
-                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <button onClick={() => handleRequest(req.id, 'approved')} style={{ padding: '7px 16px', background: PLUM, color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Approve</button>
-                      <button onClick={() => handleRequest(req.id, 'denied')} style={{ padding: '7px 14px', background: 'transparent', color: '#B42318', border: '1px solid rgba(180,35,24,0.25)', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Deny</button>
-                    </div>
-                  ) : (
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, flexShrink: 0, background: req.status === 'approved' ? 'rgba(6,118,71,0.08)' : 'rgba(180,35,24,0.08)', color: req.status === 'approved' ? GREEN : '#B42318' }}>
-                      {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
-                    </span>
-                  )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Summary bar */}
+          {requests.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              {[
+                { label: 'Total Requests', value: requests.length, color: PLUM },
+                { label: 'Pending Review', value: requests.filter((r: any) => r.status === 'pending').length, color: '#B54708' },
+                { label: 'Approved', value: requests.filter((r: any) => r.status === 'approved').length, color: GREEN },
+              ].map((stat, i) => (
+                <div key={i} style={{ background: '#fff', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 4px rgba(51,6,61,0.03)' }}>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: stat.color }}>{stat.value}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(51,6,61,0.5)', marginTop: 3 }}>{stat.label}</div>
                 </div>
               ))}
             </div>
           )}
+
+          {requests.length === 0 ? (
+            <div style={{ background: '#fff', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 16, padding: '64px 24px', textAlign: 'center', boxShadow: '0 2px 12px rgba(51,6,61,0.04)' }}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(51,6,61,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <Users size={24} style={{ color: 'rgba(51,6,61,0.25)' }} />
+              </div>
+              <p style={{ fontSize: 15, fontWeight: 600, color: PLUM }}>No access requests yet</p>
+              <p style={{ fontSize: 13, color: 'rgba(51,6,61,0.45)', marginTop: 6, maxWidth: 320, margin: '6px auto 0' }}>
+                When someone requests access to your Trust Center, their details will appear here for you to review.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {requests.map((req: any) => (
+                <RequestCard key={req.id} req={req} onAction={handleRequest} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Request Card ───────────────────────────────────────────────────────────
+function RequestCard({ req, onAction }: { req: any; onAction: (id: string, status: 'approved' | 'denied') => void }) {
+  const isPending = req.status === 'pending'
+  const isApproved = req.status === 'approved'
+  const statusColors = {
+    pending:  { bg: 'rgba(181,71,8,0.08)',  text: '#B54708', label: 'Pending Review' },
+    approved: { bg: 'rgba(6,118,71,0.08)',  text: GREEN,     label: 'Approved' },
+    denied:   { bg: 'rgba(180,35,24,0.08)', text: '#B42318', label: 'Denied' },
+  }
+  const sc = statusColors[req.status as keyof typeof statusColors] || statusColors.pending
+  const requestedAt = new Date(req.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const approvedAt = req.approvedAt ? new Date(req.approvedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : null
+  const expiresAt = req.tokenExpiresAt ? new Date(req.tokenExpiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : null
+
+  return (
+    <div style={{ background: '#fff', border: `1px solid ${isPending ? 'rgba(181,71,8,0.2)' : 'rgba(51,6,61,0.08)'}`, borderRadius: 14, overflow: 'hidden', boxShadow: '0 2px 8px rgba(51,6,61,0.04)' }}>
+      {/* Header row */}
+      <div style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid rgba(51,6,61,0.06)' }}>
+        <div style={{ width: 44, height: 44, borderRadius: '50%', background: `rgba(138,99,230,0.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16, fontWeight: 700, color: IRIS }}>
+          {req.name?.[0]?.toUpperCase() || '?'}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: PLUM }}>{req.name}</span>
+            {req.company && <span style={{ fontSize: 12, color: 'rgba(51,6,61,0.45)', background: 'rgba(51,6,61,0.05)', padding: '2px 8px', borderRadius: 4 }}>{req.company}</span>}
+            <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.text, marginLeft: 'auto' }}>{sc.label}</span>
+          </div>
+          <div style={{ fontSize: 13, color: 'rgba(51,6,61,0.55)', marginTop: 3 }}>{req.email}</div>
+        </div>
+      </div>
+
+      {/* Details grid */}
+      <div style={{ padding: '16px 24px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, borderBottom: req.message ? '1px solid rgba(51,6,61,0.06)' : 'none' }}>
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(51,6,61,0.4)', marginBottom: 4 }}>Requested</div>
+          <div style={{ fontSize: 13, color: PLUM, fontWeight: 500 }}>{requestedAt}</div>
+        </div>
+        {isApproved && approvedAt && (
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(51,6,61,0.4)', marginBottom: 4 }}>Approved</div>
+            <div style={{ fontSize: 13, color: GREEN, fontWeight: 500 }}>{approvedAt}</div>
+          </div>
+        )}
+        {isApproved && expiresAt && (
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(51,6,61,0.4)', marginBottom: 4 }}>Access Expires</div>
+            <div style={{ fontSize: 13, color: PLUM, fontWeight: 500 }}>{expiresAt}</div>
+          </div>
+        )}
+        {!isApproved && req.company && (
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(51,6,61,0.4)', marginBottom: 4 }}>Company</div>
+            <div style={{ fontSize: 13, color: PLUM, fontWeight: 500 }}>{req.company}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Message */}
+      {req.message && (
+        <div style={{ padding: '14px 24px', background: 'rgba(51,6,61,0.02)', borderBottom: isPending ? '1px solid rgba(51,6,61,0.06)' : 'none' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(51,6,61,0.4)', marginBottom: 6 }}>Message</div>
+          <p style={{ fontSize: 13, color: 'rgba(51,6,61,0.65)', lineHeight: 1.6, margin: 0, fontStyle: 'italic' }}>"{req.message}"</p>
+        </div>
+      )}
+
+      {/* Actions */}
+      {isPending && (
+        <div style={{ padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <p style={{ fontSize: 12, color: 'rgba(51,6,61,0.45)', margin: 0 }}>
+            Approving will send {req.name} an email with a personal access link valid for 90 days.
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button onClick={() => onAction(req.id, 'denied')} style={{ padding: '8px 18px', background: 'transparent', color: '#B42318', border: '1px solid rgba(180,35,24,0.25)', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              Deny
+            </button>
+            <button onClick={() => onAction(req.id, 'approved')} style={{ padding: '8px 20px', background: PLUM, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(51,6,61,0.2)' }}>
+              Approve Access →
+            </button>
+          </div>
         </div>
       )}
     </div>
