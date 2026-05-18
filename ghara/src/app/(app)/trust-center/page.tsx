@@ -1,7 +1,7 @@
 'use client'
 import useSWR from 'swr'
 import { useState } from 'react'
-import { Globe, Lock, Users, CheckCircle, ExternalLink, Copy, Check, Eye, EyeOff } from 'lucide-react'
+import { Globe, Lock, Users, CheckCircle, ExternalLink, Copy, Check, Upload, X } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 const PORTAL_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.ghara.ifulabs.com'
@@ -194,18 +194,12 @@ export default function TrustCenterAdminPage() {
               <p style={{ fontSize: 13, fontWeight: 600, color: PLUM, margin: 0 }}>Branding</p>
 
               <div>
-                <FieldLabel hint="Paste a URL to your logo (PNG or SVG). Displayed in the header of your public page.">Company Logo URL</FieldLabel>
-                <input value={currentForm.logoUrl || ''} onChange={e => setForm({ ...currentForm, logoUrl: e.target.value })}
-                  placeholder="https://yourcompany.com/logo.png" style={inputStyle} />
-                {currentForm.logoUrl && (
-                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ padding: '6px 10px', border: '1px solid rgba(51,6,61,0.08)', borderRadius: 8, background: '#FAFAFA', display: 'inline-flex' }}>
-                      <img src={currentForm.logoUrl} alt="Logo preview" style={{ height: 28, objectFit: 'contain', maxWidth: 120 }}
-                        onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = 'none' }} />
-                    </div>
-                    <span style={{ fontSize: 11, color: 'rgba(51,6,61,0.4)' }}>Preview</span>
-                  </div>
-                )}
+                <FieldLabel hint="Upload your company logo. Shown in the header of your public Trust Center page.">Company Logo</FieldLabel>
+                <LogoUpload
+                  currentUrl={currentForm.logoUrl || ''}
+                  onUploaded={(url: string) => setForm({ ...currentForm, logoUrl: url })}
+                  apiUrl={API_URL}
+                />
               </div>
 
               <div>
@@ -331,6 +325,96 @@ export default function TrustCenterAdminPage() {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Logo Upload component ──────────────────────────────────────────────────
+function LogoUpload({ currentUrl, onUploaded, apiUrl }: { currentUrl: string; onUploaded: (url: string) => void; apiUrl: string }) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const allowed = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp']
+    if (!allowed.includes(file.type)) {
+      setError('Please upload a PNG, JPG, SVG, or WebP file.')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError('File must be under 2 MB.')
+      return
+    }
+
+    setError('')
+    setUploading(true)
+    try {
+      // Get presigned URL from API
+      const res = await fetch(`${apiUrl}/api/v1/trust-center/logo`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentType: file.type })
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        // Fallback: if S3 not configured, use object URL for preview only
+        if (res.status === 501) {
+          setError('Logo upload requires S3 to be configured. Ask your admin to set TRUST_CENTER_ASSETS_BUCKET.')
+          return
+        }
+        throw new Error(err.message || 'Upload failed')
+      }
+
+      const { uploadUrl, publicUrl } = await res.json()
+
+      // Upload directly to S3
+      await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+      })
+
+      onUploaded(publicUrl)
+    } catch (err: any) {
+      setError(err.message || 'Upload failed. Please try again.')
+    } finally {
+      setUploading(false)
+      // Reset input so same file can be re-selected
+      e.target.value = ''
+    }
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Current logo preview or placeholder */}
+        <div style={{ width: 64, height: 64, borderRadius: 10, border: '1px solid rgba(51,6,61,0.12)', background: '#FAFAFA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+          {currentUrl
+            ? <img src={currentUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6 }}
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            : <div style={{ fontSize: 22, color: 'rgba(51,6,61,0.2)' }}>🏢</div>
+          }
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: uploading ? 'rgba(51,6,61,0.06)' : '#fff', border: '1px solid rgba(51,6,61,0.2)', borderRadius: 8, fontSize: 13, fontWeight: 500, color: PLUM, cursor: uploading ? 'not-allowed' : 'pointer', transition: 'background 0.15s' }}>
+            <Upload size={14} />
+            {uploading ? 'Uploading…' : currentUrl ? 'Replace logo' : 'Upload logo'}
+            <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={handleFile} disabled={uploading} style={{ display: 'none' }} />
+          </label>
+          <p style={{ fontSize: 11, color: 'rgba(51,6,61,0.4)', margin: 0 }}>PNG, JPG, SVG or WebP · max 2 MB</p>
+        </div>
+
+        {currentUrl && (
+          <button onClick={() => onUploaded('')} title="Remove logo" style={{ padding: 6, background: 'transparent', border: '1px solid rgba(51,6,61,0.12)', borderRadius: 6, cursor: 'pointer', color: 'rgba(51,6,61,0.4)', display: 'flex', alignItems: 'center' }}>
+            <X size={13} />
+          </button>
+        )}
+      </div>
+      {error && <p style={{ fontSize: 12, color: '#B42318', marginTop: 8 }}>{error}</p>}
     </div>
   )
 }
