@@ -9,6 +9,7 @@
  * Authenticated (org admin):
  *   GET    /api/v1/trust-center              — get own settings
  *   PUT    /api/v1/trust-center              — update settings
+ *   POST   /api/v1/trust-center/logo         — get presigned S3 upload URL for logo
  *   GET    /api/v1/trust-center/requests     — list access requests
  *   PATCH  /api/v1/trust-center/requests/:id — approve / deny
  */
@@ -20,6 +21,8 @@ import { verifyToken, requireUser } from '../middleware/auth.js'
 import { requireTier } from '../middleware/plan.js'
 import { auditAction } from '../services/audit.js'
 import crypto from 'crypto'
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -200,6 +203,49 @@ export default async function trustCenterRoutes(fastify) {
     return reply.send({ valid, name: accessReq?.name || null })
   })
 
+  // ── Authenticated: logo upload — get presigned S3 URL ───────────────────
+  fastify.post('/logo', {
+    preHandler: [verifyToken, requireUser],
+    schema: {
+      tags: ['Trust Center'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['contentType'],
+        properties: {
+          contentType: { type: 'string', enum: ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'] }
+        }
+      }
+    }
+  }, async (request, reply) => {
+    const BUCKET = process.env.TRUST_CENTER_ASSETS_BUCKET || process.env.S3_BUCKET
+    const REGION = process.env.AWS_REGION || 'us-east-1'
+
+    if (!BUCKET) {
+      return reply.status(501).send({
+        error: 'Not configured',
+        message: 'Logo upload requires S3_BUCKET or TRUST_CENTER_ASSETS_BUCKET env var to be set.'
+      })
+    }
+
+    const { contentType } = request.body
+    const ext = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/svg+xml': 'svg', 'image/webp': 'webp' }[contentType] || 'png'
+    const key = `trust-center-logos/${request.orgId}/${crypto.randomBytes(8).toString('hex')}.${ext}`
+
+    const s3 = new S3Client({ region: REGION })
+    const command = new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      ContentType: contentType,
+      CacheControl: 'public, max-age=31536000',
+    })
+
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }) // 5 min
+    const publicUrl = `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`
+
+    return reply.send({ uploadUrl, publicUrl, key })
+  })
+
   // ── Authenticated: get own settings ──────────────────────────────────────
   fastify.get('/', {
     preHandler: [verifyToken, requireUser],
@@ -251,7 +297,18 @@ export default async function trustCenterRoutes(fastify) {
     let result
     if (existing) {
       ;[result] = await db.update(trustCenterSettings)
-        .set({ ...body, updatedAt: new Date() })
+        .set({
+          enabled:             body.enabled !== undefined ? body.enabled : existing.enabled,
+          slug:                body.slug ?? existing.slug,
+          headline:            body.headline ?? existing.headline,
+          description:         body.description ?? existing.description,
+          logoUrl:             body.logoUrl ?? existing.logoUrl,
+          ndaRequired:         body.ndaRequired !== undefined ? body.ndaRequired : existing.ndaRequired,
+          ndaDocumentUrl:      body.ndaDocumentUrl ?? existing.ndaDocumentUrl,
+          publishedFrameworks: body.publishedFrameworks ?? existing.publishedFrameworks,
+          publishedArtifacts:  body.publishedArtifacts ?? existing.publishedArtifacts,
+          updatedAt:           new Date()
+        })
         .where(eq(trustCenterSettings.orgId, request.orgId))
         .returning()
     } else {
@@ -264,7 +321,18 @@ export default async function trustCenterRoutes(fastify) {
         body.slug = org?.slug || request.orgId.slice(0, 8)
       }
       ;[result] = await db.insert(trustCenterSettings)
-        .values({ orgId: request.orgId, ...body })
+        .values({
+          orgId:               request.orgId,
+          enabled:             body.enabled ?? false,
+          slug:                body.slug,
+          headline:            body.headline ?? null,
+          description:         body.description ?? null,
+          logoUrl:             body.logoUrl ?? null,
+          ndaRequired:         body.ndaRequired ?? false,
+          ndaDocumentUrl:      body.ndaDocumentUrl ?? null,
+          publishedFrameworks: body.publishedFrameworks ?? [],
+          publishedArtifacts:  body.publishedArtifacts ?? [],
+        })
         .returning()
     }
 
