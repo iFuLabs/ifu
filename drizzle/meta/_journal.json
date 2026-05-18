@@ -253,6 +253,13 @@
       "when": 1776026649193,
       "tag": "0035_add_subscription_past_due_at",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1776026649194,
+      "tag": "0036_add_trust_center",
+      "breakpoints": true
     }
   ]
 }

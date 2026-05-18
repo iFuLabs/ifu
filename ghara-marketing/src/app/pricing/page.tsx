@@ -4,6 +4,10 @@ import Link from 'next/link'
 
 const APP_URL = 'https://app.ghara.ifulabs.com'
 
+const Icons = {
+  CheckSm: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+}
+
 export default function PricingPage() {
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -28,12 +32,12 @@ export default function PricingPage() {
             <div className="pricing-period">per month · up to $10k/mo AWS spend</div>
             <p className="pricing-desc">SOC 2 compliance and basic cost waste detection.</p>
             <ul className="pricing-features">
-              <li>SOC 2 framework</li>
-              <li>Basic cost waste detection</li>
-              <li>Weekly scans</li>
-              <li>1 AWS account</li>
-              <li>3 team members</li>
-              <li>Email support</li>
+              <li>{Icons.CheckSm} SOC 2 framework</li>
+              <li>{Icons.CheckSm} Basic cost waste detection</li>
+              <li>{Icons.CheckSm} Weekly scans</li>
+              <li>{Icons.CheckSm} 1 AWS account</li>
+              <li>{Icons.CheckSm} 3 team members</li>
+              <li>{Icons.CheckSm} Email support</li>
             </ul>
             <a href={`${APP_URL}/signup`} className="pricing-cta">Start free trial</a>
           </div>
@@ -45,16 +49,17 @@ export default function PricingPage() {
             <div className="pricing-period">per month · up to $100k/mo AWS spend</div>
             <p className="pricing-desc">All frameworks, AI, K8s cost, Slack, daily scans.</p>
             <ul className="pricing-features">
-              <li>All frameworks (SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS)</li>
-              <li>AI evidence & remediation</li>
-              <li>Vendor risk management</li>
-              <li>Anomaly detection</li>
-              <li>Kubernetes cost (OpenCost)</li>
-              <li>Slack integration & drift alerts</li>
-              <li>Custom date ranges</li>
-              <li>Daily scans</li>
-              <li>CSV/JSON export</li>
-              <li>Unlimited team members</li>
+              <li>{Icons.CheckSm} All 5 frameworks (SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS)</li>
+              <li>{Icons.CheckSm} AI evidence & remediation</li>
+              <li>{Icons.CheckSm} Trust Center (public compliance page)</li>
+              <li>{Icons.CheckSm} Vendor risk management</li>
+              <li>{Icons.CheckSm} Anomaly detection</li>
+              <li>{Icons.CheckSm} Kubernetes cost (OpenCost)</li>
+              <li>{Icons.CheckSm} Slack integration & drift alerts</li>
+              <li>{Icons.CheckSm} Custom date ranges</li>
+              <li>{Icons.CheckSm} Daily scans</li>
+              <li>{Icons.CheckSm} CSV/JSON export</li>
+              <li>{Icons.CheckSm} Unlimited team members</li>
             </ul>
             <a href={`${APP_URL}/signup`} className="pricing-cta">Start free trial</a>
           </div>
@@ -66,14 +71,14 @@ export default function PricingPage() {
             <div className="pricing-period">unlimited AWS spend</div>
             <p className="pricing-desc">Custom frameworks, multi-account, SSO, dedicated CSM.</p>
             <ul className="pricing-features">
-              <li>Everything in Growth</li>
-              <li>Custom frameworks</li>
-              <li>Multi-account AWS</li>
-              <li>SSO / SAML</li>
-              <li>Auditor read-only role</li>
-              <li>Dedicated CSM</li>
-              <li>Priority support</li>
-              <li>FOCUS export</li>
+              <li>{Icons.CheckSm} Everything in Growth</li>
+              <li>{Icons.CheckSm} Custom frameworks</li>
+              <li>{Icons.CheckSm} Multi-account AWS</li>
+              <li>{Icons.CheckSm} SSO / SAML</li>
+              <li>{Icons.CheckSm} Auditor read-only role</li>
+              <li>{Icons.CheckSm} Dedicated CSM</li>
+              <li>{Icons.CheckSm} Priority support</li>
+              <li>{Icons.CheckSm} FOCUS export</li>
             </ul>
             <Link href="/demo" className="pricing-cta">Talk to us</Link>
           </div>

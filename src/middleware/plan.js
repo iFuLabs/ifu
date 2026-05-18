@@ -21,19 +21,6 @@ const PLAN_FEATURES = {
   growth: {
     frameworks: ['soc2', 'iso27001', 'gdpr', 'hipaa', 'pci_dss'],
     aiFeatures: true,
-    maxTeamMembers: null, // unlimited
-    regulatoryAlerts: true,
-    kubernetes: true,
-    customDateRanges: true,
-    anomalyDetection: true,
-    slackIntegration: true,
-    csvExport: true,
-    dailyScans: true,
-    vendorRisk: true,
-  },
-  scale: {
-    frameworks: ['soc2', 'iso27001', 'gdpr', 'hipaa', 'pci_dss'],
-    aiFeatures: true,
     maxTeamMembers: null,
     regulatoryAlerts: true,
     kubernetes: true,

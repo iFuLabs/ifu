@@ -484,6 +484,286 @@ async function seedPciDss() {
   console.log(`✅ Seeded ${PCI_DSS_CONTROLS.length} PCI DSS 4.0 controls`)
 }
 
+// ── HIPAA Controls ─────────────────────────────────────────────────────────
+const HIPAA_CONTROLS = [
+  // § 164.312(a)(1) — Access Control
+  {
+    controlId: 'HIPAA-164.312a1-MFA',
+    framework: 'hipaa',
+    category: 'Access Control',
+    title: 'MFA required for access to ePHI systems',
+    description: 'All user accounts with access to systems containing electronic Protected Health Information (ePHI) must use multi-factor authentication (§ 164.312(a)(1)).',
+    guidance: 'Enable MFA for all IAM users. Use aws iam list-mfa-devices to identify users without MFA. Enforce MFA via IAM policy condition: aws:MultiFactorAuthPresent.',
+    severity: 'critical',
+    automatable: true,
+    checkFn: 'iamChecks'
+  },
+  {
+    controlId: 'HIPAA-164.312a1-ROOT-MFA',
+    framework: 'hipaa',
+    category: 'Access Control',
+    title: 'Root account MFA enabled',
+    description: 'The AWS root account must have MFA enabled to prevent unauthorized access to all ePHI systems (§ 164.312(a)(1)).',
+    guidance: 'Enable MFA on the root account immediately. Never use root for day-to-day operations.',
+    severity: 'critical',
+    automatable: true,
+    checkFn: 'iamChecks'
+  },
+  {
+    controlId: 'HIPAA-164.312a1-ACCESS-KEYS',
+    framework: 'hipaa',
+    category: 'Access Control',
+    title: 'No stale IAM access keys (>90 days)',
+    description: 'IAM access keys unused for more than 90 days must be disabled or removed to limit unauthorized access to ePHI (§ 164.312(a)(1)).',
+    guidance: 'Rotate or disable access keys unused for 90+ days. Use IAM roles instead of long-lived access keys where possible.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'iamChecks'
+  },
+  {
+    controlId: 'HIPAA-164.312a1-IAM-WILDCARD',
+    framework: 'hipaa',
+    category: 'Access Control',
+    title: 'No IAM roles with wildcard permissions',
+    description: 'IAM roles must not grant wildcard access (Action: *, Resource: *) — least-privilege access is required for ePHI systems (§ 164.312(a)(1)).',
+    guidance: 'Replace wildcard policies with scoped permissions. Use AWS-managed read-only policies where broad read access is needed.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'securityChecks'
+  },
+
+  // § 164.312(a)(2)(iv) — Encryption and Decryption
+  {
+    controlId: 'HIPAA-164.312a2iv-S3-ENCRYPTION',
+    framework: 'hipaa',
+    category: 'Encryption',
+    title: 'S3 buckets encrypted at rest',
+    description: 'All S3 buckets that may store ePHI must have server-side encryption enabled (§ 164.312(a)(2)(iv)).',
+    guidance: 'Enable default encryption on each S3 bucket using SSE-KMS. Use customer-managed KMS keys for ePHI data stores.',
+    severity: 'critical',
+    automatable: true,
+    checkFn: 's3Checks'
+  },
+  {
+    controlId: 'HIPAA-164.312a2iv-RDS-ENCRYPTION',
+    framework: 'hipaa',
+    category: 'Encryption',
+    title: 'RDS instances encrypted at rest',
+    description: 'All RDS databases storing ePHI must have storage encryption enabled (§ 164.312(a)(2)(iv)).',
+    guidance: 'Enable encryption when creating RDS instances. For existing unencrypted instances: snapshot → copy with encryption → restore.',
+    severity: 'critical',
+    automatable: true,
+    checkFn: 'rdsChecks'
+  },
+  {
+    controlId: 'HIPAA-164.312a2iv-EBS-ENCRYPTION',
+    framework: 'hipaa',
+    category: 'Encryption',
+    title: 'EBS volumes encrypted at rest',
+    description: 'All EBS volumes on systems processing ePHI must be encrypted (§ 164.312(a)(2)(iv)).',
+    guidance: 'Enable EBS encryption by default at account level: EC2 → Settings → EBS Encryption. For existing volumes: snapshot → copy encrypted → restore.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'ec2Checks'
+  },
+  {
+    controlId: 'HIPAA-164.312a2iv-KMS-ROTATION',
+    framework: 'hipaa',
+    category: 'Encryption',
+    title: 'KMS keys have automatic rotation enabled',
+    description: 'Customer-managed KMS keys used to encrypt ePHI must have annual automatic rotation enabled (§ 164.312(a)(2)(iv)).',
+    guidance: 'For each customer-managed symmetric KMS key: KMS console → key → Key rotation tab → Enable.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'securityChecks'
+  },
+
+  // § 164.312(b) — Audit Controls
+  {
+    controlId: 'HIPAA-164.312b-CLOUDTRAIL',
+    framework: 'hipaa',
+    category: 'Audit Controls',
+    title: 'CloudTrail multi-region logging active',
+    description: 'A CloudTrail trail must be active and logging across all regions to maintain audit records of ePHI access (§ 164.312(b)).',
+    guidance: 'Create a multi-region CloudTrail trail logging to S3. Enable CloudWatch Logs integration. Ensure the trail is in "Logging" status.',
+    severity: 'critical',
+    automatable: true,
+    checkFn: 'cloudtrailChecks'
+  },
+  {
+    controlId: 'HIPAA-164.312b-CLOUDTRAIL-VALIDATION',
+    framework: 'hipaa',
+    category: 'Audit Controls',
+    title: 'CloudTrail log file validation enabled',
+    description: 'CloudTrail log file validation ensures audit records of ePHI access have not been tampered with (§ 164.312(b)).',
+    guidance: 'Enable log file validation when creating or modifying a CloudTrail trail.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'cloudtrailChecks'
+  },
+  {
+    controlId: 'HIPAA-164.312b-S3-LOGGING',
+    framework: 'hipaa',
+    category: 'Audit Controls',
+    title: 'S3 access logging enabled',
+    description: 'S3 bucket access logging must be enabled to track all requests to ePHI data stores (§ 164.312(b)).',
+    guidance: 'Enable server access logging on each S3 bucket. Configure a dedicated logging bucket.',
+    severity: 'medium',
+    automatable: true,
+    checkFn: 's3Checks'
+  },
+  {
+    controlId: 'HIPAA-164.312b-GUARDDUTY',
+    framework: 'hipaa',
+    category: 'Audit Controls',
+    title: 'GuardDuty threat detection enabled',
+    description: 'AWS GuardDuty must be active to detect unauthorized access to ePHI systems (§ 164.312(b)).',
+    guidance: 'Enable GuardDuty in all regions where ePHI workloads run. Configure SNS notifications for high-severity findings.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'guarddutyChecks'
+  },
+
+  // § 164.312(c)(1) — Integrity
+  {
+    controlId: 'HIPAA-164.312c1-S3-VERSIONING',
+    framework: 'hipaa',
+    category: 'Integrity',
+    title: 'S3 versioning enabled on ePHI buckets',
+    description: 'S3 versioning must be enabled to protect ePHI from accidental deletion or modification (§ 164.312(c)(1)).',
+    guidance: 'Enable versioning on each S3 bucket: Bucket → Properties → Bucket Versioning → Enable. Consider MFA delete for critical ePHI buckets.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 's3Checks'
+  },
+  {
+    controlId: 'HIPAA-164.312c1-RDS-BACKUP',
+    framework: 'hipaa',
+    category: 'Integrity',
+    title: 'RDS automated backups enabled',
+    description: 'RDS instances storing ePHI must have automated backups enabled with a minimum 7-day retention period (§ 164.312(c)(1)).',
+    guidance: 'Enable automated backups on RDS instances with a minimum 7-day retention period.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'rdsChecks'
+  },
+
+  // § 164.312(e)(1) — Transmission Security
+  {
+    controlId: 'HIPAA-164.312e1-S3-PUBLIC',
+    framework: 'hipaa',
+    category: 'Transmission Security',
+    title: 'S3 buckets block public access',
+    description: 'S3 buckets containing ePHI must not be publicly accessible — ePHI must only be transmitted to authorized parties (§ 164.312(e)(1)).',
+    guidance: 'Enable S3 Block Public Access at the account level. Audit all buckets for public ACLs and bucket policies.',
+    severity: 'critical',
+    automatable: true,
+    checkFn: 's3Checks'
+  },
+  {
+    controlId: 'HIPAA-164.312e1-RDS-PUBLIC',
+    framework: 'hipaa',
+    category: 'Transmission Security',
+    title: 'RDS instances not publicly accessible',
+    description: 'RDS databases storing ePHI must not be publicly accessible from the internet (§ 164.312(e)(1)).',
+    guidance: 'Set PubliclyAccessible to false on all RDS instances. Place databases in private subnets.',
+    severity: 'critical',
+    automatable: true,
+    checkFn: 'rdsChecks'
+  },
+  {
+    controlId: 'HIPAA-164.312e1-SG',
+    framework: 'hipaa',
+    category: 'Transmission Security',
+    title: 'No security groups expose sensitive ports to internet',
+    description: 'Security groups must not allow unrestricted access to sensitive ports — ePHI must not be exposed to unauthorized networks (§ 164.312(e)(1)).',
+    guidance: 'Remove inbound rules allowing 0.0.0.0/0 to SSH (22), database ports (3306, 5432, 1433), or cache ports (6379).',
+    severity: 'critical',
+    automatable: true,
+    checkFn: 'ec2Checks'
+  },
+  {
+    controlId: 'HIPAA-164.312e1-VPC-FLOW-LOGS',
+    framework: 'hipaa',
+    category: 'Transmission Security',
+    title: 'VPC Flow Logs enabled on all VPCs',
+    description: 'VPC Flow Logs must be enabled to monitor network traffic to and from ePHI systems (§ 164.312(e)(1)).',
+    guidance: 'For each VPC: VPC console → select VPC → Flow Logs tab → Create flow log. Send to CloudWatch Logs or S3.',
+    severity: 'high',
+    automatable: true,
+    checkFn: 'securityChecks'
+  },
+
+  // Manual / Administrative Safeguards
+  {
+    controlId: 'HIPAA-164.308a1-RISK-ANALYSIS',
+    framework: 'hipaa',
+    category: 'Administrative Safeguards',
+    title: 'Risk analysis conducted and documented',
+    description: 'A thorough assessment of potential risks and vulnerabilities to ePHI must be conducted and documented (§ 164.308(a)(1)).',
+    guidance: 'Conduct and document a risk analysis covering: ePHI inventory, threat identification, vulnerability assessment, and risk treatment plan. Review at least annually.',
+    severity: 'critical',
+    automatable: false,
+    checkFn: null
+  },
+  {
+    controlId: 'HIPAA-164.308a5-TRAINING',
+    framework: 'hipaa',
+    category: 'Administrative Safeguards',
+    title: 'Security awareness training for all workforce members',
+    description: 'All workforce members must receive security awareness training on ePHI protection (§ 164.308(a)(5)).',
+    guidance: 'Implement annual security awareness training covering: ePHI handling, phishing, password security, and incident reporting. Track completion.',
+    severity: 'high',
+    automatable: false,
+    checkFn: null
+  },
+  {
+    controlId: 'HIPAA-164.308a6-INCIDENT-RESPONSE',
+    framework: 'hipaa',
+    category: 'Administrative Safeguards',
+    title: 'Security incident response procedures documented',
+    description: 'Documented procedures must exist for identifying, responding to, and reporting security incidents involving ePHI (§ 164.308(a)(6)).',
+    guidance: 'Document incident response procedures covering: detection, containment, eradication, recovery, and breach notification. Test annually.',
+    severity: 'high',
+    automatable: false,
+    checkFn: null
+  },
+  {
+    controlId: 'HIPAA-164.308a7-CONTINGENCY',
+    framework: 'hipaa',
+    category: 'Administrative Safeguards',
+    title: 'Contingency plan for ePHI systems',
+    description: 'A contingency plan must exist for responding to emergencies that damage systems containing ePHI (§ 164.308(a)(7)).',
+    guidance: 'Document a contingency plan covering: data backup, disaster recovery, emergency mode operations, and testing procedures.',
+    severity: 'high',
+    automatable: false,
+    checkFn: null
+  },
+  {
+    controlId: 'HIPAA-164.314a1-BAA',
+    framework: 'hipaa',
+    category: 'Administrative Safeguards',
+    title: 'Business Associate Agreements in place',
+    description: 'Business Associate Agreements (BAAs) must be in place with all vendors who access, process, or store ePHI (§ 164.314(a)(1)).',
+    guidance: 'Identify all business associates (AWS, cloud vendors, SaaS tools). Ensure a signed BAA is in place with each. AWS BAA is available via AWS Artifact.',
+    severity: 'critical',
+    automatable: false,
+    checkFn: null
+  },
+]
+
+async function seedHipaa() {
+  console.log('🌱 Seeding HIPAA control definitions...')
+  for (const control of HIPAA_CONTROLS) {
+    await db.insert(controlDefinitions).values(control)
+      .onConflictDoUpdate({
+        target: controlDefinitions.controlId,
+        set: { title: control.title, description: control.description, guidance: control.guidance, severity: control.severity, automatable: control.automatable }
+      })
+  }
+  console.log(`✅ Seeded ${HIPAA_CONTROLS.length} HIPAA controls`)
+}
+
 // Run all seeds
 async function seedAll() {
   try {
@@ -492,6 +772,7 @@ async function seedAll() {
     await seedIso27001()
     await seedGdpr()
     await seedPciDss()
+    await seedHipaa()
     console.log('\n🎉 All controls seeded successfully')
   } finally {
     // Close the database connection pool

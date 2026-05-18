@@ -507,7 +507,46 @@ export const kubernetesIntegrations = pgTable('kubernetes_integrations', {
 ])
 
 
-// ── ALL Relations (after all table definitions) ────────────────────────────
+// ── Trust Center ───────────────────────────────────────────────────────────
+export const trustCenterSettings = pgTable('trust_center_settings', {
+  id:                   uuid('id').primaryKey().defaultRandom(),
+  orgId:                uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  enabled:              boolean('enabled').notNull().default(false),
+  slug:                 text('slug').notNull().unique(),
+  headline:             text('headline'),
+  description:          text('description'),
+  logoUrl:              text('logo_url'),
+  ndaRequired:          boolean('nda_required').notNull().default(false),
+  ndaDocumentUrl:       text('nda_document_url'),
+  publishedFrameworks:  jsonb('published_frameworks').default([]),
+  publishedArtifacts:   jsonb('published_artifacts').default([]),
+  createdAt:            timestamp('created_at').notNull().defaultNow(),
+  updatedAt:            timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  uniqueIndex('idx_trust_center_org_id').on(table.orgId),
+  index('idx_trust_center_slug').on(table.slug)
+])
+
+export const trustCenterAccessRequests = pgTable('trust_center_access_requests', {
+  id:             uuid('id').primaryKey().defaultRandom(),
+  orgId:          uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  name:           text('name').notNull(),
+  email:          text('email').notNull(),
+  company:        text('company'),
+  message:        text('message'),
+  status:         text('status').notNull().default('pending'), // pending | approved | denied
+  ndaSignedAt:    timestamp('nda_signed_at'),
+  approvedBy:     uuid('approved_by').references(() => users.id, { onDelete: 'set null' }),
+  approvedAt:     timestamp('approved_at'),
+  token:          text('token').notNull().unique(),
+  tokenExpiresAt: timestamp('token_expires_at'),
+  createdAt:      timestamp('created_at').notNull().defaultNow(),
+  updatedAt:      timestamp('updated_at').notNull().defaultNow()
+}, (table) => [
+  index('idx_trust_center_requests_org_id').on(table.orgId),
+  index('idx_trust_center_requests_token').on(table.token),
+  uniqueIndex('idx_trust_center_requests_org_email').on(table.orgId, table.email)
+])
 
 export const ssoConnectionsRelations = relations(ssoConnections, ({ one }) => ({
   org: one(organizations, { fields: [ssoConnections.orgId], references: [organizations.id] })
@@ -566,4 +605,14 @@ export const finopsRecommendationStatesRelations = relations(finopsRecommendatio
 export const kubernetesIntegrationsRelations = relations(kubernetesIntegrations, ({ one }) => ({
   org: one(organizations, { fields: [kubernetesIntegrations.orgId], references: [organizations.id] }),
   awsIntegration: one(integrations, { fields: [kubernetesIntegrations.awsIntegrationId], references: [integrations.id] })
+}))
+
+export const trustCenterSettingsRelations = relations(trustCenterSettings, ({ one, many }) => ({
+  org: one(organizations, { fields: [trustCenterSettings.orgId], references: [organizations.id] }),
+  accessRequests: many(trustCenterAccessRequests)
+}))
+
+export const trustCenterAccessRequestsRelations = relations(trustCenterAccessRequests, ({ one }) => ({
+  org: one(organizations, { fields: [trustCenterAccessRequests.orgId], references: [organizations.id] }),
+  approvedByUser: one(users, { fields: [trustCenterAccessRequests.approvedBy], references: [users.id] })
 }))

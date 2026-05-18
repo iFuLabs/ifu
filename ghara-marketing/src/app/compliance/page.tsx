@@ -16,18 +16,18 @@ export const metadata: Metadata = {
 }
 
 const FRAMEWORKS = [
-  { name: 'SOC 2 Type II', controls: 19, description: 'Trust service criteria for security, availability, and confidentiality. The gold standard for SaaS companies handling customer data.', tier: 'Starter' },
+  { name: 'SOC 2 Type II', controls: 28, description: 'Trust service criteria for security, availability, and confidentiality. The gold standard for SaaS companies handling customer data.', tier: 'Starter' },
   { name: 'ISO 27001', controls: 13, description: 'International information security management standard. Required for enterprise contracts and global operations.', tier: 'Growth' },
   { name: 'GDPR', controls: 10, description: 'EU data protection regulation. Mandatory for any company processing data of EU residents.', tier: 'Growth' },
-  { name: 'HIPAA', controls: 15, description: 'US healthcare data protection. Required for healthtech companies and anyone handling protected health information.', tier: 'Growth' },
+  { name: 'HIPAA', controls: 23, description: 'US healthcare data protection. Required for healthtech companies and anyone handling protected health information.', tier: 'Growth' },
   { name: 'PCI DSS 4.0', controls: 29, description: 'Payment card industry security standard. Required for companies that store, process, or transmit cardholder data.', tier: 'Growth' },
 ]
 
 const FEATURES = [
-  { title: 'Continuous scanning', description: 'Daily automated scans check your AWS infrastructure against 77+ controls. No manual spreadsheets.' },
+  { title: 'Continuous multi-region scanning', description: 'Daily automated scans check your AWS infrastructure across every active region against 103+ controls. GuardDuty, EC2, RDS, and VPC checks run in all regions — not just your primary one.' },
   { title: 'Evidence collection', description: 'Every scan captures evidence automatically — IAM policies, encryption settings, network configs. Ready for your auditor.' },
   { title: 'AI gap analysis', description: 'When a control fails, AI explains what went wrong, the business impact, and generates Terraform/CLI code to fix it.' },
-  { title: 'Audit-ready PDF export', description: 'One-click PDF export per framework. Hand it directly to your auditor with control status, evidence, and remediation history.' },
+  { title: 'Trust Center', description: 'Publish a public compliance page for prospects. Share your SOC 2 score, certifications, and security documents. NDA-gate access with one click.' },
   { title: 'Drift alerts', description: 'Get notified via Slack or email when a previously-passing control starts failing. Catch regressions before your auditor does.' },
   { title: 'Remediation tracking', description: 'Assign failing controls to team members with due dates. Track progress from open to completed.' },
 ]
@@ -54,7 +54,7 @@ export default function CompliancePage() {
       {/* Frameworks */}
       <section className="section">
         <h2 className="section-title">Five frameworks. <em>One platform.</em></h2>
-        <p className="section-sub">77+ controls across the frameworks that matter for cloud-native companies.</p>
+        <p className="section-sub">103+ controls across the frameworks that matter for cloud-native companies.</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginTop: 40, maxWidth: 900, marginLeft: 'auto', marginRight: 'auto' }}>
           {FRAMEWORKS.map(fw => (

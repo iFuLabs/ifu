@@ -41,6 +41,7 @@ import exemptionRoutes from './routes/exemptions.js'
 import auditCalendarRoutes from './routes/audits.js'
 import aiUsageRoutes from './routes/ai-usage.js'
 import demoRequestRoutes from './routes/demo-requests.js'
+import trustCenterRoutes from './routes/trust-center.js'
 
 const app = Fastify({
   logger: {
@@ -123,6 +124,7 @@ await app.register(exemptionRoutes,    { prefix: '/api/v1/exemptions' })
 await app.register(auditCalendarRoutes, { prefix: '/api/v1/audits' })
 await app.register(aiUsageRoutes,        { prefix: '/api/v1/ai-usage' })
 await app.register(demoRequestRoutes,    { prefix: '/api/v1/demo-requests' })
+await app.register(trustCenterRoutes,    { prefix: '/api/v1/trust-center' })
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', async () => ({

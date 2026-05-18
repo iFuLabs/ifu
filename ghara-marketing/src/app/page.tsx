@@ -77,7 +77,7 @@ export default function HomePage() {
         <div className="hero-cards">
           {[
             { title: 'Cloud Health Score: 84', desc: 'One number — compliance, cost, and security weighted into a single posture metric', badge: 'Live dashboard' },
-            { title: 'SOC 2 in 6 weeks', desc: 'Automated evidence, AI remediation, drift alerts across 5 frameworks', badge: 'Compliance' },
+            { title: 'SOC 2 in 6 weeks', desc: 'Automated evidence, AI remediation, drift alerts across 5 frameworks — 103 controls, multi-region', badge: 'Compliance' },
             { title: '$1,247/mo waste detected', desc: 'Idle resources, rightsizing, anomaly detection, Kubernetes', badge: 'Cost' },
             { title: 'Built by iFU Labs', desc: 'AWS Partner Network — we run cloud audits for a living', badge: 'Credibility' },
           ].map(card => (
@@ -216,12 +216,12 @@ export default function HomePage() {
 
         <div className="features-grid">
           {[
-            { icon: Icons.Shield, title: '5 compliance frameworks', desc: 'SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS — 77 controls fully automated. AI-powered remediation guidance for every failing check.' },
+            { icon: Icons.Shield, title: '5 compliance frameworks', desc: 'SOC 2, ISO 27001, GDPR, HIPAA, PCI DSS — 103 controls, multi-region scanning across every active AWS region. AI-powered remediation guidance for every failing check.' },
             { icon: Icons.Trend, title: '8 cost waste types', desc: 'Idle EBS, unattached EIPs, idle NAT gateways, oversized RDS, unused load balancers, abandoned snapshots, idle EC2, untagged spend. Each finding shows monthly and annual savings.' },
             { icon: Icons.Cube, title: 'Kubernetes cost', desc: 'OpenCost integration shows cost per namespace, per workload, per pod. Detect idle pods, oversized requests, unused PVCs across EKS, GKE, AKS, or self-managed clusters.' },
             { icon: Icons.Bell, title: 'Drift + anomaly alerts', desc: 'Slack and email alerts the moment a control flips from pass to fail, or when daily spend deviates from baseline. Never surprised in an audit again.' },
             { icon: Icons.List, title: 'Unified action queue', desc: 'One ranked list across both engines. Compliance gaps and cost waste, sorted by impact. CLI commands to fix on the spot. Snooze, assign, or mark done.' },
-            { icon: Icons.Gauge, title: 'Audit-ready evidence', desc: 'Every control links to the underlying AWS configuration, screenshot, and timestamp. Auditor read-only role available on Scale tier.' },
+            { icon: Icons.Gauge, title: 'Trust Center', desc: 'Publish a public compliance page for prospects. Share your SOC 2 score, certifications, and security documents. NDA-gate access with one click. Available on Growth.' },
           ].map(f => (
             <div key={f.title} className="feature-card">
               <div className="feature-icon">{f.icon}</div>
@@ -257,6 +257,7 @@ export default function HomePage() {
                 ['Compliance automation', true, false, true],
                 ['Cost waste detection', false, true, true],
                 ['Kubernetes cost (OpenCost)', false, 'partial', true],
+                ['Trust Center (public compliance page)', false, false, true],
                 ['Unified Cloud Health Score', false, false, true],
                 ['Cross-engine action queue', false, false, true],
                 ['Read-only AWS access', true, true, true],
@@ -323,7 +324,7 @@ export default function HomePage() {
             <div className="pricing-period">per month · up to $100k/mo AWS spend</div>
             <p className="pricing-desc">Everything to pass audits, cut waste, and ship to enterprise.</p>
             <ul className="pricing-features">
-              <li>{Icons.CheckSm} All 5 frameworks (77 controls)</li>
+              <li>{Icons.CheckSm} All 5 frameworks (103 controls)</li>
               <li>{Icons.CheckSm} AI evidence + remediation</li>
               <li>{Icons.CheckSm} Vendor risk register</li>
               <li>{Icons.CheckSm} Anomaly detection + Slack alerts</li>

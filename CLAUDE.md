@@ -90,10 +90,13 @@ Trial: 7-day free on Growth tier, no credit card required.
 - CloudFormation Quick Launch for AWS ✅
 - Marketing site with pricing page ✅
 
+- **Multi-region AWS scanning** — done 2026-05-18. `src/connectors/aws/checks/index.js` now enumerates all active regions via `DescribeRegionsCommand`. Global checks (IAM, S3, CloudTrail) run once against the primary region. Regional checks (GuardDuty, EC2, RDS, VPC/KMS security) fan out across all active regions in parallel (concurrency 5). Results are merged per controlId — worst-case wins (any region fail = overall fail). Evidence includes `regions[]` and `regionDetails[]` arrays.
+- **HIPAA controls** — done 2026-05-18. 23 HIPAA controls seeded in `src/db/seed.js` covering §164.308 (administrative), §164.312(a)(1) (access control), §164.312(a)(2)(iv) (encryption), §164.312(b) (audit), §164.312(c)(1) (integrity), §164.312(e)(1) (transmission security). 18 automated (mapped to existing iamChecks, s3Checks, rdsChecks, ec2Checks, cloudtrailChecks, guarddutyChecks, securityChecks), 5 manual. HIPAA already in Growth-tier framework list.
+- **Trust Center (C1)** — done 2026-05-18. Migration `0036_add_trust_center.sql` adds `trust_center_settings` and `trust_center_access_requests` tables. Backend: `src/routes/trust-center.js` — public GET/:slug, POST/:slug/request, GET/:slug/access; authenticated PUT (settings), GET/PATCH requests. Gated behind Growth tier. Frontend: admin page at `/trust-center` (settings + access request management), public page at `/trust/[slug]` (NDA gate, framework score cards, artifact links). Approval email sent via existing email service.
+
 ## Pending suggestions (post-launch)
 
-### FinOps (Cost engine)
-- ~~**F1** Wire scheduled scans~~ ✅ implemented
+### FinOps (Cost engine)- ~~**F1** Wire scheduled scans~~ ✅ implemented
 - ~~**F2** Anomaly detection + Slack/email alerts~~ ✅ implemented
 - **F3** Tag-based allocation/showback (Critical, Medium)
 - **F4** Budgets + variance alerts (High, Medium) — partial: budgets table + Alerts tab in /cost; variance email alerts pending
